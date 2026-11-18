@@ -829,12 +829,13 @@ async function loadPhotos(s){
   const sat={sat:true,label:"Satélite",lat:s.lat,lon:s.lon,by:"Imagen © Esri, Maxar"};
   const [a,b,c]=await Promise.all([osmPhotos(s),wikiPhoto(s),commonsNear(s.lat,s.lon)]);
   if(photoSpot!==s.id||!$("#gal"))return;
-  const seen=new Set();photos=[...a,...b,...c].filter(p=>{const k=decodeURIComponent(p.src).replace(/\/(\d+)px-/,"/").split("?")[0].split("/").pop();if(seen.has(k))return false;seen.add(k);return true});
+  const BAD=/escudo|bandera|coat[_ %-]?of[_ %-]?arms|flag|blas[oó]n|wappen|stemma|bandiera|logo|seal|sello|mapa|map[_ .-]|location|localiz|situaci|plano|\.svg|\.tif/i;
+  const seen=new Set();photos=[...a,...c,...b].filter(p=>!BAD.test(decodeURIComponent(p.src+" "+(p.page||"")))).filter(p=>{const k=decodeURIComponent(p.src).replace(/\/(\d+)px-/,"/").split("?")[0].split("/").pop();if(seen.has(k))return false;seen.add(k);return true});
   photos.push(sat);
   renderGallery();setHero(0);
 }
 function renderGallery(){
-  $("#gal").innerHTML=photos.map((p,i)=>`<div class="ph ${i===curPhoto?"on":""}" data-i="${i}">${p.sat?satHTML(p.lat,p.lon,17,"92px","70px"):`<img alt="" loading="lazy" src="${esc(p.src)}">`}<span>${p.sat?"🛰️ Satélite":"📷 "+(i+1)}</span></div>`).join("")+(photos.length===1?`<div class="small mute" style="align-self:center;padding:0 6px">Aún no hay fotos públicas de este sitio. ¡Haz tú la primera! 📸</div>`:"");
+  $("#gal").innerHTML=photos.map((p,i)=>`<div class="ph ${i===curPhoto?"on":""}" data-i="${i}">${p.sat?satHTML(p.lat,p.lon,17,"92px","70px"):`<img alt="" src="${esc(p.src)}">`}<span>${p.sat?"🛰️ Satélite":"📷 "+(i+1)}</span></div>`).join("")+(photos.length===1?`<div class="small mute" style="align-self:center;padding:0 6px">Aún no hay fotos públicas de este sitio. ¡Haz tú la primera! 📸</div>`:"");
   $("#gal").onclick=e=>{const d=e.target.closest(".ph");if(!d)return;setHero(+d.dataset.i)};
 }
 function setHero(i){
