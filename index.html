@@ -116,7 +116,32 @@ label.f{display:block;font-size:12.5px;font-weight:700;color:var(--mute);margin:
 #detail.on{display:flex}
 #dBox{background:var(--bg);width:100%;max-width:640px;max-height:94vh;border-radius:26px 26px 0 0;overflow-y:auto;padding:0 0 calc(28px + var(--safe-b));animation:up .3s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.hero{height:170px;position:relative;display:flex;align-items:flex-end;padding:16px;color:#fff;background:var(--hg);background-size:cover;background-position:center;border-radius:26px 26px 0 0}
+.hero{height:230px;position:relative;display:flex;align-items:flex-end;padding:16px;color:#fff;background:var(--hg);background-size:cover;background-position:center;border-radius:26px 26px 0 0;overflow:hidden;cursor:zoom-in}
+.hero .heroImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+.hero .heroImg.on{opacity:1}
+.hero:before{z-index:1;pointer-events:none}
+.hero .heroImg,.hero .heroSat{z-index:0}
+.hero .credit{position:absolute;right:10px;bottom:8px;z-index:2;font-size:10.5px;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:10px;color:#fff;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero>div:not(.big):not(.credit):not(.heroSat){position:relative;z-index:2;max-width:75%}
+.hero .xbtn{z-index:3}
+.gal{display:flex;gap:8px;overflow-x:auto;margin:12px 0 2px;padding-bottom:4px;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gal .ph{flex:none;width:92px;height:70px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;background:var(--card2);box-shadow:var(--shadow2);border:2px solid transparent}
+.gal .ph.on{border-color:var(--brand)}
+.gal .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.gal .ph span{position:absolute;left:4px;bottom:4px;font-size:10px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;padding:1px 6px;border-radius:8px}
+.sat{position:relative;overflow:hidden;width:100%;height:100%}
+.sat img{position:absolute;width:256px;height:256px;max-width:none}
+.sat .pinC{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#6d5dfc;border:3px solid #fff;box-shadow:0 0 0 6px rgba(109,93,252,.35)}
+#viewer{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.94);display:none;flex-direction:column;align-items:center;justify-content:center}
+#viewer.on{display:flex}
+#viewer .vimg{max-width:100%;max-height:78vh;object-fit:contain}
+#viewer .vsat{width:min(92vw,720px);height:min(70vh,720px)}
+#viewer .vcap{color:#cbd5e1;font-size:12.5px;padding:12px 16px;text-align:center;max-width:640px}
+#viewer .vcap a{color:#a5b4fc}
+#viewer .vx{position:absolute;top:calc(14px + var(--safe-t));right:14px;width:42px;height:42px;border-radius:21px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:20px}
+#viewer .vnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px}
+#viewer .vprev{left:10px}#viewer .vnext{right:10px}
 .hero:before{content:"";position:absolute;inset:0;border-radius:26px 26px 0 0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.6))}
 .hero .big{position:absolute;right:18px;top:18px;font-size:64px;opacity:.9}
 .hero h1{position:relative;color:#fff;margin:0;text-shadow:0 2px 10px rgba(0,0,0,.4)}
@@ -339,6 +364,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 </nav>
 
 <div id="detail"><div id="dBox"></div></div>
+<div id="viewer"><button class="vx" id="vX">✕</button><button class="vnav vprev" id="vPrev">‹</button><div id="vBody"></div><div class="vcap" id="vCap"></div><button class="vnav vnext" id="vNext">›</button></div>
 
 <div id="ob"><div id="obBody"></div><div class="dots" id="obDots"></div><button class="btn block" id="obNext">Empezar</button></div>
 
@@ -753,6 +779,7 @@ async function openSpot(s){
     <button class="act" id="shareBtn"><i>📤</i>Compartir</button>
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
+   <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
    <div id="wikiBox"></div>
    <h2 style="margin-top:6px">¿Puedo volar aquí?</h2>
    <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
@@ -763,11 +790,73 @@ async function openSpot(s){
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
-  if(s.wiki)loadWiki(s);
+  loadPhotos(s);if(s.wiki)loadWiki(s);
+  $("#hero").onclick=e=>{if(e.target.closest(".xbtn"))return;openViewer(curPhoto)};
   try{const res=await checkSpot(s);const box=$("#chk");if(box)box.innerHTML=res}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
 }
-async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.thumbnail){const h=$("#hero");if(h){h.style.backgroundImage=`url("${p.thumbnail.source}")`;h.querySelector(".big").style.display="none"}}if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
-function closeDetail(){$("#detail").classList.remove("on")}
+async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
+function closeDetail(){$("#detail").classList.remove("on");photoSpot=null}
+/* ===================== fotos del spot ===================== */
+let photos=[],curPhoto=0,photoSpot=null;
+function satHTML(lat,lon,z,w,hgt){
+  const n=2**z,xf=(lon+180)/360*n,lr=lat*Math.PI/180,yf=(1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n;
+  const tx=Math.floor(xf),ty=Math.floor(yf),px=(xf-tx)*256,py=(yf-ty)*256;let out="";
+  for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){const left=`calc(50% + ${Math.round(dx*256-px)}px)`,top=`calc(50% + ${Math.round(dy*256-py)}px)`;out+=`<img alt="" loading="lazy" src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty+dy}/${tx+dx}" style="left:${left};top:${top}">`}
+  return `<div class="sat" style="width:${w};height:${hgt}">${out}<div class="pinC"></div></div>`;
+}
+function stripTags(s){const d=document.createElement("div");d.innerHTML=String(s||"");return d.textContent.trim()}
+async function commonsNear(lat,lon,r=700){
+  try{const d=await jget(`https://commons.wikimedia.org/w/api.php?action=query&generator=geosearch&ggscoord=${lat}|${lon}&ggsradius=${r}&ggslimit=15&ggsnamespace=6&prop=imageinfo|coordinates&iiprop=url|extmetadata|mime&iiurlwidth=1000&format=json&origin=*`,{},15000);
+    const pages=Object.values((d.query&&d.query.pages)||{});
+    return pages.filter(p=>p.imageinfo&&/jpe?g|png|webp/i.test(p.imageinfo[0].mime||"")).map(p=>{const ii=p.imageinfo[0],m=ii.extmetadata||{};const c=p.coordinates&&p.coordinates[0];
+      return{src:ii.thumburl||ii.url,full:ii.thumburl||ii.url,page:ii.descriptionurl,by:stripTags(m.Artist&&m.Artist.value).slice(0,60),lic:m.LicenseShortName&&m.LicenseShortName.value,d:c?km(lat,lon,c.lat,c.lon):9,label:"Foto"}}).sort((a,b)=>a.d-b.d).slice(0,10);
+  }catch(e){return[]}
+}
+async function osmPhotos(s){
+  const t=s.tags||{},out=[];
+  if(t.image&&/^https?:\/\/.+\.(jpe?g|png|webp)(\?.*)?$/i.test(t.image))out.push({src:t.image,full:t.image,page:t.image,label:"Foto",by:"OpenStreetMap"});
+  const wc=t.wikimedia_commons;
+  if(wc&&/^File:/i.test(wc)){const f=encodeURIComponent(wc.replace(/^File:/i,""));out.push({src:`https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1000`,full:`https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1600`,page:`https://commons.wikimedia.org/wiki/${encodeURIComponent(wc)}`,label:"Foto",by:"Wikimedia Commons"})}
+  if(t.wikidata){try{const d=await jget(`https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${t.wikidata}&property=P18&format=json&origin=*`,{},10000);const v=d.claims&&d.claims.P18&&d.claims.P18[0].mainsnak.datavalue.value;if(v){const f=encodeURIComponent(v);out.push({src:`https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1000`,full:`https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1600`,page:`https://commons.wikimedia.org/wiki/File:${f}`,label:"Foto",by:"Wikidata"})}}catch(e){}}
+  return out;
+}
+async function wikiPhoto(s){
+  if(!s.wiki)return[];
+  try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail|name&pithumbsize=1000&pageids=${s.wiki.pageid}&format=json&origin=*`,{},10000);const p=d.query.pages[s.wiki.pageid];return p.thumbnail?[{src:p.thumbnail.source,full:p.thumbnail.source,page:p.pageimage?`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.pageimage)}`:s.url,label:"Foto",by:"Wikipedia"}]:[]}catch(e){return[]}
+}
+async function loadPhotos(s){
+  photoSpot=s.id;photos=[];curPhoto=0;
+  const sat={sat:true,label:"Satélite",lat:s.lat,lon:s.lon,by:"Imagen © Esri, Maxar"};
+  const [a,b,c]=await Promise.all([osmPhotos(s),wikiPhoto(s),commonsNear(s.lat,s.lon)]);
+  if(photoSpot!==s.id||!$("#gal"))return;
+  const seen=new Set();photos=[...a,...b,...c].filter(p=>{const k=decodeURIComponent(p.src).replace(/\/(\d+)px-/,"/").split("?")[0].split("/").pop();if(seen.has(k))return false;seen.add(k);return true});
+  photos.push(sat);
+  renderGallery();setHero(0);
+}
+function renderGallery(){
+  $("#gal").innerHTML=photos.map((p,i)=>`<div class="ph ${i===curPhoto?"on":""}" data-i="${i}">${p.sat?satHTML(p.lat,p.lon,17,"92px","70px"):`<img alt="" loading="lazy" src="${esc(p.src)}">`}<span>${p.sat?"🛰️ Satélite":"📷 "+(i+1)}</span></div>`).join("")+(photos.length===1?`<div class="small mute" style="align-self:center;padding:0 6px">Aún no hay fotos públicas de este sitio. ¡Haz tú la primera! 📸</div>`:"");
+  $("#gal").onclick=e=>{const d=e.target.closest(".ph");if(!d)return;setHero(+d.dataset.i)};
+}
+function setHero(i){
+  curPhoto=i;const p=photos[i],h=$("#hero");if(!h||!p)return;
+  h.querySelectorAll(".heroImg,.credit,.heroSat").forEach(x=>x.remove());
+  if(p.sat){const d=document.createElement("div");d.className="heroSat";d.style.cssText="position:absolute;inset:0";d.innerHTML=satHTML(p.lat,p.lon,17,"100%","100%");h.prepend(d)}
+  else{const im=document.createElement("img");im.className="heroImg";im.alt="";im.onload=()=>im.classList.add("on");im.onerror=()=>{photos.splice(i,1);renderGallery();setHero(Math.min(i,photos.length-1))};im.src=p.src;h.prepend(im)}
+  const big=h.querySelector(".big");if(big)big.style.display="none";
+  const cr=document.createElement("div");cr.className="credit";cr.textContent=(p.sat?"🛰️ ":"📷 ")+(p.by||"")+(p.lic?" · "+p.lic:"");h.appendChild(cr);
+  $$("#gal .ph").forEach(x=>x.classList.toggle("on",+x.dataset.i===i));
+}
+function openViewer(i){if(!photos.length)return;curPhoto=i;$("#viewer").classList.add("on");renderViewer()}
+function renderViewer(){const p=photos[curPhoto];$("#vBody").innerHTML=p.sat?`<div class="vsat">${satHTML(p.lat,p.lon,18,"100%","100%")}</div>`:`<img class="vimg" alt="" src="${esc(p.full||p.src)}">`;
+  $("#vCap").innerHTML=`${curPhoto+1} / ${photos.length} · ${p.sat?"Vista de satélite del punto · © Esri, Maxar":`${esc(p.by||"")}${p.lic?" · "+esc(p.lic):""}${p.page?` · <a href="${esc(p.page)}" target="_blank" rel="noopener">Ver original ↗</a>`:""}${p.d!=null&&p.d<9?` · a ${fmtD(p.d)} del spot`:""}`}`;
+  $("#vPrev").style.display=$("#vNext").style.display=photos.length>1?"block":"none"}
+$("#vX").onclick=()=>$("#viewer").classList.remove("on");
+$("#vPrev").onclick=()=>{curPhoto=(curPhoto-1+photos.length)%photos.length;renderViewer();setHero(curPhoto)};
+$("#vNext").onclick=()=>{curPhoto=(curPhoto+1)%photos.length;renderViewer();setHero(curPhoto)};
+let vx0=null;$("#viewer").addEventListener("touchstart",e=>vx0=e.touches[0].clientX,{passive:true});
+$("#viewer").addEventListener("touchend",e=>{if(vx0==null)return;const dx=e.changedTouches[0].clientX-vx0;if(Math.abs(dx)>50)(dx<0?$("#vNext"):$("#vPrev")).click();vx0=null},{passive:true});
+document.addEventListener("keydown",e=>{if(!$("#viewer").classList.contains("on"))return;if(e.key==="Escape")$("#vX").click();if(e.key==="ArrowRight")$("#vNext").click();if(e.key==="ArrowLeft")$("#vPrev").click()});
+
 $("#detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail()});
 
 function cleanHTML(s){const d=document.createElement("div");d.innerHTML=String(s||"");return d.textContent.replace(/\s+/g," ").trim()}
