@@ -2,122 +2,210 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#f5f6fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0e17" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SpotFPV">
-<title>SpotFPV · Spots y normas para volar drones</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d5dfc'/%3E%3Cstop offset='1' stop-color='%2300b4d8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='118' font-size='90' text-anchor='middle'%3E%F0%9F%9A%81%3C/text%3E%3C/svg%3E">
+<title>SpotFPV · Dónde volar tu dron</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 <style>
 :root{
-  --bg:#0d1117;--panel:#161b22;--panel2:#1f2630;--line:#2d3642;--text:#e6edf3;--mute:#9aa7b4;
-  --acc:#3fb950;--acc2:#58a6ff;--warn:#d29922;--bad:#f85149;--info:#8b949e;
-  --r:14px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+  --bg:#f5f6fb;--card:#ffffff;--card2:#f1f3f9;--ink:#0f172a;--ink2:#334155;--mute:#64748b;--line:#e6e8f0;
+  --brand:#6d5dfc;--brand2:#00b4d8;--grad:linear-gradient(135deg,#6d5dfc,#00b4d8);
+  --ok:#16a34a;--okbg:#e8f8ee;--info:#2563eb;--infobg:#e8f0ff;--warn:#d97706;--warnbg:#fff4e0;--bad:#dc2626;--badbg:#fdecec;
+  --shadow:0 10px 30px rgba(15,23,42,.12);--shadow2:0 2px 10px rgba(15,23,42,.08);
+  --r:20px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
 }
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b0e17;--card:#141927;--card2:#1c2233;--ink:#eef2ff;--ink2:#cbd5e1;--mute:#8b95ab;--line:#262d40;
+  --okbg:rgba(22,163,74,.16);--infobg:rgba(37,99,235,.18);--warnbg:rgba(217,119,6,.18);--badbg:rgba(220,38,38,.18);
+  --ok:#4ade80;--info:#7aa7ff;--warn:#fbbf24;--bad:#f87171;
+  --shadow:0 10px 30px rgba(0,0,0,.45);--shadow2:0 2px 10px rgba(0,0,0,.35);
+}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
-a{color:var(--acc2)}
-button{font:inherit;color:inherit}
-#map{position:fixed;inset:0;z-index:1;background:#0b0f14}
-/* Top bar */
-#top{position:fixed;left:0;right:0;top:0;z-index:1000;padding:calc(8px + var(--safe-t)) 10px 8px;display:flex;gap:8px;pointer-events:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 "Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none;font-weight:600}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit}
+#map{position:fixed;inset:0;z-index:1;background:var(--card2)}
+/* ---------- top ---------- */
+#top{position:fixed;left:0;right:0;top:0;z-index:1000;padding:calc(10px + var(--safe-t)) 12px 0;pointer-events:none}
 #top>*{pointer-events:auto}
+.searchRow{display:flex;gap:8px;align-items:center}
 #searchBox{flex:1;position:relative}
-#q{width:100%;height:44px;border-radius:22px;border:1px solid var(--line);background:rgba(22,27,34,.95);color:var(--text);padding:0 44px 0 16px;font-size:16px;outline:none;box-shadow:0 4px 18px rgba(0,0,0,.35)}
-#q:focus{border-color:var(--acc2)}
-#qGo{position:absolute;right:4px;top:4px;width:36px;height:36px;border-radius:18px;border:0;background:var(--acc2);color:#04111f;font-weight:700;cursor:pointer}
-.roundBtn{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:rgba(22,27,34,.95);font-size:19px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.35)}
-#suggest{position:absolute;left:0;right:0;top:50px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:none;max-height:50vh;overflow-y:auto}
-#suggest div{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}
-#suggest div:hover{background:var(--panel2)}
-/* status chip */
-#status{position:fixed;top:calc(60px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:999;background:rgba(22,27,34,.95);border:1px solid var(--line);border-radius:16px;padding:5px 12px;font-size:12.5px;color:var(--mute);display:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
-/* sheet */
-#sheet{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.45);display:flex;flex-direction:column;height:44vh;transition:height .25s ease;padding-bottom:var(--safe-b)}
-#sheet.big{height:86vh}
-#sheet.min{height:118px}
-#grab{height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
-#grab span{width:42px;height:5px;border-radius:3px;background:var(--line)}
-#tabs{display:flex;gap:4px;padding:0 8px 8px;flex:none;overflow-x:auto}
-#tabs button{flex:1;min-width:64px;border:0;background:transparent;border-radius:10px;padding:6px 4px;color:var(--mute);font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
-#tabs button b{font-size:18px;line-height:1}
-#tabs button.on{background:var(--panel2);color:var(--text)}
-#panes{flex:1;overflow-y:auto;padding:4px 14px 18px;-webkit-overflow-scrolling:touch}
-.pane{display:none}.pane.on{display:block}
-h2{font-size:17px;margin:6px 0 10px}
-h3{font-size:15px;margin:16px 0 8px}
-.mute{color:var(--mute)}
-.small{font-size:12.5px}
+#q{width:100%;height:50px;border-radius:25px;border:0;background:var(--card);color:var(--ink);padding:0 16px 0 46px;font-size:16px;outline:none;box-shadow:var(--shadow)}
+#q::placeholder{color:var(--mute)}
+#searchBox .lens{position:absolute;left:16px;top:14px;font-size:18px;opacity:.7;pointer-events:none}
+.fab{width:50px;height:50px;border-radius:25px;border:0;background:var(--card);box-shadow:var(--shadow);font-size:20px;display:flex;align-items:center;justify-content:center;flex:none}
+#droneFab{width:auto;padding:0 14px 0 10px;gap:6px;font-size:13px;font-weight:700}
+#droneFab span.e{font-size:20px}
+#suggest{position:absolute;left:0;right:0;top:58px;background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;display:none;max-height:50vh;overflow-y:auto}
+#suggest div{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+#suggest div:last-child{border:0}
+#suggest div:hover{background:var(--card2)}
+#catBar{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 6px;scrollbar-width:none}
+#catBar::-webkit-scrollbar{display:none}
+.cchip{flex:none;display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:20px;background:var(--card);box-shadow:var(--shadow2);font-size:13px;font-weight:600;border:2px solid transparent;user-select:none;cursor:pointer;color:var(--ink2);transition:.15s}
+.cchip.on{border-color:var(--c,var(--brand));color:var(--ink)}
+.cchip:not(.on){opacity:.65}
+/* ---------- floating ---------- */
+#areaBtn{position:fixed;left:50%;transform:translateX(-50%);z-index:999;border:0;background:var(--ink);color:var(--bg);border-radius:22px;padding:10px 18px;font-weight:700;font-size:14px;box-shadow:var(--shadow);display:none}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(122px + var(--safe-t));z-index:1500;background:var(--card);color:var(--ink);border-radius:18px;padding:9px 16px;font-size:13px;font-weight:600;box-shadow:var(--shadow);display:none;max-width:92vw;text-align:center}
+#addHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--grad);color:#fff;font-weight:700;padding:10px 18px;border-radius:20px;display:none;box-shadow:var(--shadow)}
+/* ---------- sheet ---------- */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:var(--bg);border-radius:26px 26px 0 0;box-shadow:0 -10px 40px rgba(15,23,42,.18);display:flex;flex-direction:column;height:46vh;transition:height .3s cubic-bezier(.2,.8,.2,1);padding-bottom:calc(64px + var(--safe-b))}
+#sheet.big{height:90vh}
+#sheet.min{height:calc(150px + var(--safe-b))}
+#grab{height:24px;display:flex;align-items:center;justify-content:center;cursor:grab;flex:none;touch-action:none}
+#grab span{width:44px;height:5px;border-radius:3px;background:var(--line)}
+#panes{flex:1;overflow-y:auto;padding:0 16px 20px;-webkit-overflow-scrolling:touch}
+.pane{display:none;animation:fade .25s}.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:1002;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + var(--safe-b))}
+#nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--mute);padding:4px 0;border-radius:12px}
+#nav button i{font-style:normal;font-size:21px;line-height:1.1;filter:grayscale(1);opacity:.75;transition:.15s}
+#nav button.on{color:var(--brand)}
+#nav button.on i{filter:none;opacity:1;transform:translateY(-1px) scale(1.08)}
+/* ---------- generic ---------- */
+h1{font-size:22px;font-weight:800;margin:4px 0 4px;letter-spacing:-.3px}
+h2{font-size:19px;font-weight:800;margin:6px 0 4px;letter-spacing:-.2px}
+h3{font-size:15px;font-weight:700;margin:18px 0 8px}
+.sub{color:var(--mute);font-size:13.5px;margin:0 0 10px}
+.mute{color:var(--mute)}.small{font-size:12.5px}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin:10px 0;box-shadow:var(--shadow2)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
-.chip{border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:5px 11px;font-size:13px;cursor:pointer;user-select:none}
-.chip.on{border-color:var(--acc);background:rgba(63,185,80,.15)}
-select,input[type=number],input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;width:100%}
-label.f{display:block;font-size:12.5px;color:var(--mute);margin:10px 0 4px}
-.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--acc2);color:#04111f;font-weight:650;cursor:pointer}
-.btn.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-.btn.green{background:var(--acc);color:#03140a}
-.card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin:8px 0}
-.spot{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);background:var(--panel2);border-radius:12px;margin:7px 0;cursor:pointer}
-.spot .ic{font-size:22px;width:30px;text-align:center;flex:none}
-.spot .nm{font-weight:600}
-.spot .meta{font-size:12.5px;color:var(--mute)}
-.badge{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
-.b-ok{background:rgba(63,185,80,.18);color:#56d364}
-.b-warn{background:rgba(210,153,34,.2);color:#e3b341}
-.b-bad{background:rgba(248,81,73,.2);color:#ff7b72}
-.b-info{background:rgba(139,148,158,.2);color:#c9d1d9}
-.b-q{background:rgba(88,166,255,.18);color:#79c0ff}
-.req{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
-.req:last-child{border-bottom:0}
-.req .st{flex:none;width:24px;text-align:center;font-size:17px}
-.req .tx b{display:block}
-.req .tx .d{font-size:13px;color:var(--mute);margin-top:2px}
-.req .tx .tm{font-size:12px;color:#79c0ff;margin-top:3px}
-.verdict{border-radius:14px;padding:12px 14px;margin:8px 0 4px;font-weight:600}
-.v0{background:rgba(63,185,80,.14);border:1px solid rgba(63,185,80,.5)}
-.v1{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.45)}
-.v2{background:rgba(210,153,34,.14);border:1px solid rgba(210,153,34,.5)}
-.v3{background:rgba(248,81,73,.13);border:1px solid rgba(248,81,73,.5)}
-.legend{display:grid;grid-template-columns:18px 1fr;gap:6px 8px;font-size:13px;align-items:center}
-.sw{width:14px;height:14px;border-radius:3px}
-.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.toggle:last-child{border-bottom:0}
-.sw2{position:relative;width:46px;height:26px;flex:none}
-.sw2 input{opacity:0;width:0;height:0}
-.sw2 span{position:absolute;inset:0;background:var(--line);border-radius:13px;transition:.2s;cursor:pointer}
-.sw2 span:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
-.sw2 input:checked+span{background:var(--acc)}
-.sw2 input:checked+span:before{transform:translateX(20px)}
-.cert{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
-.cert input{width:20px;height:20px;margin-top:2px;flex:none}
-.cert small{display:block;color:var(--mute)}
-/* detail modal */
-#detail{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center}
+.btn{border:0;border-radius:14px;padding:12px 16px;background:var(--grad);color:#fff;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:var(--shadow2)}
+.btn.block{width:100%}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.p0{background:var(--okbg);color:var(--ok)}.p1{background:var(--infobg);color:var(--info)}.p2{background:var(--warnbg);color:var(--warn)}.p3{background:var(--badbg);color:var(--bad)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:currentColor}
+.seg{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;border-radius:10px;padding:8px 4px;font-size:13px;font-weight:700;color:var(--mute)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow2)}
+select,input[type=text],input[type=number]{background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:15px;width:100%;outline:none}
+select:focus,input:focus{border-color:var(--brand)}
+label.f{display:block;font-size:12.5px;font-weight:700;color:var(--mute);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.4px}
+/* sheet header */
+.sheetHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 8px}
+.ctx{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.ctx::-webkit-scrollbar{display:none}
+.ctxc{flex:none;background:var(--card);border-radius:14px;padding:8px 12px;box-shadow:var(--shadow2);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;border:0;color:var(--ink)}
+/* spot cards */
+.spot{display:flex;gap:12px;align-items:center;padding:12px;background:var(--card);border-radius:18px;margin:8px 0;box-shadow:var(--shadow2);cursor:pointer;transition:transform .1s}
+.spot:active{transform:scale(.985)}
+.spot .ic{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none;background:var(--c)}
+.spot .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spot .meta{font-size:12.5px;color:var(--mute);margin-top:1px}
+.spot .go{font-size:18px;color:var(--mute)}
+.empty{text-align:center;padding:26px 10px;color:var(--mute)}
+.empty b{display:block;font-size:34px;margin-bottom:6px}
+/* markers */
+.mk{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--c);border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.mk.l1{border-color:#3b82f6}.mk.l2{border-color:#f59e0b}.mk.l3{border-color:#ef4444}.mk.l0{border-color:#22c55e}
+.mkref{width:22px;height:22px;border-radius:50%;background:var(--brand);border:4px solid #fff;box-shadow:0 0 0 8px rgba(109,93,252,.25),0 3px 10px rgba(0,0,0,.3)}
+.mkr{font-size:18px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+/* detail */
+#detail{position:fixed;inset:0;z-index:2000;background:rgba(10,12,20,.45);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
 #detail.on{display:flex}
-#dBox{background:var(--panel);width:100%;max-width:720px;max-height:92vh;border-radius:18px 18px 0 0;overflow-y:auto;padding:14px 16px calc(24px + var(--safe-b));border-top:1px solid var(--line)}
-#dClose{float:right;border:0;background:var(--panel2);width:34px;height:34px;border-radius:17px;font-size:18px;cursor:pointer}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}
-.kv span:nth-child(odd){color:var(--mute)}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--acc2);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+#dBox{background:var(--bg);width:100%;max-width:640px;max-height:94vh;border-radius:26px 26px 0 0;overflow-y:auto;padding:0 0 calc(28px + var(--safe-b));animation:up .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.hero{height:170px;position:relative;display:flex;align-items:flex-end;padding:16px;color:#fff;background:var(--hg);background-size:cover;background-position:center;border-radius:26px 26px 0 0}
+.hero:before{content:"";position:absolute;inset:0;border-radius:26px 26px 0 0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.6))}
+.hero .big{position:absolute;right:18px;top:18px;font-size:64px;opacity:.9}
+.hero h1{position:relative;color:#fff;margin:0;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.hero .tag{position:relative;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.22);padding:4px 10px;border-radius:12px;display:inline-block;margin-bottom:6px;backdrop-filter:blur(4px)}
+.xbtn{position:absolute;top:14px;left:14px;width:38px;height:38px;border-radius:19px;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;z-index:2;backdrop-filter:blur(4px)}
+.dIn{padding:0 16px}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.act{background:var(--card);border-radius:16px;padding:10px 4px;text-align:center;font-size:11.5px;font-weight:700;color:var(--ink2);box-shadow:var(--shadow2);border:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.act i{font-style:normal;font-size:20px}
+.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.fact{background:var(--card);border-radius:12px;padding:6px 10px;font-size:12.5px;font-weight:600;box-shadow:var(--shadow2)}
+.verdict{border-radius:20px;padding:16px;display:flex;gap:12px;align-items:center;margin:4px 0 8px}
+.verdict .vi{font-size:34px;flex:none}
+.verdict b{display:block;font-size:16px}
+.verdict span{font-size:13px;opacity:.9}
+.v0{background:var(--okbg);color:var(--ok)}.v1{background:var(--infobg);color:var(--info)}.v2{background:var(--warnbg);color:var(--warn)}.v3{background:var(--badbg);color:var(--bad)}
+.verdict b,.verdict span{color:var(--ink)}
+.req{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.req:last-child{border-bottom:0;padding-bottom:2px}
+.req:first-child{padding-top:2px}
+.req .st{flex:none;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.st.ok{background:var(--okbg)}.st.need{background:var(--warnbg)}.st.warn{background:var(--warnbg)}.st.bad{background:var(--badbg)}.st.info,.st.q{background:var(--infobg)}
+.req .tx{flex:1;min-width:0}
+.req .tx b{display:block;font-size:14.5px}
+.req .tx .d{font-size:13px;color:var(--mute);margin-top:2px}
+.req .tx .tm{font-size:12px;color:var(--brand);margin-top:5px;font-weight:700}
+.req .tx .lk{margin-top:5px;font-size:13px}
+details.sec{background:var(--card);border-radius:var(--r);margin:10px 0;box-shadow:var(--shadow2);overflow:hidden}
+details.sec summary{list-style:none;padding:14px;font-weight:700;display:flex;align-items:center;gap:10px;cursor:pointer}
+details.sec summary::-webkit-details-marker{display:none}
+details.sec summary:after{content:"›";margin-left:auto;font-size:22px;color:var(--mute);transition:.2s;line-height:1}
+details.sec[open] summary:after{transform:rotate(90deg)}
+details.sec .in{padding:0 14px 12px}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px}
 @keyframes sp{to{transform:rotate(360deg)}}
-.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text)}
-.leaflet-control-attribution{font-size:10px;background:rgba(13,17,23,.7)!important;color:#9aa7b4}
-.leaflet-control-attribution a{color:#79c0ff}
-.leaflet-top{top:calc(62px + var(--safe-t))}
-.pin{font-size:20px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7));text-align:center}
-.pin.ref{font-size:26px}
-.notice{font-size:12.5px;color:var(--mute);border-left:3px solid var(--warn);padding:6px 10px;margin:10px 0;background:rgba(210,153,34,.07);border-radius:0 8px 8px 0}
-#addHint{position:fixed;top:calc(64px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--acc);color:#03140a;font-weight:700;padding:8px 14px;border-radius:18px;display:none}
-details{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;background:var(--panel2)}
-details summary{cursor:pointer;font-weight:600}
+.skel{height:76px;border-radius:18px;margin:8px 0;background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+/* drone & pilot */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dcard{background:var(--card);border-radius:18px;padding:12px;box-shadow:var(--shadow2);border:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:96px}
+.dcard.on{border-color:var(--brand);background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box}
+.dcard .e{font-size:26px}
+.dcard b{font-size:13.5px;line-height:1.25}
+.dcard small{color:var(--mute);font-weight:600}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.toggle:last-child{border-bottom:0}
+.toggle .t b{display:block;font-size:14.5px}.toggle .t small{color:var(--mute);font-size:12.5px}
+.sw{position:relative;width:50px;height:30px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:var(--line);border-radius:15px;transition:.2s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.sw input:checked+span{background:var(--brand)}
+.sw input:checked+span:before{transform:translateX(20px)}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.wbig{font-size:30px;font-weight:800;letter-spacing:-.5px}
+.flags{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.flag{background:var(--card);border-radius:16px;padding:10px 6px;text-align:center;box-shadow:var(--shadow2);border:2px solid transparent;font-size:12.5px;font-weight:700}
+.flag i{font-style:normal;font-size:28px;display:block}
+.flag.on{border-color:var(--brand)}
+.progress{height:10px;border-radius:5px;background:var(--card2);overflow:hidden;margin:8px 0}
+.progress div{height:100%;background:var(--grad);border-radius:5px;transition:width .4s}
+.hero2{background:var(--grad);color:#fff;border-radius:22px;padding:16px;margin:8px 0 6px;box-shadow:var(--shadow)}
+.hero2 b{font-size:17px;display:block}
+.hero2 span{opacity:.9;font-size:13px}
+.legend{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:13.5px;align-items:center}
+.notice{font-size:12.5px;color:var(--mute);background:var(--card);border-radius:16px;padding:12px 14px;margin:14px 0;box-shadow:var(--shadow2);display:flex;gap:10px}
+/* onboarding */
+#ob{position:fixed;inset:0;z-index:3000;background:var(--bg);display:none;flex-direction:column;padding:calc(20px + var(--safe-t)) 20px calc(20px + var(--safe-b))}
+#ob.on{display:flex}
+#obBody{flex:1;overflow-y:auto}
+.obHero{background:var(--grad);border-radius:28px;padding:30px 22px;color:#fff;text-align:center;margin-bottom:18px}
+.obHero .e{font-size:64px}
+.obHero h1{color:#fff;font-size:26px}
+.feat{display:flex;gap:14px;align-items:center;margin:14px 2px}
+.feat i{font-style:normal;font-size:24px;width:46px;height:46px;border-radius:14px;background:var(--card);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow2);flex:none}
+.feat b{display:block}.feat span{color:var(--mute);font-size:13.5px}
+.dots{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.dots span{width:8px;height:8px;border-radius:4px;background:var(--line);transition:.2s}
+.dots span.on{width:22px;background:var(--brand)}
+/* leaflet */
+.leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.7)!important}
+.leaflet-control-zoom{display:none}
+.leaflet-popup-content-wrapper{border-radius:14px;font-family:inherit}
 @media (min-width:900px){
-  #sheet{left:12px;right:auto;width:440px;bottom:12px;border-radius:18px;height:calc(100vh - 90px)!important;border:1px solid var(--line)}
+  #sheet{left:16px;right:auto;width:430px;bottom:16px;border-radius:26px;height:calc(100vh - 150px)!important;padding-bottom:70px;box-shadow:var(--shadow)}
+  #nav{left:16px;right:auto;width:430px;bottom:16px;border-radius:0 0 26px 26px;border:0}
   #grab{display:none}
-  .leaflet-top.leaflet-left{left:460px}
-  #status{left:calc(50% + 230px)}
+  #top{left:462px;right:16px;padding-left:0}
+  #areaBtn{left:calc(50% + 230px)}
 }
 </style>
 </head>
@@ -125,122 +213,133 @@ details summary{cursor:pointer;font-weight:600}
 <div id="map"></div>
 
 <div id="top">
-  <div id="searchBox">
-    <input id="q" type="search" placeholder="Busca un sitio: Colmenar del Arroyo, Berlín, Medellín…" autocomplete="off" enterkeyhint="search">
-    <button id="qGo" aria-label="Buscar">🔍</button>
-    <div id="suggest"></div>
+  <div class="searchRow">
+    <div id="searchBox">
+      <span class="lens">🔎</span>
+      <input id="q" type="search" placeholder="¿Dónde quieres volar?" autocomplete="off" enterkeyhint="search">
+      <div id="suggest"></div>
+    </div>
+    <button class="fab" id="locBtn" aria-label="Mi ubicación">📍</button>
   </div>
-  <button class="roundBtn" id="locBtn" title="Mi ubicación" aria-label="Mi ubicación">📍</button>
+  <div id="catBar"></div>
 </div>
-<div id="status"></div>
-<div id="addHint">Toca el mapa donde está tu spot</div>
+<div id="toast"></div>
+<div id="addHint">👆 Toca el mapa donde está tu spot</div>
+<button id="areaBtn">🔄 Buscar en esta zona</button>
 
 <section id="sheet">
   <div id="grab"><span></span></div>
-  <div id="tabs">
-    <button data-p="spots" class="on"><b>🗺️</b>Spots</button>
-    <button data-p="dron"><b>🚁</b>Mi dron</button>
-    <button data-p="piloto"><b>🪪</b>Piloto</button>
-    <button data-p="viaje"><b>✈️</b>Viajar</button>
-    <button data-p="capas"><b>🧭</b>Capas</button>
-  </div>
   <div id="panes">
 
-    <!-- SPOTS -->
     <div class="pane on" id="p-spots">
-      <div class="row" style="justify-content:space-between">
-        <h2 id="spotsTitle" style="margin:4px 0">Spots cercanos</h2>
-        <button class="btn sec small" id="reloadBtn">↻ Actualizar</button>
+      <div class="sheetHead">
+        <div><h2 id="spotsTitle">Explora spots</h2><div class="sub" id="refLine" style="margin:0">Busca un lugar o toca 📍</div></div>
+        <button class="fab" id="addSpotBtn" style="width:44px;height:44px;font-size:22px;background:var(--grad);color:#fff" aria-label="Añadir spot">＋</button>
       </div>
-      <div class="small mute" id="refLine">Busca un lugar o pulsa 📍 para empezar.</div>
-      <label class="f">Radio de búsqueda</label>
-      <div class="chips" id="radiusChips">
-        <span class="chip" data-r="5">5 km</span><span class="chip on" data-r="15">15 km</span><span class="chip" data-r="30">30 km</span><span class="chip" data-r="50">50 km</span>
+      <div class="ctx">
+        <button class="ctxc" id="ctxDrone">🚁 <span></span></button>
+        <button class="ctxc" id="ctxCountry">🌍 <span>—</span></button>
+        <button class="ctxc" id="ctxRadius">📏 <span></span></button>
+        <button class="ctxc" id="ctxGood">✨ <span>Todos</span></button>
       </div>
-      <label class="f">Tipos de spot</label>
-      <div class="chips" id="catChips"></div>
-      <div id="countryBox"></div>
-      <div id="spotList"><div class="card mute small">Aún no hay spots cargados.</div></div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn green" id="addSpotBtn">＋ Añadir mi spot</button>
-        <button class="btn sec" id="exportBtn">Exportar mis spots</button>
-      </div>
-      <p class="notice">Los spots salen en directo de OpenStreetMap, Wikipedia y tus propios spots. Las zonas oficiales vienen de ENAIRE (España) y DiPUL (Alemania); en el resto de países se usan datos de OSM y el enlace al mapa oficial. Comprueba siempre el mapa oficial y los NOTAM el mismo día del vuelo.</p>
+      <div id="spotList"></div>
     </div>
 
-    <!-- DRON -->
     <div class="pane" id="p-dron">
-      <h2>¿Qué dron vas a volar?</h2>
-      <div id="dronePresets" class="chips"></div>
-      <div class="card">
+      <h1>Tu dron</h1>
+      <p class="sub">Elige el tipo que más se parezca. El peso es lo que más cambia las normas.</p>
+      <div class="grid2" id="dronePresets"></div>
+      <div class="card" style="margin-top:14px">
+        <label class="f" style="margin-top:0">Peso al despegar (con batería y cámara)</label>
+        <div class="row" style="justify-content:space-between"><span class="wbig"><span id="wVal">0</span> g</span><span id="wBadge" class="pill p0"></span></div>
+        <input type="range" id="dWeightR" min="10" max="3000" step="5">
+        <input type="number" id="dWeight" min="1" max="30000" style="margin-top:8px">
         <label class="f">Nombre</label>
         <input type="text" id="dName">
-        <div class="row" style="flex-wrap:nowrap">
-          <div style="flex:1"><label class="f">Peso al despegar (g, con batería y cámara)</label><input type="number" id="dWeight" min="1" max="30000"></div>
-        </div>
-        <label class="f">Marcado de clase / origen</label>
+        <label class="f">Marcado de clase</label>
         <select id="dClass">
-          <option value="propio">Montado por mí / sin marcado de clase</option>
-          <option value="legado">Comercial sin marcado (comprado antes de 2024)</option>
-          <option value="C0">C0 (menos de 250 g)</option>
-          <option value="C1">C1 (menos de 900 g)</option>
-          <option value="C2">C2 (menos de 4 kg)</option>
+          <option value="propio">Montado por mí / sin marcado</option>
+          <option value="legado">Comercial sin marcado (antes de 2024)</option>
+          <option value="C0">C0 · menos de 250 g</option>
+          <option value="C1">C1 · menos de 900 g</option>
+          <option value="C2">C2 · menos de 4 kg</option>
           <option value="C3">C3</option>
-          <option value="C4">C4 (aeromodelo)</option>
+          <option value="C4">C4 · aeromodelo</option>
         </select>
-        <div class="toggle"><span>Lleva cámara (graba o transmite imagen)</span><label class="sw2"><input type="checkbox" id="dCam"><span></span></label></div>
-        <div class="toggle"><span>Vuelo con gafas FPV</span><label class="sw2"><input type="checkbox" id="dFpv"><span></span></label></div>
-        <div class="toggle"><span>Es un juguete (Directiva 2009/48/CE)</span><label class="sw2"><input type="checkbox" id="dToy"><span></span></label></div>
+        <div style="margin-top:6px">
+          <div class="toggle"><div class="t"><b>📷 Lleva cámara</b><small>Graba o transmite imagen</small></div><label class="sw"><input type="checkbox" id="dCam"><span></span></label></div>
+          <div class="toggle"><div class="t"><b>🥽 Vuelo con gafas FPV</b><small>Necesitarás observador</small></div><label class="sw"><input type="checkbox" id="dFpv"><span></span></label></div>
+          <div class="toggle"><div class="t"><b>🧸 Es un juguete</b><small>Directiva 2009/48/CE</small></div><label class="sw"><input type="checkbox" id="dToy"><span></span></label></div>
+        </div>
       </div>
       <div id="droneSummary"></div>
     </div>
 
-    <!-- PILOTO -->
     <div class="pane" id="p-piloto">
-      <h2>Tu perfil de piloto</h2>
-      <label class="f">Nacionalidad</label><select id="pNat"></select>
-      <label class="f">País donde vives (residencia)</label><select id="pRes"></select>
-      <label class="f">Tipo de vuelo</label>
-      <select id="pPurpose"><option value="recreativo">Recreativo / hobby</option><option value="profesional">Profesional (cobro por las tomas)</option></select>
-      <h3>Títulos, registros y seguros que ya tienes</h3>
-      <div id="certList" class="card"></div>
+      <h1>Tu perfil</h1>
+      <p class="sub">Así sé qué títulos te valen en cada país.</p>
+      <div class="card">
+        <label class="f" style="margin-top:0">Nacionalidad</label><select id="pNat"></select>
+        <label class="f">Dónde vives</label><select id="pRes"></select>
+        <label class="f">Tipo de vuelo</label>
+        <div class="seg" id="pPurpose"><button data-v="recreativo">🎮 Hobby</button><button data-v="profesional">💼 Profesional</button></div>
+      </div>
+      <h3>Lo que ya tienes</h3>
+      <div id="certList"></div>
+      <h3>¿Dónde te valen?</h3>
       <div id="validity"></div>
     </div>
 
-    <!-- VIAJE -->
     <div class="pane" id="p-viaje">
-      <h2>Planificar vuelo en otro país</h2>
-      <p class="small mute">Elige el país al que vas. Te digo qué de lo que tienes vale allí, qué te falta, dónde se pide, cuánto suele tardar y qué hacer antes de viajar y estando allí.</p>
-      <label class="f">País de destino</label><select id="vDest"></select>
+      <h1>¿Te vas de viaje?</h1>
+      <p class="sub">Elige el país y te digo qué te vale, qué te falta y cuánto tarda.</p>
+      <div class="flags" id="flagGrid"></div>
+      <select id="vDest" style="margin-top:10px"></select>
       <div id="travelOut"></div>
     </div>
 
-    <!-- CAPAS -->
     <div class="pane" id="p-capas">
-      <h2>Mapa y capas</h2>
-      <label class="f">Mapa base</label>
-      <div class="chips" id="baseChips">
-        <span class="chip on" data-b="osm">Calles</span><span class="chip" data-b="sat">Satélite</span><span class="chip" data-b="topo">Relieve</span>
+      <h1>Ajustes del mapa</h1>
+      <label class="f">Estilo de mapa</label>
+      <div class="seg" id="baseSeg"><button data-b="voy" class="on">🗺️ Claro</button><button data-b="dark">🌙 Oscuro</button><button data-b="sat">🛰️ Satélite</button><button data-b="topo">⛰️ Relieve</button></div>
+      <label class="f">Radio de búsqueda</label>
+      <div class="seg" id="radiusSeg"><button data-r="5">5 km</button><button data-r="15">15 km</button><button data-r="30">30 km</button><button data-r="50">50 km</button></div>
+      <h3>Capas</h3>
+      <div class="card" style="padding:4px 14px">
+        <div class="toggle"><div class="t"><b>🇪🇸 Zonas oficiales ENAIRE</b><small>Aeropuertos, urbanas, infraestructuras</small></div><label class="sw"><input type="checkbox" id="lyEnaire" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>🇩🇪 Zonas oficiales DiPUL</b><small>Alemania, con zoom</small></div><label class="sw"><input type="checkbox" id="lyDipul" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>✈️ Aeródromos y zonas sensibles</b><small>Todo el mundo, datos OSM</small></div><label class="sw"><input type="checkbox" id="lyOsmR" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>📍 Spots</b><small>Mostrar en el mapa</small></div><label class="sw"><input type="checkbox" id="lySpots" checked><span></span></label></div>
       </div>
-      <div class="card">
-        <div class="toggle"><span>🇪🇸 Zonas UAS oficiales de ENAIRE</span><label class="sw2"><input type="checkbox" id="lyEnaire" checked><span></span></label></div>
-        <div class="toggle"><span>🇩🇪 Zonas UAS oficiales de DiPUL</span><label class="sw2"><input type="checkbox" id="lyDipul" checked><span></span></label></div>
-        <div class="toggle"><span>✈️ Aeródromos, helipuertos, zonas militares y prisiones (OSM, mundial)</span><label class="sw2"><input type="checkbox" id="lyOsmR" checked><span></span></label></div>
-        <div class="toggle"><span>📍 Spots</span><label class="sw2"><input type="checkbox" id="lySpots" checked><span></span></label></div>
+      <h3>Colores del mapa</h3>
+      <div class="card legend">
+        <div class="mk l0" style="--c:#fff;width:26px;height:26px;font-size:12px"></div><div>Borde verde: pinta bien</div>
+        <div class="mk l1" style="--c:#fff;width:26px;height:26px"></div><div>Borde azul: revisar</div>
+        <div class="mk l2" style="--c:#fff;width:26px;height:26px"></div><div>Borde ámbar: con condiciones</div>
+        <div class="mk l3" style="--c:#fff;width:26px;height:26px"></div><div>Borde rojo: restringido</div>
+        <div style="width:26px;height:26px;border-radius:6px;background:rgba(255,120,120,.55)"></div><div>Zona UAS oficial</div>
+        <div style="width:26px;height:26px;border-radius:50%;border:2px solid #ef4444;background:rgba(239,68,68,.15)"></div><div>Radio aproximado de aeródromo</div>
       </div>
-      <h3>Leyenda</h3>
-      <div class="legend card">
-        <div class="sw" style="background:rgba(255,120,120,.6)"></div><div>Zona UAS oficial (ENAIRE / DiPUL): toca un spot dentro para ver la condición</div>
-        <div class="sw" style="background:rgba(248,81,73,.25);border:2px solid #f85149"></div><div>Radio orientativo de aeródromo (OSM)</div>
-        <div class="sw" style="background:rgba(210,153,34,.3);border:2px solid #d29922"></div><div>Zona militar / prisión / central (OSM)</div>
-      </div>
-      <h3>Mapas oficiales por país</h3>
-      <div id="officialMaps" class="card small"></div>
+      <h3>Mapas oficiales</h3>
+      <div id="officialMaps" class="card"></div>
+      <h3>Mis spots</h3>
+      <div class="row"><button class="btn ghost" id="exportBtn">⬇️ Exportar</button><button class="btn ghost" id="obAgain">👋 Ver bienvenida</button></div>
+      <div class="notice"><span>ℹ️</span><span>Datos en vivo de OpenStreetMap, Wikipedia, ENAIRE y DiPUL. Es una ayuda: revisa siempre el mapa oficial y los NOTAM el día del vuelo. No es asesoría legal.</span></div>
     </div>
   </div>
 </section>
 
-<div id="detail"><div id="dBox"><button id="dClose" aria-label="Cerrar">✕</button><div id="dBody"></div></div></div>
+<nav id="nav">
+  <button data-p="spots" class="on"><i>🧭</i>Explorar</button>
+  <button data-p="dron"><i>🚁</i>Mi dron</button>
+  <button data-p="piloto"><i>🪪</i>Perfil</button>
+  <button data-p="viaje"><i>✈️</i>Viajar</button>
+  <button data-p="capas"><i>⚙️</i>Ajustes</button>
+</nav>
+
+<div id="detail"><div id="dBox"></div></div>
+
+<div id="ob"><div id="obBody"></div><div class="dots" id="obDots"></div><button class="btn block" id="obNext">Empezar</button></div>
 
 <script>
 "use strict";
@@ -252,7 +351,6 @@ function km(a,b,c,d){const R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,h=Math.sin(x
 const fmtD=k=>k<1?Math.round(k*1000)+" m":(k<10?k.toFixed(1):Math.round(k))+" km";
 let regionName; try{regionName=new Intl.DisplayNames(["es"],{type:"region"})}catch(e){regionName=null}
 const cName=cc=>(CDB[cc]&&CDB[cc].name)||(regionName&&cc&&cc.length===2?regionName.of(cc.toUpperCase()):cc)||"país desconocido";
-function status(msg,ms){const s=$("#status");if(!msg){s.style.display="none";return}s.innerHTML=msg;s.style.display="block";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>s.style.display="none",ms)}
 async function jget(url,opt={},ms=25000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{...opt,signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}}
 function jsonp(url,ms=15000){return new Promise((res,rej)=>{const cb="jp"+Math.random().toString(36).slice(2);const s=document.createElement("script");const t=setTimeout(()=>{cleanup();rej(new Error("timeout"))},ms);function cleanup(){clearTimeout(t);delete window[cb];s.remove()}window[cb]=d=>{cleanup();res(d)};s.onerror=()=>{cleanup();rej(new Error("jsonp"))};s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;document.head.appendChild(s)})}
 const OVERPASS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
@@ -448,103 +546,108 @@ function certValidity(cc){
   });
 }
 
+
+/* ===================== UI: utilidades ===================== */
+function status(msg,ms){const s=$("#toast");if(!msg){s.style.display="none";return}s.innerHTML=msg;s.style.display="block";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>s.style.display="none",ms)}
+const dark=()=>window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
+
 /* ===================== mapa ===================== */
-const map=L.map("map",{zoomControl:true,attributionControl:true,worldCopyJump:true}).setView([40.42,-4.21],6);
+const map=L.map("map",{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([40.42,-4.21],6);
 const BASES={
- osm:L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}),
- sat:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"© Esri, Maxar, Earthstar"}),
- topo:L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenTopoMap (CC-BY-SA), © OSM"})
+ voy:L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{maxZoom:20,subdomains:"abcd",attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>'}),
+ dark:L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:20,subdomains:"abcd",attribution:'© OSM © CARTO'}),
+ sat:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"© Esri, Maxar"}),
+ topo:L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenTopoMap, © OSM"})
 };
-let base=BASES.osm.addTo(map);
+let baseKey=LS.get("sf_base",dark()?"dark":"voy");
+let base=BASES[baseKey].addTo(map);
 const ENAIRE_URL="https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer";
 let enaireLayer=null;
-try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.5,f:"image",layers:[0,2,3],attribution:"Zonas UAS © ENAIRE"})}catch(e){console.warn(e)}
-const dipulLayer=L.tileLayer.wms("https://uas-betrieb.de/geoservices/dipul/wms",{layers:["flughaefen","flugplaetze","kontrollzonen","flugbeschraenkungsgebiete","militaerische_anlagen","justizvollzugsanstalten","naturschutzgebiete","nationalparks","wohngrundstuecke","industrieanlagen","kraftwerke","krankenhaeuser","temporaere_betriebseinschraenkungen"].map(x=>"dipul:"+x).join(","),format:"image/png",transparent:true,version:"1.3.0",opacity:.55,attribution:"Zonas UAS © DFS dipul"});
-const spotLayer=L.layerGroup().addTo(map), osmRLayer=L.layerGroup().addTo(map), refLayer=L.layerGroup().addTo(map);
+try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.45,f:"image",layers:[0,2,3],attribution:"Zonas UAS © ENAIRE"})}catch(e){}
+const dipulLayer=L.tileLayer.wms("https://uas-betrieb.de/geoservices/dipul/wms",{layers:["flughaefen","flugplaetze","kontrollzonen","flugbeschraenkungsgebiete","militaerische_anlagen","justizvollzugsanstalten","naturschutzgebiete","nationalparks","wohngrundstuecke","industrieanlagen","kraftwerke","krankenhaeuser","temporaere_betriebseinschraenkungen"].map(x=>"dipul:"+x).join(","),format:"image/png",transparent:true,version:"1.3.0",opacity:.5,attribution:"Zonas UAS © DFS dipul"});
+const spotLayer=L.layerGroup().addTo(map),osmRLayer=L.layerGroup().addTo(map),refLayer=L.layerGroup().addTo(map);
 if(enaireLayer)enaireLayer.addTo(map);
-function syncOfficialByZoom(){/* WMS de Alemania solo útil con zoom */ if($("#lyDipul").checked&&map.getZoom()>=8){if(!map.hasLayer(dipulLayer))dipulLayer.addTo(map)}else if(map.hasLayer(dipulLayer))map.removeLayer(dipulLayer)}
+function syncOfficialByZoom(){if($("#lyDipul").checked&&map.getZoom()>=8){if(!map.hasLayer(dipulLayer))dipulLayer.addTo(map)}else if(map.hasLayer(dipulLayer))map.removeLayer(dipulLayer)}
 map.on("zoomend",syncOfficialByZoom);
+const icon=(html,size=36)=>L.divIcon({className:"",html,iconSize:[size,size],iconAnchor:[size/2,size/2]});
 
-const divIcon=(html,cls="pin")=>L.divIcon({className:"",html:`<div class="${cls}">${html}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
-
-/* ===================== categorías de spots ===================== */
+/* ===================== categorías ===================== */
 const CATS={
- view:{ic:"🌄",n:"Miradores",q:'node["tourism"="viewpoint"]'},
- peak:{ic:"⛰️",n:"Cumbres",q:'node["natural"="peak"]["name"]'},
- ruins:{ic:"🏚️",n:"Ruinas / abandonados",q:['nwr["historic"="ruins"]','nwr["ruins"="yes"]["name"]','nwr["abandoned"="yes"]["name"]','nwr["building"="ruins"]["name"]']},
- castle:{ic:"🏰",n:"Castillos",q:'nwr["historic"="castle"]'},
- water:{ic:"💧",n:"Embalses y lagos",q:['nwr["water"~"^(reservoir|lake)$"]["name"]','nwr["landuse"="reservoir"]["name"]','nwr["natural"="beach"]["name"]']},
- field:{ic:"🛩️",n:"Pistas de aeromodelismo",q:['nwr["sport"="model_aerodrome"]','nwr["aeroway"="model_runway"]']},
- wiki:{ic:"📖",n:"Lugares destacados (Wikipedia)"},
- mine:{ic:"⭐",n:"Mis spots"}
+ view:{ic:"🌄",n:"Miradores",c:"#fde7c2",m:"#f59e0b",q:'node["tourism"="viewpoint"]'},
+ peak:{ic:"⛰️",n:"Cumbres",c:"#d4f5e6",m:"#10b981",q:'node["natural"="peak"]["name"]'},
+ ruins:{ic:"🏚️",n:"Abandonados",c:"#ece4ff",m:"#8b5cf6",q:['nwr["historic"="ruins"]','nwr["ruins"="yes"]["name"]','nwr["abandoned"="yes"]["name"]','nwr["building"="ruins"]["name"]']},
+ castle:{ic:"🏰",n:"Castillos",c:"#ffe1e6",m:"#e11d48",q:'nwr["historic"="castle"]'},
+ water:{ic:"💧",n:"Agua",c:"#d9f2fd",m:"#0ea5e9",q:['nwr["water"~"^(reservoir|lake)$"]["name"]','nwr["landuse"="reservoir"]["name"]','nwr["natural"="beach"]["name"]']},
+ field:{ic:"🛩️",n:"Pistas RC",c:"#e1e5ff",m:"#6366f1",q:['nwr["sport"="model_aerodrome"]','nwr["aeroway"="model_runway"]']},
+ wiki:{ic:"📖",n:"Destacados",c:"#e9edf3",m:"#64748b"},
+ mine:{ic:"⭐",n:"Mis spots",c:"#ffe4ef",m:"#f43f5e"},
+ fav:{ic:"❤️",n:"Favoritos",c:"#ffe4ef",m:"#f43f5e",virtual:true}
 };
-let activeCats=LS.get("sf_cats",["view","peak","ruins","castle","water","field","wiki","mine"]);
+const HERO={view:"linear-gradient(135deg,#f59e0b,#f97316)",peak:"linear-gradient(135deg,#10b981,#0d9488)",ruins:"linear-gradient(135deg,#8b5cf6,#6366f1)",castle:"linear-gradient(135deg,#e11d48,#f97316)",water:"linear-gradient(135deg,#0ea5e9,#6366f1)",field:"linear-gradient(135deg,#6366f1,#00b4d8)",wiki:"linear-gradient(135deg,#475569,#6d5dfc)",mine:"linear-gradient(135deg,#f43f5e,#6d5dfc)"};
+let activeCats=LS.get("sf_cats2",["view","peak","ruins","castle","water","field","wiki","mine"]);
 let radiusKm=LS.get("sf_r",15);
-let ref=LS.get("sf_ref",null); // {lat,lon,label}
-let spots=[], rFeatures=[], mySpots=LS.get("sf_mine",[]);
-let refCountry=null;
+let ref=LS.get("sf_ref",null);
+let spots=[],rFeatures=[],mySpots=LS.get("sf_mine",[]),favs=LS.get("sf_favs",{}),refCountry=null,onlyGood=false;
 
-function renderCatChips(){
-  $("#catChips").innerHTML=Object.entries(CATS).map(([k,c])=>`<span class="chip ${activeCats.includes(k)?"on":""}" data-c="${k}">${c.ic} ${c.n}</span>`).join("");
+function renderCatBar(){
+  $("#catBar").innerHTML=Object.entries(CATS).map(([k,c])=>`<span class="cchip ${(k==="fav"?onlyFav:activeCats.includes(k))?"on":""}" style="--c:${c.m}" data-c="${k}">${c.ic} ${c.n}</span>`).join("");
 }
-$("#catChips").addEventListener("click",e=>{const ch=e.target.closest(".chip");if(!ch)return;const k=ch.dataset.c;activeCats=activeCats.includes(k)?activeCats.filter(x=>x!==k):[...activeCats,k];LS.set("sf_cats",activeCats);renderCatChips();renderSpots()});
-$("#radiusChips").addEventListener("click",e=>{const ch=e.target.closest(".chip");if(!ch)return;radiusKm=+ch.dataset.r;LS.set("sf_r",radiusKm);$$("#radiusChips .chip").forEach(x=>x.classList.toggle("on",x===ch));if(ref)loadAll()});
-$$("#radiusChips .chip").forEach(x=>x.classList.toggle("on",+x.dataset.r===radiusKm));
+let onlyFav=false;
+$("#catBar").addEventListener("click",e=>{const ch=e.target.closest(".cchip");if(!ch)return;const k=ch.dataset.c;
+  if(k==="fav"){onlyFav=!onlyFav}else{activeCats=activeCats.includes(k)?activeCats.filter(x=>x!==k):[...activeCats,k];LS.set("sf_cats2",activeCats)}
+  renderCatBar();renderSpots()});
 
-/* ===================== búsqueda y ubicación ===================== */
+/* ===================== búsqueda ===================== */
 async function geocode(q){return jget("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=es&q="+encodeURIComponent(q))}
 async function revCountry(lat,lon){
-  const key="sf_rc_"+lat.toFixed(2)+"_"+lon.toFixed(2); const c=LS.get(key,null); if(c)return c;
+  const key="sf_rc_"+lat.toFixed(2)+"_"+lon.toFixed(2);const c=LS.get(key,null);if(c)return c;
   try{const r=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=es&lat=${lat}&lon=${lon}`);const out={cc:(r.address&&r.address.country_code)||null,label:r.display_name||""};LS.set(key,out);return out}catch(e){return{cc:null,label:""}}
 }
 let sugT;
-$("#q").addEventListener("input",()=>{clearTimeout(sugT);const v=$("#q").value.trim();if(v.length<3){$("#suggest").style.display="none";return}sugT=setTimeout(()=>doSuggest(v),450)});
+$("#q").addEventListener("input",()=>{clearTimeout(sugT);const v=$("#q").value.trim();if(v.length<3){$("#suggest").style.display="none";return}sugT=setTimeout(()=>doSuggest(v),400)});
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSearch()}});
-$("#qGo").onclick=doSearch;
-async function doSuggest(v){try{const r=await geocode(v);const box=$("#suggest");if(!r.length){box.style.display="none";return}box.innerHTML=r.map((x,i)=>`<div data-i="${i}">${esc(x.display_name)}</div>`).join("");box.style.display="block";box.onclick=e=>{const d=e.target.closest("div[data-i]");if(!d)return;const x=r[+d.dataset.i];pickPlace(+x.lat,+x.lon,x.display_name);box.style.display="none"}}catch(e){}}
-async function doSearch(){const v=$("#q").value.trim();if(!v)return;$("#suggest").style.display="none";status('<span class="spin"></span> Buscando “'+esc(v)+'”…');try{const r=await geocode(v);if(!r.length){status("No encontré ese sitio",3000);return}pickPlace(+r[0].lat,+r[0].lon,r[0].display_name)}catch(e){status("Error buscando. Revisa la conexión.",4000)}}
-$("#locBtn").onclick=()=>{if(!navigator.geolocation){status("Tu navegador no da la ubicación",3000);return}status('<span class="spin"></span> Obteniendo tu ubicación…');navigator.geolocation.getCurrentPosition(p=>pickPlace(p.coords.latitude,p.coords.longitude,"Mi ubicación"),()=>status("No pude obtener la ubicación (revisa permisos)",4000),{enableHighAccuracy:true,timeout:15000})};
+$("#q").addEventListener("focus",()=>{$("#q").select()});
+async function doSuggest(v){try{const r=await geocode(v);const box=$("#suggest");if(!r.length){box.style.display="none";return}box.innerHTML=r.map((x,i)=>{const p=x.display_name.split(",");return `<div data-i="${i}"><span>📍</span><span><b>${esc(p[0])}</b><br><span class="mute small">${esc(p.slice(1,4).join(","))}</span></span></div>`}).join("");box.style.display="block";box.onclick=e=>{const d=e.target.closest("div[data-i]");if(!d)return;const x=r[+d.dataset.i];pickPlace(+x.lat,+x.lon,x.display_name);box.style.display="none"}}catch(e){}}
+async function doSearch(){const v=$("#q").value.trim();if(!v)return;$("#suggest").style.display="none";status('<span class="spin"></span> Buscando…');try{const r=await geocode(v);if(!r.length){status("😕 No encontré ese sitio",3000);return}pickPlace(+r[0].lat,+r[0].lon,r[0].display_name)}catch(e){status("📡 Sin conexión con el buscador",4000)}}
+$("#locBtn").onclick=()=>{if(!navigator.geolocation){status("Tu navegador no da la ubicación",3000);return}status('<span class="spin"></span> Buscándote…');navigator.geolocation.getCurrentPosition(p=>pickPlace(p.coords.latitude,p.coords.longitude,"Tu ubicación"),()=>status("📍 Activa el permiso de ubicación",4000),{enableHighAccuracy:true,timeout:15000})};
+function zoomFor(r){return r<=5?13:r<=15?12:r<=30?11:10}
 function pickPlace(lat,lon,label){
-  ref={lat,lon,label:String(label).split(",").slice(0,3).join(",")};LS.set("sf_ref",ref);$("#q").blur();
-  map.setView([lat,lon],radiusKm<=5?13:radiusKm<=15?12:radiusKm<=30?11:10);
-  loadAll();
+  ref={lat,lon,label:String(label).split(",").slice(0,2).join(",")};LS.set("sf_ref",ref);$("#q").value=ref.label.split(",")[0];$("#q").blur();
+  map.setView([lat,lon],zoomFor(radiusKm));$("#areaBtn").style.display="none";loadAll();
 }
-function drawRef(){refLayer.clearLayers();if(!ref)return;L.marker([ref.lat,ref.lon],{icon:divIcon("🎯","pin ref"),zIndexOffset:1000}).addTo(refLayer).bindPopup(esc(ref.label));L.circle([ref.lat,ref.lon],{radius:radiusKm*1000,color:"#58a6ff",weight:1,fill:false,dashArray:"4 6"}).addTo(refLayer)}
+function drawRef(){refLayer.clearLayers();if(!ref)return;L.marker([ref.lat,ref.lon],{icon:icon('<div class="mkref"></div>',22),zIndexOffset:1000}).addTo(refLayer);L.circle([ref.lat,ref.lon],{radius:radiusKm*1000,color:"#6d5dfc",weight:1.5,fillOpacity:.04,dashArray:"6 8"}).addTo(refLayer)}
+map.on("moveend",()=>{if(!ref||loading)return;const c=map.getCenter();const d=km(c.lat,c.lng,ref.lat,ref.lon);const b=$("#areaBtn");b.style.display=d>Math.max(2,radiusKm*.4)?"block":"none";positionAreaBtn()});
+function positionAreaBtn(){const h=$("#sheet").getBoundingClientRect().top;$("#areaBtn").style.top=(h-56)+"px"}
+$("#areaBtn").onclick=async()=>{const c=map.getCenter();$("#areaBtn").style.display="none";const r=await revCountry(c.lat,c.lng);const lbl=(r.label||"Esta zona").split(",").slice(0,2).join(",");ref={lat:c.lat,lon:c.lng,label:lbl};LS.set("sf_ref",ref);$("#q").value=lbl.split(",")[0];loadAll()};
 
-/* ===================== carga de datos en vivo ===================== */
+/* ===================== datos en vivo ===================== */
 let loading=false;
 async function loadAll(){
-  if(!ref||loading)return; loading=true; drawRef();
-  $("#refLine").innerHTML=`Desde <b>${esc(ref.label)}</b> · radio ${radiusKm} km`;
-  $("#spotList").innerHTML='<div class="card small"><span class="spin"></span> Buscando spots y restricciones en directo…</div>';
-  status('<span class="spin"></span> Cargando spots y zonas…');
-  const R=radiusKm*1000, {lat,lon}=ref;
-  const rc=revCountry(lat,lon);
-  const parts=[];
-  Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>parts.push(`${s}(around:${R},${lat},${lon});`))});
+  if(!ref||loading)return;loading=true;drawRef();
+  $("#refLine").textContent=`Cerca de ${ref.label.split(",")[0]} · ${radiusKm} km`;
+  $("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  status('<span class="spin"></span> Buscando spots en directo…');
+  const R=radiusKm*1000,{lat,lon}=ref;
+  const parts=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>parts.push(`${s}(around:${R},${lat},${lon});`))});
   const qSpots=`[out:json][timeout:35];(${parts.join("")});out center tags 400;`;
   const R2=R+8000;
   const qR=`[out:json][timeout:35];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:${R2},${lat},${lon});nwr["landuse"="military"](around:${R},${lat},${lon});nwr["military"~"^(base|airfield|barracks|range|danger_area|naval_base)$"](around:${R},${lat},${lon});nwr["amenity"="prison"](around:${R},${lat},${lon});nwr["power"="plant"](around:${R},${lat},${lon}););out center tags 300;`;
-  const [sRes,rRes,wRes,cRes]=await Promise.allSettled([overpass(qSpots),overpass(qR),wikiNear(lat,lon,Math.min(R,10000)),rc]);
+  const [sRes,rRes,wRes,cRes]=await Promise.allSettled([overpass(qSpots),overpass(qR),wikiNear(lat,lon,Math.min(R,10000)),revCountry(lat,lon)]);
   refCountry=cRes.status==="fulfilled"?cRes.value.cc:null;
   spots=[];
   if(sRes.status==="fulfilled")sRes.value.elements.forEach(el=>{const s=fromOsm(el);if(s)spots.push(s)});
   if(wRes.status==="fulfilled")wRes.value.forEach(w=>spots.push(w));
   mySpots.forEach(m=>spots.push({...m,cat:"mine",src:"Mi spot"}));
-  // deduplicar por nombre+cercanía
   const seen=[];spots=spots.filter(s=>{const dup=seen.find(o=>o.name&&s.name&&o.name.toLowerCase()===s.name.toLowerCase()&&km(o.lat,o.lon,s.lat,s.lon)<.4);if(dup)return false;seen.push(s);return true});
   spots.forEach(s=>s.dist=km(lat,lon,s.lat,s.lon));
-  spots=spots.filter(s=>s.dist<=radiusKm+0.5).sort((a,b)=>a.dist-b.dist);
+  spots=spots.filter(s=>s.dist<=radiusKm+.5).sort((a,b)=>a.dist-b.dist);
   rFeatures=rRes.status==="fulfilled"?rRes.value.elements.map(fromOsmR).filter(Boolean):[];
   spots.forEach(s=>s.pre=prelim(s));
-  drawR();renderSpots();renderCountryBox();
+  drawR();renderSpots();renderCtx();
   const errs=[sRes,rRes].filter(x=>x.status==="rejected").length;
-  status(errs?"Algunos datos no cargaron (servidor ocupado). Pulsa ↻ Actualizar.":`Actualizado ${new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})} · ${spots.length} spots`,errs?6000:3500);
-  LS.set("sf_last",Date.now());
+  status(errs?"⚠️ Algunos datos no cargaron. Vuelve a buscar en un momento.":`✅ ${spots.length} spots encontrados`,errs?5000:2500);
   loading=false;
 }
-$("#reloadBtn").onclick=()=>{if(ref)loadAll();else status("Primero busca un lugar o pulsa 📍",3000)};
-
 function catOf(t){
   if(t.sport==="model_aerodrome"||t.aeroway==="model_runway")return"field";
   if(t.historic==="castle")return"castle";
@@ -555,238 +658,284 @@ function catOf(t){
   return null;
 }
 function fromOsm(el){
-  const t=el.tags||{}; const c=catOf(t); if(!c)return null;
-  const lat=el.lat??(el.center&&el.center.lat), lon=el.lon??(el.center&&el.center.lon); if(lat==null)return null;
-  const names={view:"Mirador",peak:"Cumbre",ruins:"Ruinas",castle:"Castillo",water:"Agua",field:"Pista de aeromodelismo"};
+  const t=el.tags||{};const c=catOf(t);if(!c)return null;
+  const lat=el.lat??(el.center&&el.center.lat),lon=el.lon??(el.center&&el.center.lon);if(lat==null)return null;
+  const names={view:"Mirador",peak:"Cumbre",ruins:"Ruinas",castle:"Castillo",water:"Lámina de agua",field:"Pista de aeromodelismo"};
   return{id:el.type+"/"+el.id,lat,lon,cat:c,name:t.name||t["name:es"]||names[c],tags:t,src:"OpenStreetMap",url:`https://www.openstreetmap.org/${el.type}/${el.id}`,ele:t.ele};
 }
 async function wikiNear(lat,lon,r){
-  const langs=["es","en"]; const out=[];
-  for(const lg of langs){
+  const out=[];
+  for(const lg of ["es","en"]){
     try{const d=await jget(`https://${lg}.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${Math.max(100,Math.round(r))}&gslimit=40&format=json&origin=*`);
-      (d.query&&d.query.geosearch||[]).forEach(g=>out.push({id:"wiki/"+lg+"/"+g.pageid,lat:g.lat,lon:g.lon,cat:"wiki",name:g.title,src:"Wikipedia ("+lg+")",url:`https://${lg}.wikipedia.org/?curid=${g.pageid}`,wiki:{lg,pageid:g.pageid}}));
+      (d.query&&d.query.geosearch||[]).forEach(g=>out.push({id:"wiki/"+lg+"/"+g.pageid,lat:g.lat,lon:g.lon,cat:"wiki",name:g.title,src:"Wikipedia",url:`https://${lg}.wikipedia.org/?curid=${g.pageid}`,wiki:{lg,pageid:g.pageid}}));
       if(out.length>=15)break;
     }catch(e){}
   }
   return out;
 }
 function fromOsmR(el){
-  const t=el.tags||{}; const lat=el.lat??(el.center&&el.center.lat), lon=el.lon??(el.center&&el.center.lon); if(lat==null)return null;
+  const t=el.tags||{};const lat=el.lat??(el.center&&el.center.lat),lon=el.lon??(el.center&&el.center.lon);if(lat==null)return null;
   let k="other",n=t.name||"";
   if(t.aeroway==="aerodrome"){k="aero";n=n||"Aeródromo"}else if(t.aeroway==="heliport"){k="heli";n=n||"Helipuerto"}else if(t.aeroway==="airstrip"){k="strip";n=n||"Pista de aterrizaje"}
   else if(t.landuse==="military"||t.military){k="mil";n=n||"Zona militar"}else if(t.amenity==="prison"){k="prison";n=n||"Prisión"}else if(t.power==="plant"){k="power";n=n||"Central eléctrica"}
   return{k,n,lat,lon,tags:t};
 }
-const RINFO={aero:{ic:"✈️",r:5000,c:"#f85149",t:"aeródromo"},heli:{ic:"🚁",r:1500,c:"#f85149",t:"helipuerto"},strip:{ic:"🛬",r:2000,c:"#f85149",t:"pista de aterrizaje"},mil:{ic:"🪖",r:600,c:"#d29922",t:"zona militar"},prison:{ic:"🔒",r:500,c:"#d29922",t:"prisión"},power:{ic:"⚡",r:300,c:"#d29922",t:"central eléctrica"}};
+const RINFO={aero:{ic:"✈️",r:5000,c:"#ef4444",t:"aeródromo"},heli:{ic:"🚁",r:1500,c:"#ef4444",t:"helipuerto"},strip:{ic:"🛬",r:2000,c:"#ef4444",t:"pista de aterrizaje"},mil:{ic:"🪖",r:600,c:"#f59e0b",t:"zona militar"},prison:{ic:"🔒",r:500,c:"#f59e0b",t:"prisión"},power:{ic:"⚡",r:300,c:"#f59e0b",t:"central eléctrica"}};
 function drawR(){
-  osmRLayer.clearLayers(); if(!$("#lyOsmR").checked)return;
+  osmRLayer.clearLayers();if(!$("#lyOsmR").checked)return;
   rFeatures.forEach(f=>{const i=RINFO[f.k];if(!i)return;
-    L.circle([f.lat,f.lon],{radius:i.r,color:i.c,weight:1.5,fillOpacity:.12}).addTo(osmRLayer);
-    L.marker([f.lat,f.lon],{icon:divIcon(i.ic)}).addTo(osmRLayer).bindPopup(`<b>${esc(f.n)}</b><br><span class="small">${i.t} · radio orientativo ${fmtD(i.r/1000)}${f.tags.icao?"<br>ICAO: "+esc(f.tags.icao):""}</span>`);
+    L.circle([f.lat,f.lon],{radius:i.r,color:i.c,weight:1.5,fillOpacity:.1}).addTo(osmRLayer);
+    L.marker([f.lat,f.lon],{icon:icon(`<div class="mkr">${i.ic}</div>`,24)}).addTo(osmRLayer).bindPopup(`<b>${esc(f.n)}</b><br><span class="small">${i.t} · radio orientativo ${fmtD(i.r/1000)}</span>`);
   });
 }
 function prelim(s){
-  // valoración rápida para la lista (la buena se hace al abrir el spot)
-  let lv=0,why="Sin restricciones detectadas cerca (revisa al abrir)";
+  let lv=0,why="Sin avisos cerca";
   for(const f of rFeatures){const d=km(s.lat,s.lon,f.lat,f.lon),i=RINFO[f.k];if(!i)continue;
-    if(d*1000<i.r){const l=(f.k==="mil"||f.k==="prison")?3:2;if(l>lv){lv=l;why=`Dentro del radio de ${i.t}: ${f.n} (${fmtD(d)})`}}
-    else if(f.k==="aero"&&d<8&&lv<2){lv=Math.max(lv,1);why=`Aeródromo a ${fmtD(d)}: ${f.n}`}}
-  if(s.cat==="ruins"&&lv<2){lv=Math.max(lv,1);why=(lv===1&&why.startsWith("Aeródromo")?why+" · ":"")+"Acceso y propiedad sin confirmar"}
-  if(s.cat==="field"&&lv===0)why="Pista de aeromodelismo: suele haber club con normas propias";
+    if(d*1000<i.r){const l=(f.k==="mil"||f.k==="prison")?3:2;if(l>lv){lv=l;why=`Cerca de ${i.t}`}}
+    else if(f.k==="aero"&&d<8&&lv<1){lv=1;why=`Aeródromo a ${fmtD(d)}`}}
+  if(s.cat==="ruins"&&lv<2){lv=Math.max(lv,1);why="Confirma el acceso"}
+  if(s.cat==="field"&&lv===0)why="Suele tener club";
   return{lv,why};
 }
-const LV=[{b:"b-ok",t:"Pinta bien"},{b:"b-q",t:"Revisar"},{b:"b-warn",t:"Con condiciones"},{b:"b-bad",t:"Restringido"}];
+const LV=[{t:"Pinta bien",e:"🟢"},{t:"Revisar",e:"🔵"},{t:"Con condiciones",e:"🟠"},{t:"Restringido",e:"🔴"}];
+function visibleSpots(){return spots.filter(s=>(onlyFav?favs[s.id]:activeCats.includes(s.cat))&&(!onlyGood||s.pre.lv<=1))}
 function renderSpots(){
   spotLayer.clearLayers();
-  const list=spots.filter(s=>activeCats.includes(s.cat));
-  $("#spotsTitle").textContent=ref?`Spots cercanos (${list.length})`:"Spots cercanos";
-  if(!ref){return}
-  if(!list.length){$("#spotList").innerHTML='<div class="card small mute">No hay spots de esos tipos en este radio. Prueba a ampliar el radio o activar más tipos.</div>';return}
-  $("#spotList").innerHTML=list.slice(0,150).map((s,i)=>`<div class="spot" data-id="${esc(s.id)}"><div class="ic">${CATS[s.cat].ic}</div><div style="flex:1;min-width:0"><div class="nm">${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${CATS[s.cat].n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div class="meta" style="margin-top:3px"><span class="badge ${LV[s.pre.lv].b}">${LV[s.pre.lv].t}</span> ${esc(s.pre.why)}</div></div></div>`).join("")+(list.length>150?`<div class="small mute">Mostrando 150 de ${list.length}. Reduce el radio para ver el resto.</div>`:"");
-  if($("#lySpots").checked)list.forEach(s=>{L.marker([s.lat,s.lon],{icon:divIcon(CATS[s.cat].ic)}).addTo(spotLayer).on("click",()=>openSpot(s))});
+  if(!ref){$("#spotList").innerHTML='<div class="empty"><b>🗺️</b>Busca un sitio arriba o toca 📍 para ver spots cerca de ti.</div>';return}
+  const list=visibleSpots();
+  $("#spotsTitle").textContent=list.length?`${list.length} spot${list.length>1?"s":""} cerca`:"Explora spots";
+  if(!list.length){$("#spotList").innerHTML=`<div class="empty"><b>${onlyFav?"💔":"🔭"}</b>${onlyFav?"Aún no tienes favoritos aquí. Toca ❤️ en un spot para guardarlo.":"No hay spots de esos tipos. Amplía el radio en ⚙️ Ajustes o activa más categorías arriba."}</div>`;return}
+  $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.c}">${c.ic}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?"❤️ ":""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">›</div></div>`}).join("");
+  if($("#lySpots").checked)list.forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.c}">${c.ic}</div>`)}).addTo(spotLayer).on("click",()=>openSpot(s))});
 }
 $("#spotList").addEventListener("click",e=>{const el=e.target.closest(".spot");if(!el)return;const s=spots.find(x=>x.id===el.dataset.id);if(s){map.setView([s.lat,s.lon],Math.max(map.getZoom(),14));openSpot(s)}});
 
-function renderCountryBox(){
-  if(!refCountry){$("#countryBox").innerHTML="";return}
-  const r=requirements(refCountry,drone,profile);
-  const need=r.items.filter(x=>x.st==="need"||x.st==="bad").length;
-  const c=CDB[refCountry];
-  $("#countryBox").innerHTML=`<div class="card"><b>${c&&c.flag||"🌍"} Estás mirando ${esc(cName(refCountry))}</b><div class="small mute">${esc(r.head)} con tu ${esc(drone.name)} (${drone.g} g)</div><div class="small" style="margin-top:6px">${need?`<span class="badge b-warn">Te faltan ${need} requisito(s)</span>`:'<span class="badge b-ok">Tienes lo necesario</span>'} <a href="#" id="seeCountry">Ver requisitos</a></div></div>`;
-  $("#seeCountry").onclick=e=>{e.preventDefault();$("#vDest").value=COUNTRY_OPTS.includes(refCountry)?refCountry:"other";if(!COUNTRY_OPTS.includes(refCountry)){addOpt(refCountry)}renderTravel();showPane("viaje")};
+function renderCtx(){
+  $("#ctxDrone span").textContent=`${drone.name.split("(")[0].trim()} · ${drone.g} g`;
+  $("#ctxRadius span").textContent=radiusKm+" km";
+  $("#ctxGood span").textContent=onlyGood?"Solo los buenos":"Todos";
+  $("#ctxGood").style.outline=onlyGood?"2px solid var(--ok)":"none";
+  const b=$("#ctxCountry");
+  if(refCountry){const r=requirements(refCountry,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad").length;b.innerHTML=`${(CDB[refCountry]&&CDB[refCountry].flag)||"🌍"} <span>${esc(cName(refCountry))}${r.sub?" · "+r.sub:""}</span> ${need?`<span class="pill p2">${need} pendiente${need>1?"s":""}</span>`:'<span class="pill p0">✓</span>'}`}
+  else b.innerHTML="🌍 <span>País</span>";
 }
-function addOpt(cc){["#vDest"].forEach(sel=>{if(![...$(sel).options].some(o=>o.value===cc)){const o=new Option(cName(cc),cc);$(sel).add(o)}$(sel).value=cc})}
+$("#ctxDrone").onclick=()=>showPane("dron");
+$("#ctxRadius").onclick=()=>{const opts=[5,15,30,50];radiusKm=opts[(opts.indexOf(radiusKm)+1)%opts.length];LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}};
+$("#ctxGood").onclick=()=>{onlyGood=!onlyGood;renderCtx();renderSpots()};
+$("#ctxCountry").onclick=()=>{if(!refCountry)return;addOpt(refCountry);renderTravel();showPane("viaje")};
+function addOpt(cc){const sel=$("#vDest");if(![...sel.options].some(o=>o.value===cc))sel.add(new Option(cName(cc),cc));sel.value=cc;renderFlags()}
 
-/* ===================== detalle del spot ===================== */
+/* ===================== detalle ===================== */
 async function openSpot(s){
   $("#detail").classList.add("on");
-  const head=`<h2 style="margin-right:44px">${CATS[s.cat].ic} ${esc(s.name)}</h2>
-   <div class="kv"><span>Distancia</span><span>${s.dist!=null?fmtD(s.dist)+" desde "+esc(ref?ref.label:""):"—"}</span><span>Tipo</span><span>${CATS[s.cat].n}</span>${s.ele?`<span>Altitud</span><span>${esc(s.ele)} m</span>`:""}<span>Coordenadas</span><span>${s.lat.toFixed(5)}, ${s.lon.toFixed(5)}</span><span>Fuente</span><span>${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.src)}</a>`:esc(s.src)}</span></div>
-   <div class="row" style="margin-top:10px"><a class="btn sec" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener">🧭 Cómo llegar</a><a class="btn sec" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lon}" target="_blank" rel="noopener">👀 Street View</a>${s.cat==="mine"?`<button class="btn sec" id="delMine">🗑️ Borrar</button>`:""}</div>
+  const c=CATS[s.cat];
+  $("#dBox").innerHTML=`<div class="hero" id="hero" style="--hg:${HERO[s.cat]||HERO.wiki}"><button class="xbtn" id="dClose">✕</button><div class="big">${c.ic}</div><div><span class="tag">${c.n}</span><h1>${esc(s.name)}</h1></div></div>
+  <div class="dIn">
+   <div class="facts">${s.dist!=null?`<span class="fact">📏 ${fmtD(s.dist)}</span>`:""}${s.ele?`<span class="fact">⛰️ ${esc(s.ele)} m</span>`:""}<span class="fact">🔗 <a href="${esc(s.url||"#")}" target="_blank" rel="noopener">${esc(s.src)}</a></span></div>
+   <div class="acts">
+    <a class="act" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>🧭</i>Cómo llegar</a>
+    <button class="act" id="favBtn"><i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}</button>
+    <a class="act" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>👀</i>Street View</a>
+    <button class="act" id="shareBtn"><i>📤</i>Compartir</button>
+   </div>
+   ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
    <div id="wikiBox"></div>
-   <h3>¿Puedo volar aquí con mi ${esc(drone.name)}?</h3><div id="chk"><div class="card small"><span class="spin"></span> Consultando zonas oficiales, espacios protegidos, zonas pobladas a 150 m y aeródromos…</div></div>`;
-  $("#dBody").innerHTML=head;
+   <h2 style="margin-top:6px">¿Puedo volar aquí?</h2>
+   <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
+   <div id="chk"><div class="verdict v1"><span class="vi"><span class="spin" style="width:28px;height:28px"></span></span><div><b>Comprobando…</b><span>Zonas oficiales, espacios protegidos, casas cercanas y aeródromos</span></div></div></div>
+   ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">🗑️ Borrar este spot</button>`:""}
+  </div>`;
+  $("#dClose").onclick=closeDetail;
+  $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
+  $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
   if(s.wiki)loadWiki(s);
-  try{const res=await checkSpot(s);if($("#dBody").contains($("#chk")))$("#chk").innerHTML=res}catch(e){$("#chk").innerHTML='<div class="card small">No pude completar la comprobación. Vuelve a intentarlo.</div>'}
+  try{const res=await checkSpot(s);const box=$("#chk");if(box)box.innerHTML=res}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
 }
-async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=600&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];$("#wikiBox").innerHTML=`<div class="card">${p.thumbnail?`<img src="${esc(p.thumbnail.source)}" alt="" style="width:100%;border-radius:10px;margin-bottom:8px">`:""}<div class="small">${esc(p.extract||"")}</div></div>`}catch(e){}}
+async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.thumbnail){const h=$("#hero");if(h){h.style.backgroundImage=`url("${p.thumbnail.source}")`;h.querySelector(".big").style.display="none"}}if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
 function closeDetail(){$("#detail").classList.remove("on")}
-$("#dClose").onclick=closeDetail;$("#detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail()});
+$("#detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail()});
 
 async function enaireAt(lat,lon){
   const fields="name,type,reasons,message,restrictionConditions,lower,upper,uom,lowerReference,upperReference,email,phone,siteURL,provider,otherReasonInfo,name_authority";
   const q=id=>`${ENAIRE_URL}/${id}/query?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=${fields}&returnGeometry=false&f=json`;
-  const layerName={0:"Infraestructuras",2:"Aeronáutica",3:"Urbana"};
-  const res=[];
-  for(const id of [0,2,3]){
-    let d; try{d=await jget(q(id),{},15000)}catch(e){d=await jsonp(q(id))}
-    (d.features||[]).forEach(f=>res.push({layer:layerName[id],...f.attributes}));
-  }
+  const layerName={0:"de infraestructuras",2:"aeronáutica",3:"urbana"};const res=[];
+  for(const id of [0,2,3]){let d;try{d=await jget(q(id),{},15000)}catch(e){d=await jsonp(q(id))}(d.features||[]).forEach(f=>res.push({layer:layerName[id],lid:id,...f.attributes}))}
   return res;
 }
 async function dipulAt(lat,lon){
-  const e=0.0008, bbox=[lat-e,lon-e,lat+e,lon+e].join(",");
-  const lay=dipulLayer.wmsParams.layers;
+  const e=.0008,bbox=[lat-e,lon-e,lat+e,lon+e].join(","),lay=dipulLayer.wmsParams.layers;
   const u=`https://uas-betrieb.de/geoservices/dipul/wms?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=${lay}&query_layers=${lay}&styles=&crs=EPSG:4326&bbox=${bbox}&width=101&height=101&i=50&j=50&info_format=application/json&feature_count=20`;
-  const d=await jget(u,{},15000); return (d.features||[]).map(f=>({layer:(f.id||"").split(".")[0],...f.properties}));
+  const d=await jget(u,{},15000);return(d.features||[]).map(f=>({layer:(f.id||"").split(".")[0],...f.properties}));
 }
 async function checkSpot(s){
-  const {lat,lon}=s;
+  const{lat,lon}=s;
   const q=`[out:json][timeout:30];is_in(${lat},${lon})->.a;area.a["boundary"~"^(protected_area|national_park)$"]->.p;area.a["leisure"="nature_reserve"]->.n;area.a["landuse"="military"]->.m;area.a["access"~"^(private|no)$"]->.x;(.p;.n;.m;.x;)->.areas;.areas out tags;(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon});)->.pop;.pop out tags 40;way["building"](around:150,${lat},${lon});out count;nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});out center tags;(nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`;
   const cc=(await revCountry(lat,lon)).cc||refCountry;
-  const [osm,ena,dip]=await Promise.allSettled([overpass(q),cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
-  const items=[]; let lv=0; const bump=x=>{lv=Math.max(lv,x)};
-  const req=requirements(cc,drone,profile);
-  const sub=req.sub;
-  // --- zonas oficiales
+  const[osm,ena,dip]=await Promise.allSettled([overpass(q),cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
+  const items=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
+  const req=requirements(cc,drone,profile);const sub=req.sub;
   if(cc==="es"){
-    if(ena.status==="fulfilled"){
-      const z=ena.value;
-      if(!z.length)items.push(IT("ok","ENAIRE: fuera de zonas geográficas UAS","En este punto no aparece ninguna zona aeronáutica, urbana ni de infraestructuras."));
-      z.forEach(a=>{const up=a.upper!=null?` · ${a.lower??0}–${a.upper} ${a.uom||"m"}`:"";const contact=[a.email,a.phone].filter(Boolean).join(" · ");
-        const st=a.layer==="Urbana"?"warn":(String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn");bump(st==="bad"?3:2);
-        items.push(IT(st,`ENAIRE · zona ${a.layer}: ${a.name||a.identifier||""}`,`${a.message||a.reasons||a.otherReasonInfo||""}${a.restrictionConditions?" · Condiciones: "+a.restrictionConditions:""}${up}${contact?" · Contacto: "+contact:""}${a.layer==="Urbana"?" · Entorno urbano: comunicación al Ministerio del Interior con 5 días de antelación.":""}`,{time:a.layer==="Urbana"?"≥ 5 días antes":"Coordinación previa (días–semanas)",link:a.siteURL?LK("Más información",a.siteURL):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
-    }else items.push(IT("q","No pude consultar ENAIRE desde aquí","Abre el mapa oficial y busca este punto.",{link:LK("ENAIRE Drones","https://drones.enaire.es/")}));
+    if(ena.status==="fulfilled"){const z=ena.value;
+      if(!z.length)items.push(IT("ok","Fuera de zonas de ENAIRE","No hay zona aeronáutica, urbana ni de infraestructuras en este punto."));
+      z.forEach(a=>{const up=a.upper!=null?` Altura: ${a.lower??0}–${a.upper} ${a.uom||"m"}.`:"";const contact=[a.email,a.phone].filter(Boolean).join(" · ");
+        const st=a.lid===3?"warn":(String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn");bump(st==="bad"?3:2);
+        items.push(IT(st,`Zona ${a.layer}: ${a.name||a.identifier||""}`,`${a.message||a.reasons||a.otherReasonInfo||""}${a.restrictionConditions?" Condiciones: "+a.restrictionConditions:""}${up}${contact?" Contacto: "+contact:""}${a.lid===3?" Hay que avisar al Ministerio del Interior 5 días antes.":""}`,{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.siteURL?LK("Más información",a.siteURL):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
+    }else items.push(IT("q","No pude consultar ENAIRE","Mira este punto en el mapa oficial.",{link:LK("Abrir ENAIRE Drones","https://drones.enaire.es/")}));
   }else if(cc==="de"){
-    if(dip.status==="fulfilled"){const z=dip.value;if(!z.length)items.push(IT("ok","DiPUL: sin zonas en este punto","No aparece ninguna zona geográfica (§ 21h LuftVO)."));z.forEach(a=>{bump(2);items.push(IT("warn",`DiPUL · ${a.name||a.layer}`,`${a.legal_ref||a.type_code||""} ${a.lower_limit_altitude!=null?"· "+a.lower_limit_altitude+"–"+a.upper_limit_altitude+" "+(a.upper_limit_unit||""):""}`.trim()||"Zona geográfica con restricciones. Consulta los detalles en dipul.",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}))})}
-    else items.push(IT("q","No pude consultar DiPUL desde aquí","Las zonas se ven en la capa del mapa; para el detalle abre el mapa oficial.",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}));
-  }else{
-    const c=CDB[cc]; items.push(IT("q",`Zonas oficiales de ${cName(cc)}`,"No tengo conexión directa con el mapa oficial de este país: compruébalo antes de volar.",c&&c.map?{link:c.map}:{}));bump(1);
-  }
-  // --- OSM
+    if(dip.status==="fulfilled"){const z=dip.value;if(!z.length)items.push(IT("ok","Fuera de zonas DiPUL","Sin zonas geográficas en este punto."));z.forEach(a=>{bump(2);items.push(IT("warn",`Zona DiPUL: ${a.name||a.layer}`,"Zona geográfica con restricciones (§ 21h LuftVO).",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}))})}
+    else items.push(IT("q","No pude consultar DiPUL","Las zonas se ven en el mapa; el detalle, en el mapa oficial.",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}));
+  }else{const c=CDB[cc];bump(1);items.push(IT("q",`Mapa oficial de ${cName(cc)}`,"No tengo conexión directa con él: compruébalo antes de volar.",c&&c.map?{link:c.map}:{}))}
   if(osm.status==="fulfilled"){
-    const els=osm.value.elements; const areas=els.filter(e=>e.type==="area"); const cnt=els.find(e=>e.type==="count");
-    const pop=els.filter(e=>(e.type==="way"||e.type==="node"||e.type==="relation")&&e.tags&&(e.tags.landuse||e.tags.leisure)&&!e.tags.aeroway&&!e.tags.amenity&&!e.tags.power&&e.tags.landuse!=="military");
-    const near=els.filter(e=>e.tags&&(e.tags.aeroway||e.tags.amenity==="prison"||e.tags.power==="plant"||(e.tags.landuse==="military"&&e.type!=="area")));
+    const els=osm.value.elements,areas=els.filter(e=>e.type==="area"),cnt=els.find(e=>e.type==="count");
+    const pop=els.filter(e=>e.type!=="area"&&e.type!=="count"&&e.tags&&(e.tags.landuse||e.tags.leisure)&&!e.tags.aeroway&&!e.tags.amenity&&!e.tags.power&&e.tags.landuse!=="military");
+    const near=els.filter(e=>e.tags&&e.type!=="area"&&(e.tags.aeroway||e.tags.amenity==="prison"||e.tags.power==="plant"||e.tags.landuse==="military"));
     areas.forEach(a=>{const t=a.tags||{};
-      if(t.landuse==="military"){bump(3);items.push(IT("bad","Dentro de una zona militar: "+(t.name||""),"No vueles aquí."))}
-      else if(t.access==="private"||t.access==="no"){bump(3);items.push(IT("bad","Terreno de acceso privado o prohibido"+(t.name?": "+t.name:""),"Necesitas permiso del propietario para entrar y despegar."))}
-      else{bump(2);items.push(IT("warn","Espacio natural protegido: "+(t.name||t["protection_title"]||""),`${t.protection_title?t.protection_title+". ":""}Puede prohibir o limitar los drones (fauna, nidificación). Consulta al órgano gestor del espacio.`,{time:"Pide permiso con días o semanas de margen"}))}});
+      if(t.landuse==="military"){bump(3);items.push(IT("bad","Zona militar"+(t.name?": "+t.name:""),"No vueles aquí."))}
+      else if(t.access==="private"||t.access==="no"){bump(3);items.push(IT("bad","Terreno privado"+(t.name?": "+t.name:""),"Necesitas permiso del dueño para entrar y despegar."))}
+      else{bump(2);items.push(IT("warn","Espacio protegido: "+(t.name||t.protection_title||""),`${t.protection_title?t.protection_title+". ":""}Puede limitar los drones por la fauna. Pregunta al órgano gestor.`,{time:"Permiso con días o semanas de margen"}))}});
     const buildings=cnt?(+cnt.tags.ways||+cnt.tags.total||0):0;
-    const popNames=[...new Set(pop.map(p=>({residential:"zona residencial",commercial:"zona comercial",industrial:"zona industrial",retail:"zona comercial",park:"parque",playground:"parque infantil",pitch:"campo deportivo",sports_centre:"polideportivo",stadium:"estadio",water_park:"parque acuático",golf_course:"campo de golf"})[p.tags.landuse||p.tags.leisure]).filter(Boolean))];
+    const popNames=[...new Set(pop.map(p=>({residential:"casas",commercial:"comercios",industrial:"polígono",retail:"comercios",park:"parque",playground:"parque infantil",pitch:"campo deportivo",sports_centre:"polideportivo",stadium:"estadio",water_park:"parque acuático",golf_course:"golf"})[p.tags.landuse||p.tags.leisure]).filter(Boolean))];
     if(sub==="A3"){
-      if(popNames.length||buildings>3){bump(3);items.push(IT("bad","A3: hay zonas pobladas o recreativas a menos de 150 m",`Encontrado: ${popNames.join(", ")||""}${buildings?(popNames.length?" y ":"")+buildings+" edificios":""}. Con tu dron (A3) debes estar al menos a 150 m. Busca un punto de despegue más alejado o usa un dron de menos de 250 g.`))}
-      else items.push(IT("ok","A3: sin zonas pobladas a 150 m (según OSM)","Aun así, comprueba en el sitio que no hay gente ni casas cerca."));
+      if(popNames.length||buildings>3){bump(3);items.push(IT("bad","Demasiado cerca de zonas habitadas",`Hay ${popNames.join(", ")||""}${buildings?(popNames.length?" y ":"")+buildings+" edificios":""} a menos de 150 m. Con tu dron (A3) necesitas 150 m de distancia. Despega más lejos o usa uno de menos de 250 g.`))}
+      else items.push(IT("ok","Lejos de casas y parques","Nada habitado a 150 m según OSM. Compruébalo al llegar."));
     }else if(sub){
-      if(popNames.length||buildings>3){bump(1);items.push(IT("info","Hay gente o edificios cerca",`${popNames.join(", ")||buildings+" edificios"} a menos de 150 m. Con tu dron (${sub}) puedes volar, pero sin sobrevolar aglomeraciones${sub==="A2"?" y a 30 m de personas ajenas":" y evitando pasar por encima de personas"}.`))}
+      if(popNames.length||buildings>3){bump(1);items.push(IT("info","Hay gente o casas cerca",`${popNames.join(", ")||buildings+" edificios"} a menos de 150 m. Con tu dron (${sub}) puedes volar, sin pasar sobre personas ni aglomeraciones.`))}
+      else items.push(IT("ok","Zona despejada","Nada habitado a 150 m según OSM."));
     }
     near.forEach(e=>{const t=e.tags,la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
-      if(t.aeroway){const k=t.aeroway==="heliport"?"heli":t.aeroway==="airstrip"?"strip":"aero";const lim=k==="aero"?(cc==="es"?8:5):k==="heli"?1.5:2;const lvl=d<lim?2:1;bump(lvl);items.push(IT(lvl===2?"warn":"info",`${RINFO[k].ic} ${t.name||RINFO[k].t} a ${fmtD(d)}`,lvl===2?"Muy probablemente estás dentro de su zona de seguridad: hace falta coordinación con el aeródromo o el control aéreo.":"Fuera del radio inmediato, pero tenlo en cuenta (tráfico a baja altura)."))}
-      else if(t.amenity==="prison"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🔒 Prisión a ${fmtD(d)}: ${t.name||""}`,"No sobrevueles ni te acerques: suelen tener prohibición."))}
-      else if(t.landuse==="military"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🪖 Zona militar a ${fmtD(d)}: ${t.name||""}`,"Zona de seguridad: no la sobrevueles."))}
-      else if(t.power==="plant"){bump(1);items.push(IT("info",`⚡ Central eléctrica a ${fmtD(d)}`,"Infraestructura crítica: no la sobrevueles."))}
-    });
-  }else items.push(IT("q","No pude consultar OpenStreetMap ahora","El servidor está ocupado. Cierra y vuelve a abrir el spot en un momento."));
-  // --- tipo de spot
-  if(s.cat==="ruins"){bump(1);items.push(IT("q","Sitio abandonado: acceso sin confirmar","Casi todas las ruinas tienen propietario. Despega desde suelo público (camino, mirador) salvo que sepas que el acceso es libre o tengas permiso. Entrar en propiedad privada sin permiso no está permitido, aunque esté abandonada. Cuidado con estructuras inestables."))}
-  if(s.cat==="field")items.push(IT("info","Pista de aeromodelismo","Suelen pertenecer a un club: pide permiso y respeta sus horarios y frecuencias. Muchas son el sitio más tranquilo para volar FPV."));
-  if(s.cat==="castle"||s.cat==="wiki")items.push(IT("info","Patrimonio / lugar turístico","Puede haber normas propias del monumento o mucha gente en horas punta. Ve temprano."));
-  if(s.cat==="water")items.push(IT("info","Agua","Si cae al agua, el dron casi siempre se pierde. Algunos embalses son zonas protegidas o de abastecimiento."));
-  // --- dron y piloto
-  if(drone.fpv)items.push(IT("warn","Gafas FPV","Lleva un observador a tu lado con el dron a la vista."));
+      if(t.aeroway){const k=t.aeroway==="heliport"?"heli":t.aeroway==="airstrip"?"strip":"aero";const lim=k==="aero"?(cc==="es"?8:5):k==="heli"?1.5:2;const l=d<lim?2:1;bump(l);items.push(IT(l===2?"warn":"info",`${RINFO[k].ic} ${t.name||RINFO[k].t} a ${fmtD(d)}`,l===2?"Seguramente estás en su zona de seguridad: hay que coordinar.":"Fuera de su radio inmediato, pero puede haber tráfico bajo."))}
+      else if(t.amenity==="prison"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🔒 Prisión a ${fmtD(d)}`,"No te acerques ni la sobrevueles."))}
+      else if(t.landuse==="military"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🪖 Zona militar a ${fmtD(d)}`,"No la sobrevueles."))}
+      else if(t.power==="plant"){bump(1);items.push(IT("info",`⚡ Central eléctrica a ${fmtD(d)}`,"No la sobrevueles."))}});
+  }else items.push(IT("q","No pude consultar los alrededores","Servidor ocupado. Vuelve a abrir el spot en un momento."));
+  const tips=[];
+  if(s.cat==="ruins"){bump(1);tips.push(IT("q","Sitio abandonado: ¿se puede entrar?","Casi todos tienen dueño. Despega desde suelo público (camino, mirador) salvo que sepas que el acceso es libre. Ojo con estructuras inestables."))}
+  if(s.cat==="field")tips.push(IT("info","Pista de aeromodelismo","Suele ser de un club: pide permiso y respeta sus horarios. Ideal para FPV."));
+  if(s.cat==="castle"||s.cat==="wiki")tips.push(IT("info","Lugar turístico","Puede tener normas propias y mucha gente. Ve temprano."));
+  if(s.cat==="water")tips.push(IT("info","Agua cerca","Si cae al agua, casi seguro que lo pierdes. Algunos embalses están protegidos."));
+  if(drone.fpv)tips.push(IT("warn","Con gafas FPV","Lleva un observador que vea el dron."));
   const missing=req.items.filter(x=>x.st==="need"||x.st==="bad");
-  if(missing.length){bump(2);items.push(IT("warn",`Te faltan ${missing.length} requisito(s) de piloto en ${cName(cc)}`,missing.map(m=>m.t).join(" · ")+". Míralos en la pestaña ✈️ Viajar."))}
-  else items.push(IT("ok",`Tus títulos sirven en ${cName(cc)}`,req.head));
-  const vt=["✅ Pinta bien para volar (comprueba el mapa oficial y los NOTAM el día del vuelo)","🔎 Se puede volar con precaución: revisa los puntos marcados","⚠️ Solo con condiciones: permisos, coordinación o distancias","⛔ No recomendado o prohibido con tu dron y tus títulos actuales"];
-  return `<div class="verdict v${lv}">${vt[lv]}</div>`+reqHTML(items)+`<p class="small mute">Datos en vivo: ${cc==="es"?"ENAIRE, ":cc==="de"?"DFS dipul, ":""}OpenStreetMap. Es una ayuda, no sustituye a la consulta oficial.</p>`;
+  if(missing.length)bump(2);
+  const V=[["✅","¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],["🔎","Se puede, con ojo","Hay cosas que revisar antes de despegar."],["⚠️","Solo con condiciones","Necesitas permiso, coordinación o más distancia."],["⛔","Mejor no","Restringido con tu dron o tus títulos actuales."]];
+  const sorted=items.sort((a,b)=>"bad warn need q info ok".indexOf(a.st)-"bad warn need q info ok".indexOf(b.st));
+  return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}</b><span>${V[lv][2]}</span></div></div>
+   <details class="sec" open><summary>📍 Qué hay en este punto</summary><div class="in">${reqHTML(sorted)}</div></details>
+   ${tips.length?`<details class="sec" open><summary>💡 Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
+   <details class="sec" ${missing.length?"open":""}><summary>🪪 Tus papeles en ${esc(cName(cc))} ${missing.length?`<span class="pill p2">${missing.length} pendiente${missing.length>1?"s":""}</span>`:'<span class="pill p0">Todo OK</span>'}</summary><div class="in">${reqHTML(req.items)}</div></details>
+   <p class="small mute" style="text-align:center">Datos en vivo de ${cc==="es"?"ENAIRE y ":cc==="de"?"DFS dipul y ":""}OpenStreetMap · Orientativo</p>`;
 }
-const STI={ok:"✅",need:"🟠",warn:"⚠️",bad:"⛔",info:"ℹ️",q:"🔎"};
-function reqHTML(items){return `<div class="card">${items.map(x=>`<div class="req"><div class="st">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(x.t)}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="d"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}</div>`}
+const STI={ok:"✅",need:"📝",warn:"⚠️",bad:"⛔",info:"ℹ️",q:"🔎"};
+function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(x.t)}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
 
-/* ===================== añadir spots propios ===================== */
+/* ===================== añadir spots ===================== */
 let adding=false;
-$("#addSpotBtn").onclick=()=>{adding=true;$("#addHint").style.display="block";$("#sheet").className="min"};
+$("#addSpotBtn").onclick=()=>{adding=true;$("#addHint").style.display="block";$("#sheet").className="min";positionAreaBtn()};
 map.on("click",e=>{if(!adding)return;adding=false;$("#addHint").style.display="none";openAddForm(e.latlng.lat,e.latlng.lng)});
 function openAddForm(lat,lon){
   $("#detail").classList.add("on");
-  $("#dBody").innerHTML=`<h2>⭐ Nuevo spot</h2><label class="f">Nombre</label><input type="text" id="nsName" placeholder="Ej.: Prado junto al embalse"><label class="f">Notas (acceso, mejor hora, viento…)</label><input type="text" id="nsNote"><div class="small mute" style="margin:8px 0">${lat.toFixed(5)}, ${lon.toFixed(5)}</div><button class="btn green" id="nsSave">Guardar</button>`;
-  $("#nsSave").onclick=()=>{const n=$("#nsName").value.trim()||"Mi spot";const m={id:"mine/"+Date.now(),lat,lon,name:n,note:$("#nsNote").value.trim()};mySpots.push(m);LS.set("sf_mine",mySpots);closeDetail();$("#sheet").className="";if(ref)loadAll();else{spots.push({...m,cat:"mine",src:"Mi spot",dist:null,pre:{lv:0,why:"Mi spot"}});renderSpots()}};
+  $("#dBox").innerHTML=`<div class="hero" style="--hg:${HERO.mine};height:120px"><button class="xbtn" id="dClose">✕</button><div class="big">⭐</div><div><h1>Nuevo spot</h1></div></div><div class="dIn"><label class="f">Nombre</label><input type="text" id="nsName" placeholder="Ej.: Prado junto al embalse"><label class="f">Notas</label><input type="text" id="nsNote" placeholder="Acceso, mejor hora, viento…"><p class="small mute">${lat.toFixed(5)}, ${lon.toFixed(5)}</p><button class="btn block" id="nsSave">Guardar spot</button></div>`;
+  $("#dClose").onclick=closeDetail;
+  $("#nsSave").onclick=()=>{const m={id:"mine/"+Date.now(),lat,lon,name:$("#nsName").value.trim()||"Mi spot",note:$("#nsNote").value.trim()};mySpots.push(m);LS.set("sf_mine",mySpots);closeDetail();$("#sheet").className="";status("⭐ Spot guardado",2000);if(ref)loadAll()};
 }
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(mySpots,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="mis-spots-fpv.json";document.body.appendChild(a);a.click();a.remove()};
 
-/* ===================== pestañas y hoja ===================== */
-function showPane(p){$$("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));$$(".pane").forEach(x=>x.classList.toggle("on",x.id==="p-"+p));if($("#sheet").className==="min")$("#sheet").className="";$("#panes").scrollTop=0}
-$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)showPane(b.dataset.p)});
-$("#grab").onclick=()=>{const s=$("#sheet");s.className=s.className===""?"big":s.className==="big"?"min":""};
-let ty0=null;$("#grab").addEventListener("touchstart",e=>ty0=e.touches[0].clientY,{passive:true});$("#grab").addEventListener("touchend",e=>{if(ty0==null)return;const dy=e.changedTouches[0].clientY-ty0;const s=$("#sheet");if(dy<-30)s.className=s.className==="min"?"":"big";else if(dy>30)s.className=s.className==="big"?"":"min";ty0=null},{passive:true});
+/* ===================== navegación y hoja ===================== */
+function showPane(p){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));$$(".pane").forEach(x=>x.classList.toggle("on",x.id==="p-"+p));if($("#sheet").className==="min"||p!=="spots")$("#sheet").className=p==="spots"?"":"big";$("#panes").scrollTop=0;setTimeout(positionAreaBtn,320)}
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)showPane(b.dataset.p)});
+$("#grab").onclick=()=>{const s=$("#sheet");s.className=s.className===""?"big":s.className==="big"?"min":"";setTimeout(positionAreaBtn,320)};
+let ty0=null;$("#grab").addEventListener("touchstart",e=>ty0=e.touches[0].clientY,{passive:true});
+$("#grab").addEventListener("touchend",e=>{if(ty0==null)return;const dy=e.changedTouches[0].clientY-ty0;const s=$("#sheet");if(dy<-30)s.className=s.className==="min"?"":"big";else if(dy>30)s.className=s.className==="big"?"":"min";ty0=null;setTimeout(positionAreaBtn,320)},{passive:true});
 
-/* ===================== pestaña dron ===================== */
+/* ===================== mi dron ===================== */
+function weightBadge(g){return g<100?["Menos de 100 g","p0"]:g<250?["Menos de 250 g · A1","p0"]:g<900?["250–900 g","p2"]:["Más de 900 g","p3"]}
 function renderDrone(){
-  $("#dronePresets").innerHTML=PRESETS.map(p=>`<span class="chip ${drone.id===p.id?"on":""}" data-id="${p.id}">${p.ic} ${esc(p.name)}</span>`).join("")+`<span class="chip ${drone.id==="custom"?"on":""}" data-id="custom">✏️ Otro</span>`;
-  $("#dName").value=drone.name;$("#dWeight").value=drone.g;$("#dClass").value=drone.cls;$("#dCam").checked=!!drone.cam;$("#dFpv").checked=!!drone.fpv;$("#dToy").checked=!!drone.toy;
-  const countries=[...new Set(["es","de","fr","it","gb","us","co",refCountry].filter(Boolean))];
+  $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""}</small></div>`).join("")+`<div class="dcard ${drone.id==="custom"?"on":""}" data-id="custom"><span class="e">✏️</span><b>Otro dron</b><small>Pon tu peso</small></div>`;
+  $("#dName").value=drone.name;$("#dWeight").value=drone.g;$("#dWeightR").value=Math.min(3000,drone.g);$("#wVal").textContent=drone.g;
+  const wb=weightBadge(drone.g);$("#wBadge").className="pill "+wb[1];$("#wBadge").textContent=wb[0];
+  $("#dClass").value=drone.cls;$("#dCam").checked=!!drone.cam;$("#dFpv").checked=!!drone.fpv;$("#dToy").checked=!!drone.toy;
   const s=euSub(drone);
-  $("#droneSummary").innerHTML=`<h3>Qué significa en cada país</h3>`+countries.map(cc=>{const r=requirements(cc,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad");return `<details><summary>${(CDB[cc]&&CDB[cc].flag)||"🌍"} ${esc(cName(cc))} · ${esc(r.head)} ${need.length?`<span class="badge b-warn">faltan ${need.length}</span>`:'<span class="badge b-ok">OK</span>'}</summary>${reqHTML(r.items)}</details>`}).join("")+`<p class="notice">El peso manda: por debajo de 250 g (A1) puedes volar en casi cualquier sitio abierto; desde 250 g, un dron montado por ti solo vuela en A3, a 150 m de casas, parques y polígonos. Pesa tu dron con la batería y la cámara puestas.</p>`;
+  const countries=[...new Set(["es","de","fr","it","gb","us","co",refCountry].filter(Boolean))];
+  $("#droneSummary").innerHTML=`<div class="hero2"><b>En Europa vuelas en ${s.sub}</b><span>${esc(s.why)}</span></div><h3>Y en otros países</h3>`+countries.map(cc=>{const r=requirements(cc,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad");return `<details class="sec"><summary>${(CDB[cc]&&CDB[cc].flag)||"🌍"} ${esc(cName(cc))} ${need.length?`<span class="pill p2">${need.length} pendiente${need.length>1?"s":""}</span>`:'<span class="pill p0">Listo</span>'}</summary><div class="in"><p class="small mute">${esc(r.head)}</p>${reqHTML(r.items)}</div></details>`}).join("")+`<div class="notice"><span>⚖️</span><span>Pesa tu dron con batería y cámara. Por debajo de 250 g vuelas casi en cualquier sitio abierto; desde 250 g, uno montado por ti necesita 150 m de distancia a casas y parques.</span></div>`;
 }
-$("#dronePresets").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;const p=PRESETS.find(x=>x.id===c.dataset.id);drone=p?{...p}:{...drone,id:"custom",name:"Mi dron"};saveDrone()});
+$("#dronePresets").addEventListener("click",e=>{const c=e.target.closest(".dcard");if(!c)return;const p=PRESETS.find(x=>x.id===c.dataset.id);drone=p?{...p}:{...drone,id:"custom",name:"Mi dron"};saveDrone()});
+$("#dWeightR").addEventListener("input",()=>{$("#wVal").textContent=$("#dWeightR").value;$("#dWeight").value=$("#dWeightR").value});
+$("#dWeightR").addEventListener("change",()=>{drone.g=+$("#dWeightR").value;saveDrone()});
 ["#dName","#dWeight","#dClass","#dCam","#dFpv","#dToy"].forEach(id=>$(id).addEventListener("change",()=>{drone={...drone,name:$("#dName").value||"Mi dron",g:+$("#dWeight").value||0,cls:$("#dClass").value,cam:$("#dCam").checked,fpv:$("#dFpv").checked,toy:$("#dToy").checked};saveDrone()}));
-function saveDrone(){LS.set("sf_drone",drone);renderDrone();renderCountryBox();renderTravel();if(spots.length){spots.forEach(s=>s.pre=prelim(s));renderSpots()}}
+function saveDrone(){LS.set("sf_drone",drone);renderDrone();renderCtx();renderTravel();if(spots.length){spots.forEach(s=>s.pre=prelim(s));renderSpots()}}
 
-/* ===================== pestaña piloto ===================== */
-function fillCountrySelect(sel,val){$(sel).innerHTML=COUNTRY_OPTS.map(cc=>`<option value="${cc}">${cc==="other"?"Otro país":esc(cName(cc))}</option>`).join("");$(sel).value=val}
+/* ===================== perfil ===================== */
+const CERT_GROUPS=[["🇪🇺 Europa (EASA)",["eu_a1a3","eu_a2","eu_sts","eu_reg"]],["🛡️ Seguro",["insur"]],["🇬🇧 Reino Unido",["uk_flyer","uk_op","uk_a2"]],["🇺🇸 Estados Unidos",["us_trust","us_reg","us_107"]],["🇨🇴 Colombia",["co_reg","co_idon"]]];
+function fillCountrySelect(sel,val){$(sel).innerHTML=COUNTRY_OPTS.map(cc=>`<option value="${cc}">${cc==="other"?"🌍 Otro país":esc(((CDB[cc]&&CDB[cc].flag)||"")+" "+cName(cc))}</option>`).join("");$(sel).value=val}
 function renderProfile(){
-  fillCountrySelect("#pNat",profile.nat);fillCountrySelect("#pRes",profile.res);$("#pPurpose").value=profile.purpose||"recreativo";
-  $("#certList").innerHTML=CERTS.map(([k,n,d])=>`<label class="cert"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span><b>${esc(n)}</b><small>${esc(d)}</small></span></label>`).join("");
-  const res=profile.res;
-  $("#validity").innerHTML=`<h3>¿Dónde valen tus títulos?</h3><div class="card small">${["es","de","gb","us","co"].map(cc=>{const v=certValidity(cc);return `<div class="req"><div class="st">${(CDB[cc]||{}).flag||""}</div><div class="tx"><b>${esc(cName(cc))}</b><div class="d">${v.length?v.map(x=>`${STI[x.st]} ${esc(x.n)}`).join("<br>"):"No has marcado títulos."}</div></div></div>`}).join("")}</div>${!EASA.has(res)&&res!=="other"?`<p class="notice">Vives fuera de la UE: para volar en Europa te registras como operador en el primer país EASA donde vayas a volar y allí sacas el A1/A3. Después vale en toda la UE.</p>`:""}`;
+  fillCountrySelect("#pNat",profile.nat);fillCountrySelect("#pRes",profile.res);
+  $$("#pPurpose button").forEach(b=>b.classList.toggle("on",b.dataset.v===(profile.purpose||"recreativo")));
+  $("#certList").innerHTML=CERT_GROUPS.map(([g,keys])=>`<details class="sec" ${g.includes("Europa")?"open":""}><summary>${g} <span class="pill p1" style="margin-left:6px">${keys.filter(k=>has(k)).length}/${keys.length}</span></summary><div class="in">${keys.map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div></details>`).join("");
+  $("#validity").innerHTML=["es","de","gb","us","co"].map(cc=>{const v=certValidity(cc);const ok=v.filter(x=>x.st==="ok").length;return `<div class="card row" style="justify-content:space-between"><span style="font-weight:700">${CDB[cc].flag} ${esc(cName(cc))}</span><span class="pill ${ok?"p0":"p3"}">${ok?ok+" válido"+(ok>1?"s":""):"Ninguno vale"}</span></div>`}).join("")+(!EASA.has(profile.res)&&profile.res!=="other"?`<div class="notice"><span>💡</span><span>Vives fuera de la UE: regístrate y saca el A1/A3 en el primer país europeo donde vayas a volar. Luego vale en toda la UE.</span></div>`:"");
 }
 $("#certList").addEventListener("change",e=>{const k=e.target.dataset.k;if(!k)return;profile.certs[k]=e.target.checked;saveProfile()});
-["#pNat","#pRes","#pPurpose"].forEach(id=>$(id).addEventListener("change",()=>{profile.nat=$("#pNat").value;profile.res=$("#pRes").value;profile.purpose=$("#pPurpose").value;saveProfile()}));
-function saveProfile(){LS.set("sf_profile",profile);renderProfile();renderDrone();renderCountryBox();renderTravel()}
+["#pNat","#pRes"].forEach(id=>$(id).addEventListener("change",()=>{profile.nat=$("#pNat").value;profile.res=$("#pRes").value;saveProfile()}));
+$("#pPurpose").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;profile.purpose=b.dataset.v;saveProfile()});
+function saveProfile(){LS.set("sf_profile",profile);renderProfile();renderDrone();renderCtx();renderTravel()}
 
-/* ===================== pestaña viajar ===================== */
+/* ===================== viajar ===================== */
+const FLAGS=["es","co","de","fr","it","pt","ch","gb","us"];
+function renderFlags(){const v=$("#vDest").value;$("#flagGrid").innerHTML=FLAGS.map(cc=>`<button class="flag ${v===cc?"on":""}" data-cc="${cc}"><i>${CDB[cc].flag}</i>${esc(CDB[cc].name)}</button>`).join("")}
+$("#flagGrid").addEventListener("click",e=>{const b=e.target.closest(".flag");if(!b)return;$("#vDest").value=b.dataset.cc;renderFlags();renderTravel()});
 function renderTravel(){
-  const cc=$("#vDest").value||"co"; if(cc==="other"){$("#travelOut").innerHTML='<div class="card small">Elige un país de la lista o busca un sitio de ese país en el mapa y pulsa “Ver requisitos”.</div>';return}
-  const r=requirements(cc,drone,profile); const c=CDB[cc]||{};
-  const v=certValidity(cc);
-  const groups={antes:[],sitio:[],otros:[]};
-  r.items.forEach(x=>{(x.when==="antes"&&(x.st==="need"||x.st==="bad")?groups.antes:(x.st==="ok"?groups.otros:groups.sitio)).push(x)});
-  const need=r.items.filter(x=>x.st==="need"||x.st==="bad");
-  $("#travelOut").innerHTML=`<div class="verdict ${need.length?"v2":"v0"}">${c.flag||"🌍"} ${esc(cName(cc))} con tu ${esc(drone.name)} (${drone.g} g): ${need.length?`te faltan ${need.length} cosa(s)`:"tienes lo necesario"}</div>
-  <div class="small mute">${esc(r.head)} · Tú: ${esc(cName(profile.nat))} que vive en ${esc(cName(profile.res))} · ${profile.purpose==="profesional"?"vuelo profesional":"vuelo recreativo"}</div>
-  <h3>Tus títulos en ${esc(cName(cc))}</h3>${v.length?reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d}))):'<div class="card small mute">No has marcado ningún título en 🪪 Piloto.</div>'}
-  ${groups.antes.length?`<h3>📋 Antes de viajar</h3>${reqHTML(groups.antes)}`:""}
-  <h3>📍 Allí y en cada vuelo</h3>${reqHTML(groups.sitio)}
-  ${groups.otros.length?`<h3>✅ Ya cumples</h3>${reqHTML(groups.otros)}`:""}
-  <div class="card small"><b>Enlaces oficiales</b><br>${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a>`).join("<br>")||"—"}${EASA.has(cc)?`<br><a href="https://www.easa.europa.eu/en/domains/drones-air-mobility/drones-air-mobility-landscape/national-aviation-authorities" target="_blank" rel="noopener">Autoridades nacionales EASA ↗</a>`:""}</div>
-  <p class="notice">Plazos orientativos. Las normas cambian: confírmalas en la web oficial antes de viajar. Esta app no es asesoría legal.</p>`;
+  const cc=$("#vDest").value||"co";if(cc==="other"){$("#travelOut").innerHTML='<div class="empty"><b>🌍</b>Elige un país, o busca un sitio de ese país en el mapa y toca su bandera en Explorar.</div>';return}
+  const r=requirements(cc,drone,profile),c=CDB[cc]||{},v=certValidity(cc);
+  const need=r.items.filter(x=>x.st==="need"||x.st==="bad"),total=r.items.filter(x=>x.st!=="info").length||1,okN=r.items.filter(x=>x.st==="ok").length;
+  const antes=r.items.filter(x=>x.when==="antes"&&(x.st==="need"||x.st==="bad")),sitio=r.items.filter(x=>!antes.includes(x)&&x.st!=="ok"),ok=r.items.filter(x=>x.st==="ok");
+  $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||"🌍"} ${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
+  ${v.length?`<details class="sec"><summary>🪪 Tus títulos allí</summary><div class="in">${reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d})))}</div></details>`:""}
+  ${antes.length?`<details class="sec" open><summary>📋 Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
+  <details class="sec" open><summary>📍 Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
+  ${ok.length?`<details class="sec"><summary>✅ Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
+  <details class="sec"><summary>🔗 Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
+  <div class="notice"><span>⏱️</span><span>Plazos orientativos. Las normas cambian: confírmalas antes de viajar.</span></div>`;
 }
-$("#vDest").addEventListener("change",renderTravel);
+$("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
 
-/* ===================== pestaña capas ===================== */
-$("#baseChips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;map.removeLayer(base);base=BASES[c.dataset.b].addTo(map);base.bringToBack();$$("#baseChips .chip").forEach(x=>x.classList.toggle("on",x===c))});
+/* ===================== ajustes ===================== */
+function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
+$("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base",baseKey);base=BASES[baseKey].addTo(map);base.bringToBack();syncSeg()});
+$("#radiusSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;radiusKm=+b.dataset.r;LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}});
 $("#lyEnaire").onchange=e=>{if(!enaireLayer)return;e.target.checked?enaireLayer.addTo(map):map.removeLayer(enaireLayer)};
-$("#lyDipul").onchange=syncOfficialByZoom;
-$("#lyOsmR").onchange=drawR;
-$("#lySpots").onchange=renderSpots;
-$("#officialMaps").innerHTML=Object.entries(CDB).filter(([,c])=>c.map).map(([cc,c])=>`${c.flag} <a href="${esc(c.map.u)}" target="_blank" rel="noopener">${esc(c.name)}: ${esc(c.map.t)} ↗</a>`).join("<br>")+`<br>🇪🇺 <a href="https://www.easa.europa.eu/en/domains/drones-air-mobility/drones-air-mobility-landscape/national-aviation-authorities" target="_blank" rel="noopener">Resto de la UE: autoridades nacionales (EASA) ↗</a>`;
+$("#lyDipul").onchange=syncOfficialByZoom;$("#lyOsmR").onchange=drawR;$("#lySpots").onchange=renderSpots;
+$("#officialMaps").innerHTML=Object.entries(CDB).filter(([,c])=>c.map).map(([cc,c])=>`<div class="req"><div class="st info">${c.flag}</div><div class="tx"><b>${esc(c.name)}</b><div class="lk"><a href="${esc(c.map.u)}" target="_blank" rel="noopener">${esc(c.map.t)} ↗</a></div></div></div>`).join("");
+$("#obAgain").onclick=()=>startOb();
+
+/* ===================== bienvenida ===================== */
+let obStep=0;
+function startOb(){obStep=0;$("#ob").classList.add("on");renderOb()}
+function renderOb(){
+  const steps=[
+   ()=>`<div class="obHero"><div class="e">🚁</div><h1>SpotFPV</h1><div>Encuentra dónde volar tu dron, sin líos.</div></div>
+    <div class="feat"><i>🗺️</i><div><b>Spots cerca de ti</b><span>Miradores, cumbres, ruinas, embalses y pistas RC, en todo el mundo.</span></div></div>
+    <div class="feat"><i>🚦</i><div><b>Semáforo de vuelo</b><span>Te digo si puedes volar en cada spot con tu dron.</span></div></div>
+    <div class="feat"><i>✈️</i><div><b>Listo para viajar</b><span>Qué títulos te valen en cada país y qué te falta.</span></div></div>`,
+   ()=>`<h1>¿Qué dron vuelas?</h1><p class="sub">Puedes cambiarlo cuando quieras.</p><div class="grid2" id="obDrones">${PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g</small></div>`).join("")}</div>`,
+   ()=>`<h1>¿Qué títulos tienes?</h1><p class="sub">Así sé qué te vale en cada país.</p><div class="card" style="padding:4px 14px">${["eu_a1a3","eu_a2","eu_sts","eu_reg","insur"].map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div><label class="f">Dónde vives</label><select id="obRes"></select>`,
+   ()=>`<div class="obHero"><div class="e">📍</div><h1>¡Todo listo!</h1><div>Busca un sitio o usa tu ubicación para ver los spots cercanos.</div></div><div class="notice"><span>⚠️</span><span>SpotFPV te orienta con datos en vivo, pero el responsable del vuelo eres tú: mira siempre el mapa oficial antes de despegar.</span></div>`
+  ];
+  $("#obBody").innerHTML=steps[obStep]();
+  $("#obDots").innerHTML=steps.map((_,i)=>`<span class="${i===obStep?"on":""}"></span>`).join("");
+  $("#obNext").textContent=obStep===0?"Empezar":obStep===steps.length-1?"Ir al mapa 🚀":"Siguiente";
+  if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id)};LS.set("sf_drone",drone);$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
+  if(obStep===2){fillCountrySelect("#obRes",profile.res);$("#obRes").onchange=()=>{profile.res=$("#obRes").value;LS.set("sf_profile",profile)};$("#obBody").onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){profile.certs[k]=e.target.checked;LS.set("sf_profile",profile)}}}
+}
+$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}}};
 
 /* ===================== arranque ===================== */
+function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots()}
 fillCountrySelect("#vDest","co");
-renderCatChips();renderDrone();renderProfile();renderTravel();syncOfficialByZoom();
-if(ref){$("#q").value=ref.label;map.setView([ref.lat,ref.lon],12);loadAll()}
+renderAll();syncOfficialByZoom();
+window.addEventListener("resize",positionAreaBtn);
+if(!LS.get("sf_ob",0))startOb();
+else if(ref){$("#q").value=ref.label.split(",")[0];map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}
 else{$("#q").value="Colmenar del Arroyo";doSearch()}
+
 </script>
 </body>
 </html>
