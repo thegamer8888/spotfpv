@@ -790,7 +790,7 @@ async function checkSpot(s){
   const cc=(await revCountry(lat,lon)).cc||refCountry;
   const known=ref&&km(lat,lon,ref.lat,ref.lon)<=radiusKm&&rFeatures.length>=0;
   const nearQ=known?Promise.resolve({elements:rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags}))}):overpass(`[out:json][timeout:25];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,45000);
-  const[oA,oB,oN,ena,dip]=await Promise.allSettled([overpass(qA,45000),overpass(qB,45000),nearQ,cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
+  const[oA,oB,oN,ena,dip]=await Promise.allSettled([overpass(qA,20000),overpass(qB,25000),nearQ,cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
   const osm=(oA.status==="fulfilled"||oB.status==="fulfilled"||oN.status==="fulfilled")?{status:"fulfilled",value:{elements:[...(oA.value?oA.value.elements:[]),...(oB.value?oB.value.elements:[]),...(oN.value?oN.value.elements.filter(e=>{const la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);const t=e.tags||{};const lim=t.aeroway?8:t.power?1:2;return la!=null&&km(lat,lon,la,lo)<=lim}):[])]},partial:oA.status!=="fulfilled"||oB.status!=="fulfilled"}:{status:"rejected"};
   const items=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
   const req=requirements(cc,drone,profile);const sub=req.sub;
