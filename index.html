@@ -240,6 +240,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
         <button class="ctxc" id="ctxDrone">🚁 <span></span></button>
         <button class="ctxc" id="ctxCountry">🌍 <span>—</span></button>
         <button class="ctxc" id="ctxRadius">📏 <span></span></button>
+        <button class="ctxc" id="ctxReload">🔄 <span>Actualizar</span></button>
         <button class="ctxc" id="ctxGood">✨ <span>Todos</span></button>
       </div>
       <div id="spotList"></div>
@@ -353,8 +354,12 @@ let regionName; try{regionName=new Intl.DisplayNames(["es"],{type:"region"})}cat
 const cName=cc=>(CDB[cc]&&CDB[cc].name)||(regionName&&cc&&cc.length===2?regionName.of(cc.toUpperCase()):cc)||"país desconocido";
 async function jget(url,opt={},ms=25000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{...opt,signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}}
 function jsonp(url,ms=15000){return new Promise((res,rej)=>{const cb="jp"+Math.random().toString(36).slice(2);const s=document.createElement("script");const t=setTimeout(()=>{cleanup();rej(new Error("timeout"))},ms);function cleanup(){clearTimeout(t);delete window[cb];s.remove()}window[cb]=d=>{cleanup();res(d)};s.onerror=()=>{cleanup();rej(new Error("jsonp"))};s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;document.head.appendChild(s)})}
-const OVERPASS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
-async function overpass(q){let err;for(const u of OVERPASS){try{return await jget(u,{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}},40000)}catch(e){err=e}}throw err}
+const OVERPASS=["https://maps.mail.ru/osm/tools/overpass/api/interpreter","https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+async function overpass(q,ms=60000){
+  const ctrls=OVERPASS.map(()=>new AbortController());const t=setTimeout(()=>ctrls.forEach(c=>c.abort()),ms);
+  try{return await Promise.any(OVERPASS.map(async(u,i)=>{const r=await fetch(u,{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ctrls[i].signal});if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(j.remark&&/runtime error|timed out/i.test(j.remark)&&!(j.elements||[]).length)throw new Error(j.remark);ctrls.forEach((c,k)=>{if(k!==i)c.abort()});return j}))}
+  finally{clearTimeout(t)}
+}
 
 /* ===================== base de conocimiento normativa ===================== */
 // Países que aplican las normas comunes de EASA (UE + Noruega, Islandia, Liechtenstein, Suiza)
@@ -567,8 +572,9 @@ try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.45,f:"image",lay
 const dipulLayer=L.tileLayer.wms("https://uas-betrieb.de/geoservices/dipul/wms",{layers:["flughaefen","flugplaetze","kontrollzonen","flugbeschraenkungsgebiete","militaerische_anlagen","justizvollzugsanstalten","naturschutzgebiete","nationalparks","wohngrundstuecke","industrieanlagen","kraftwerke","krankenhaeuser","temporaere_betriebseinschraenkungen"].map(x=>"dipul:"+x).join(","),format:"image/png",transparent:true,version:"1.3.0",opacity:.5,attribution:"Zonas UAS © DFS dipul"});
 const spotLayer=L.layerGroup().addTo(map),osmRLayer=L.layerGroup().addTo(map),refLayer=L.layerGroup().addTo(map);
 if(enaireLayer)enaireLayer.addTo(map);
-function syncOfficialByZoom(){if($("#lyDipul").checked&&map.getZoom()>=8){if(!map.hasLayer(dipulLayer))dipulLayer.addTo(map)}else if(map.hasLayer(dipulLayer))map.removeLayer(dipulLayer)}
-map.on("zoomend",syncOfficialByZoom);
+function inDE(){const c=map.getCenter();return c.lat>47.2&&c.lat<55.1&&c.lng>5.8&&c.lng<15.1}
+function syncOfficialByZoom(){if($("#lyDipul").checked&&map.getZoom()>=8&&inDE()){if(!map.hasLayer(dipulLayer))dipulLayer.addTo(map)}else if(map.hasLayer(dipulLayer))map.removeLayer(dipulLayer)}
+map.on("zoomend moveend",syncOfficialByZoom);
 const icon=(html,size=36)=>L.divIcon({className:"",html,iconSize:[size,size],iconAnchor:[size/2,size/2]});
 
 /* ===================== categorías ===================== */
@@ -622,31 +628,37 @@ $("#areaBtn").onclick=async()=>{const c=map.getCenter();$("#areaBtn").style.disp
 
 /* ===================== datos en vivo ===================== */
 let loading=false;
+function bboxOf(lat,lon,rKm){const dLat=rKm/111.32,dLon=rKm/(111.32*Math.cos(lat*Math.PI/180));return[(lat-dLat).toFixed(5),(lon-dLon).toFixed(5),(lat+dLat).toFixed(5),(lon+dLon).toFixed(5)].join(",")}
+const CACHE_MS=3*24*3600*1000;
+function cacheGet(k){const c=LS.get(k,null);return c&&Date.now()-c.t<CACHE_MS?c.d:null}
+function cacheSet(k,d){try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(e){try{Object.keys(localStorage).filter(x=>x.startsWith("sf_c_")).forEach(x=>localStorage.removeItem(x));localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(e2){}}}
+let loadId=0,osmSpots=[],wikiSpots=[];
+function mergeSpots(){
+  const {lat,lon}=ref;let all=[...osmSpots,...wikiSpots,...mySpots.map(m=>({...m,cat:"mine",src:"Mi spot"}))];
+  const seen=[];all=all.filter(s=>{const dup=seen.find(o=>o.name&&s.name&&o.name.toLowerCase()===s.name.toLowerCase()&&km(o.lat,o.lon,s.lat,s.lon)<.4);if(dup)return false;seen.push(s);return true});
+  all.forEach(s=>{s.dist=km(lat,lon,s.lat,s.lon);s.pre=prelim(s)});
+  spots=all.filter(s=>s.dist<=radiusKm+.5).sort((a,b)=>a.dist-b.dist);
+}
 async function loadAll(){
-  if(!ref||loading)return;loading=true;drawRef();
+  if(!ref)return;const id=++loadId;loading=true;drawRef();
   $("#refLine").textContent=`Cerca de ${ref.label.split(",")[0]} · ${radiusKm} km`;
+  const {lat,lon}=ref,b=bboxOf(lat,lon,radiusKm),b2=bboxOf(lat,lon,radiusKm+8);
+  const key="sf_c_"+lat.toFixed(3)+"_"+lon.toFixed(3)+"_"+radiusKm;
+  osmSpots=[];wikiSpots=[];rFeatures=[];spots=[];
+  const cached=cacheGet(key);
+  if(cached){osmSpots=cached.s;rFeatures=cached.r}
   $("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  revCountry(lat,lon).then(c=>{if(id!==loadId)return;refCountry=c.cc;renderCtx()});
+  wikiNear(lat,lon,Math.min(radiusKm*1000,10000)).then(w=>{if(id!==loadId)return;wikiSpots=w;mergeSpots();drawR();renderSpots(!cached)}).catch(()=>{});
+  if(cached){mergeSpots();drawR();renderSpots(false);status(`✅ ${spots.length} spots`,2000);loading=false;return}
   status('<span class="spin"></span> Buscando spots en directo…');
-  const R=radiusKm*1000,{lat,lon}=ref;
-  const parts=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>parts.push(`${s}(around:${R},${lat},${lon});`))});
-  const qSpots=`[out:json][timeout:35];(${parts.join("")});out center tags 400;`;
-  const R2=R+8000;
-  const qR=`[out:json][timeout:35];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:${R2},${lat},${lon});nwr["landuse"="military"](around:${R},${lat},${lon});nwr["military"~"^(base|airfield|barracks|range|danger_area|naval_base)$"](around:${R},${lat},${lon});nwr["amenity"="prison"](around:${R},${lat},${lon});nwr["power"="plant"](around:${R},${lat},${lon}););out center tags 300;`;
-  const [sRes,rRes,wRes,cRes]=await Promise.allSettled([overpass(qSpots),overpass(qR),wikiNear(lat,lon,Math.min(R,10000)),revCountry(lat,lon)]);
-  refCountry=cRes.status==="fulfilled"?cRes.value.cc:null;
-  spots=[];
-  if(sRes.status==="fulfilled")sRes.value.elements.forEach(el=>{const s=fromOsm(el);if(s)spots.push(s)});
-  if(wRes.status==="fulfilled")wRes.value.forEach(w=>spots.push(w));
-  mySpots.forEach(m=>spots.push({...m,cat:"mine",src:"Mi spot"}));
-  const seen=[];spots=spots.filter(s=>{const dup=seen.find(o=>o.name&&s.name&&o.name.toLowerCase()===s.name.toLowerCase()&&km(o.lat,o.lon,s.lat,s.lon)<.4);if(dup)return false;seen.push(s);return true});
-  spots.forEach(s=>s.dist=km(lat,lon,s.lat,s.lon));
-  spots=spots.filter(s=>s.dist<=radiusKm+.5).sort((a,b)=>a.dist-b.dist);
-  rFeatures=rRes.status==="fulfilled"?rRes.value.elements.map(fromOsmR).filter(Boolean):[];
-  spots.forEach(s=>s.pre=prelim(s));
-  drawR();renderSpots();renderCtx();
-  const errs=[sRes,rRes].filter(x=>x.status==="rejected").length;
-  status(errs?"⚠️ Algunos datos no cargaron. Vuelve a buscar en un momento.":`✅ ${spots.length} spots encontrados`,errs?5000:2500);
-  loading=false;
+  const parts=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>parts.push(`${s}(${b});`))});
+  const qSpots=`[out:json][timeout:40];(${parts.join("")});out center tags 400;`;
+  const qR=`[out:json][timeout:40];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](${b2});nwr["landuse"="military"](${b});nwr["amenity"="prison"](${b});nwr["power"="plant"](${b}););out center tags 300;`;
+  const pS=overpass(qSpots).then(r=>{if(id!==loadId)return;osmSpots=r.elements.map(fromOsm).filter(Boolean);mergeSpots();renderSpots(false);status(`✅ ${spots.length} spots encontrados`,2500)}).catch(()=>{if(id!==loadId)return;mergeSpots();renderSpots(false);status("🐢 El servidor de mapas va lento. Toca 🔄 en un momento.",6000)});
+  const pR=overpass(qR).then(r=>{if(id!==loadId)return;rFeatures=r.elements.map(fromOsmR).filter(Boolean);mergeSpots();drawR();renderSpots(false)}).catch(()=>{});
+  await Promise.allSettled([pS,pR]);
+  if(id===loadId){if(osmSpots.length)cacheSet(key,{s:osmSpots,r:rFeatures});loading=false}
 }
 function catOf(t){
   if(t.sport==="model_aerodrome"||t.aeroway==="model_runway")return"field";
@@ -699,13 +711,14 @@ function prelim(s){
 }
 const LV=[{t:"Pinta bien",e:"🟢"},{t:"Revisar",e:"🔵"},{t:"Con condiciones",e:"🟠"},{t:"Restringido",e:"🔴"}];
 function visibleSpots(){return spots.filter(s=>(onlyFav?favs[s.id]:activeCats.includes(s.cat))&&(!onlyGood||s.pre.lv<=1))}
-function renderSpots(){
+function renderSpots(pending){
   spotLayer.clearLayers();
   if(!ref){$("#spotList").innerHTML='<div class="empty"><b>🗺️</b>Busca un sitio arriba o toca 📍 para ver spots cerca de ti.</div>';return}
   const list=visibleSpots();
   $("#spotsTitle").textContent=list.length?`${list.length} spot${list.length>1?"s":""} cerca`:"Explora spots";
+  if(!list.length&&(pending||loading)){$("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="small mute" style="text-align:center">Buscando spots… puede tardar unos segundos</div>';return}
   if(!list.length){$("#spotList").innerHTML=`<div class="empty"><b>${onlyFav?"💔":"🔭"}</b>${onlyFav?"Aún no tienes favoritos aquí. Toca ❤️ en un spot para guardarlo.":"No hay spots de esos tipos. Amplía el radio en ⚙️ Ajustes o activa más categorías arriba."}</div>`;return}
-  $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.c}">${c.ic}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?"❤️ ":""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">›</div></div>`}).join("");
+  $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.c}">${c.ic}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?"❤️ ":""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">›</div></div>`}).join("")+(pending||loading?'<div class="skel"></div><div class="small mute" style="text-align:center">Cargando más spots…</div>':"");
   if($("#lySpots").checked)list.forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.c}">${c.ic}</div>`)}).addTo(spotLayer).on("click",()=>openSpot(s))});
 }
 $("#spotList").addEventListener("click",e=>{const el=e.target.closest(".spot");if(!el)return;const s=spots.find(x=>x.id===el.dataset.id);if(s){map.setView([s.lat,s.lon],Math.max(map.getZoom(),14));openSpot(s)}});
@@ -720,6 +733,7 @@ function renderCtx(){
   else b.innerHTML="🌍 <span>País</span>";
 }
 $("#ctxDrone").onclick=()=>showPane("dron");
+$("#ctxReload").onclick=()=>{if(!ref)return;Object.keys(localStorage).filter(x=>x.startsWith("sf_c_")).forEach(x=>localStorage.removeItem(x));loadAll()};
 $("#ctxRadius").onclick=()=>{const opts=[5,15,30,50];radiusKm=opts[(opts.indexOf(radiusKm)+1)%opts.length];LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}};
 $("#ctxGood").onclick=()=>{onlyGood=!onlyGood;renderCtx();renderSpots()};
 $("#ctxCountry").onclick=()=>{if(!refCountry)return;addOpt(refCountry);renderTravel();showPane("viaje")};
