@@ -301,7 +301,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
     <div class="pane" id="p-capas">
       <h1>Ajustes del mapa</h1>
       <label class="f">Estilo de mapa</label>
-      <div class="seg" id="baseSeg"><button data-b="voy" class="on">🗺️ Claro</button><button data-b="dark">🌙 Oscuro</button><button data-b="sat">🛰️ Satélite</button><button data-b="topo">⛰️ Relieve</button></div>
+      <div class="seg" id="baseSeg"><button data-b="voy" class="on">🗺️ Calles</button><button data-b="dark">🌙 Oscuro</button><button data-b="sat">🛰️ Satélite</button><button data-b="topo">⛰️ Relieve</button></div>
       <label class="f">Radio de búsqueda</label>
       <div class="seg" id="radiusSeg"><button data-r="5">5 km</button><button data-r="15">15 km</button><button data-r="30">30 km</button><button data-r="50">50 km</button></div>
       <h3>Capas</h3>
@@ -554,12 +554,12 @@ const dark=()=>window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").mat
 /* ===================== mapa ===================== */
 const map=L.map("map",{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([40.42,-4.21],6);
 const BASES={
- voy:L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{maxZoom:20,subdomains:"abcd",attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>'}),
- dark:L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:20,subdomains:"abcd",attribution:'© OSM © CARTO'}),
+ voy:L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}),
+ dark:L.layerGroup([L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:16,attribution:"© Esri"}),L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:16})]),
  sat:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"© Esri, Maxar"}),
  topo:L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenTopoMap, © OSM"})
 };
-let baseKey=LS.get("sf_base",dark()?"dark":"voy");
+let baseKey=LS.get("sf_base2","voy");if(!BASES[baseKey])baseKey="voy";
 let base=BASES[baseKey].addTo(map);
 const ENAIRE_URL="https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer";
 let enaireLayer=null;
@@ -899,7 +899,7 @@ $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
 
 /* ===================== ajustes ===================== */
 function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
-$("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base",baseKey);base=BASES[baseKey].addTo(map);base.bringToBack();syncSeg()});
+$("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base2",baseKey);base=BASES[baseKey].addTo(map);if(base.bringToBack)base.bringToBack();syncSeg()});
 $("#radiusSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;radiusKm=+b.dataset.r;LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}});
 $("#lyEnaire").onchange=e=>{if(!enaireLayer)return;e.target.checked?enaireLayer.addTo(map):map.removeLayer(enaireLayer)};
 $("#lyDipul").onchange=syncOfficialByZoom;$("#lyOsmR").onchange=drawR;$("#lySpots").onchange=renderSpots;
