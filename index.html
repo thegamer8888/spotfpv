@@ -770,6 +770,7 @@ async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedi
 function closeDetail(){$("#detail").classList.remove("on")}
 $("#detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail()});
 
+function cleanHTML(s){const d=document.createElement("div");d.innerHTML=String(s||"");return d.textContent.replace(/\s+/g," ").trim()}
 async function enaireAt(lat,lon){
   const fields="name,type,reasons,message,restrictionConditions,lower,upper,uom,lowerReference,upperReference,email,phone,siteURL,provider,otherReasonInfo,name_authority";
   const q=id=>`${ENAIRE_URL}/${id}/query?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=${fields}&returnGeometry=false&f=json`;
@@ -784,17 +785,24 @@ async function dipulAt(lat,lon){
 }
 async function checkSpot(s){
   const{lat,lon}=s;
-  const q=`[out:json][timeout:30];is_in(${lat},${lon})->.a;area.a["boundary"~"^(protected_area|national_park)$"]->.p;area.a["leisure"="nature_reserve"]->.n;area.a["landuse"="military"]->.m;area.a["access"~"^(private|no)$"]->.x;(.p;.n;.m;.x;)->.areas;.areas out tags;(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon});)->.pop;.pop out tags 40;way["building"](around:150,${lat},${lon});out count;nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});out center tags;(nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`;
+  const qA=`[out:json][timeout:25];is_in(${lat},${lon})->.a;(area.a["boundary"~"^(protected_area|national_park)$"];area.a["leisure"="nature_reserve"];area.a["landuse"="military"];area.a["access"~"^(private|no)$"];);out tags;`;
+  const qB=`[out:json][timeout:25];(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon}););out tags 40;way["building"](around:150,${lat},${lon});out count;`;
   const cc=(await revCountry(lat,lon)).cc||refCountry;
-  const[osm,ena,dip]=await Promise.allSettled([overpass(q),cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
+  const known=ref&&km(lat,lon,ref.lat,ref.lon)<=radiusKm&&rFeatures.length>=0;
+  const nearQ=known?Promise.resolve({elements:rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags}))}):overpass(`[out:json][timeout:25];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,45000);
+  const[oA,oB,oN,ena,dip]=await Promise.allSettled([overpass(qA,45000),overpass(qB,45000),nearQ,cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
+  const osm=(oA.status==="fulfilled"||oB.status==="fulfilled"||oN.status==="fulfilled")?{status:"fulfilled",value:{elements:[...(oA.value?oA.value.elements:[]),...(oB.value?oB.value.elements:[]),...(oN.value?oN.value.elements.filter(e=>{const la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);const t=e.tags||{};const lim=t.aeroway?8:t.power?1:2;return la!=null&&km(lat,lon,la,lo)<=lim}):[])]},partial:oA.status!=="fulfilled"||oB.status!=="fulfilled"}:{status:"rejected"};
   const items=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
   const req=requirements(cc,drone,profile);const sub=req.sub;
   if(cc==="es"){
     if(ena.status==="fulfilled"){const z=ena.value;
       if(!z.length)items.push(IT("ok","Fuera de zonas de ENAIRE","No hay zona aeronáutica, urbana ni de infraestructuras en este punto."));
-      z.forEach(a=>{const up=a.upper!=null?` Altura: ${a.lower??0}–${a.upper} ${a.uom||"m"}.`:"";const contact=[a.email,a.phone].filter(Boolean).join(" · ");
-        const st=a.lid===3?"warn":(String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn");bump(st==="bad"?3:2);
-        items.push(IT(st,`Zona ${a.layer}: ${a.name||a.identifier||""}`,`${a.message||a.reasons||a.otherReasonInfo||""}${a.restrictionConditions?" Condiciones: "+a.restrictionConditions:""}${up}${contact?" Contacto: "+contact:""}${a.lid===3?" Hay que avisar al Ministerio del Interior 5 días antes.":""}`,{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.siteURL?LK("Más información",a.siteURL):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
+      z.forEach(a=>{const msg=cleanHTML(a.message||a.reasons||a.otherReasonInfo||"");const open60=/altura m[aá]xima de 60 ?m/i.test(msg)&&a.lid===2;
+        const contact=[a.email,a.phone].filter(Boolean).join(" · ");const nm=cleanHTML(a.name||a.identifier||"");
+        if(open60){bump(1);items.push(IT("info",`Espacio aéreo controlado${nm?": "+nm:""}`,"Puedes volar sin pedir nada hasta 60 m de altura y siempre a la vista. Para subir más, pide coordinación en ENAIRE Planea.",{link:LK("ENAIRE Planea","https://planea.enaire.es/")}));return}
+        const st=String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn";bump(st==="bad"?3:2);
+        const short=msg.length>240?msg.slice(0,240).replace(/\s\S*$/,"")+"…":msg;
+        items.push(IT(st,a.lid===3?"Zona urbana (entorno urbano)":`Zona ${a.layer}${nm?": "+nm:""}`,a.lid===3?"Si vuelas aquí hay que avisar al Ministerio del Interior al menos 5 días antes.":(short||"Zona con condiciones.")+(contact?" Contacto: "+contact:""),{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.lid===3?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
     }else items.push(IT("q","No pude consultar ENAIRE","Mira este punto en el mapa oficial.",{link:LK("Abrir ENAIRE Drones","https://drones.enaire.es/")}));
   }else if(cc==="de"){
     if(dip.status==="fulfilled"){const z=dip.value;if(!z.length)items.push(IT("ok","Fuera de zonas DiPUL","Sin zonas geográficas en este punto."));z.forEach(a=>{bump(2);items.push(IT("warn",`Zona DiPUL: ${a.name||a.layer}`,"Zona geográfica con restricciones (§ 21h LuftVO).",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}))})}
@@ -822,6 +830,7 @@ async function checkSpot(s){
       else if(t.amenity==="prison"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🔒 Prisión a ${fmtD(d)}`,"No te acerques ni la sobrevueles."))}
       else if(t.landuse==="military"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🪖 Zona militar a ${fmtD(d)}`,"No la sobrevueles."))}
       else if(t.power==="plant"){bump(1);items.push(IT("info",`⚡ Central eléctrica a ${fmtD(d)}`,"No la sobrevueles."))}});
+    if(osm.partial)items.push(IT("q","Parte de los alrededores no cargó","El servidor de mapas va lento: espacios protegidos o casas cercanas pueden faltar. Vuelve a abrir el spot en un rato."));
   }else items.push(IT("q","No pude consultar los alrededores","Servidor ocupado. Vuelve a abrir el spot en un momento."));
   const tips=[];
   if(s.cat==="ruins"){bump(1);tips.push(IT("q","Sitio abandonado: ¿se puede entrar?","Casi todos tienen dueño. Despega desde suelo público (camino, mirador) salvo que sepas que el acceso es libre. Ojo con estructuras inestables."))}
