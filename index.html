@@ -1063,7 +1063,7 @@ function buildCheck(s,st){
         if(open60){bump(1);items.push(IT("info",`Espacio aéreo controlado${nm?": "+nm:""}`,"Puedes volar sin pedir nada hasta 60 m de altura y siempre a la vista. Para subir más, pide coordinación en ENAIRE Planea.",{link:LK("ENAIRE Planea","https://planea.enaire.es/")}));return}
         const t=String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn";bump(t==="bad"?3:2);
         const short=msg.length>240?msg.slice(0,240).replace(/\s\S*$/,"")+"…":msg;
-        items.push(IT(t,a.lid===3?"Zona urbana (entorno urbano)":`Zona ${a.layer}${nm?": "+nm:""}`,a.lid===3?"Si vuelas aquí hay que avisar al Ministerio del Interior al menos 5 días antes.":(short||"Zona con condiciones.")+(contact?" Contacto: "+contact:""),{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.lid===3?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
+        items.push(IT(t,a.lid===3?"Zona urbana (entorno urbano)":`Zona ${a.layer}${nm?": "+nm:""}`,a.lid===3?"ENAIRE marca este punto como entorno urbano (a veces incluye campo alrededor del pueblo). Si vuelas aquí hay que avisar al Ministerio del Interior al menos 5 días antes.":(short||"Zona con condiciones.")+(contact?" Contacto: "+contact:""),{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.lid===3?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
     }else items.push(IT("q","No pude consultar ENAIRE","Mira este punto en el mapa oficial.",{link:LK("Abrir ENAIRE Drones","https://drones.enaire.es/")}));
   }else if(cc==="de"){
     if(st.dip===undefined)pend.push("zonas DiPUL");
@@ -1215,7 +1215,13 @@ function renderRec(s){
     const sm=daySummary(hours,day,lim,di===0);const hs=sm.hs||[];
     const maxG=hs.length?Math.round(Math.max(...hs.map(h=>h.g))):0,avgW=hs.length?Math.round(hs.reduce((a,h)=>a+h.w10,0)/hs.length):0,tmin=hs.length?Math.round(Math.min(...hs.map(h=>h.temp))):0,maxP=hs.length?Math.max(...hs.map(h=>h.pp)):0;
     const fmt=w=>`${String(w.a).padStart(2,"0")}:00 y las ${String(w.b+1).padStart(2,"0")}:00`;
-    if(sm.lv===0)good.push(`<b>Sí, recomendable volar ${dayLabel}.</b> Con tu ${esc(drone.name.split("(")[0].trim())} de ${g} g (aguanta unos ${lim} km/h) el mejor momento es entre las ${fmt(sm.best)}. Viento medio ${avgW} km/h, rachas de hasta ${maxG}.`);
+    let blocked="";if(lc){const lim5=new Date(flyDate);lim5.setDate(lim5.getDate()-5);
+      if(lc.items.some(x=>x.st==="bad"&&/militar|Prisión|Terreno privado/.test(x.t)))blocked="este punto está restringido";
+      else if(lc.items.some(x=>/Zona urbana/.test(x.t))&&lim5<new Date(new Date().toDateString()))blocked="al ser entorno urbano necesitas avisar con 5 días y ya no llegas para ese día";
+      else if(lc.items.some(x=>/Seguramente estás en su zona|^Zona aeronáutica/.test(x.t)))blocked="antes necesitas la coordinación con ENAIRE o el aeródromo";
+      else if(lc.items.some(x=>/Demasiado cerca de zonas habitadas/.test(x.t)))blocked="con tu dron tienes que alejarte a 150 m de las casas"}
+    if(sm.lv===0&&blocked)warn.push(`<b>🌤️ El tiempo acompaña ${dayLabel}</b> (mejor entre las ${fmt(sm.best)}, viento medio ${avgW} km/h, rachas de ${maxG}), <b>pero ${blocked}.</b> Mira los pasos de abajo.`);
+    else if(sm.lv===0)good.push(`<b>Sí, recomendable volar ${dayLabel}.</b> Con tu ${esc(drone.name.split("(")[0].trim())} de ${g} g (aguanta unos ${lim} km/h) el mejor momento es entre las ${fmt(sm.best)}. Viento medio ${avgW} km/h, rachas de hasta ${maxG}.`);
     else if(sm.lv===1)warn.push(`<b>${dayLabel[0].toUpperCase()+dayLabel.slice(1)} se puede, pero justo.</b> ${sm.sub}. Con ${g} g, rachas de ${maxG} km/h te van a mover: vuela bajo, cerca de ti y con batería de sobra.`);
     else if(sm.lv===2)warn.push(`<b>No te recomiendo volar ${dayLabel}.</b> ${sm.sub} y tu dron de ${g} g aguanta unos ${lim} km/h. Podrías perderlo con el viento.`);
     else warn.push(`<b>${dayLabel[0].toUpperCase()+dayLabel.slice(1)} ya no quedan horas de luz.</b>`);
