@@ -3,18 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#f5f6fb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b0e17" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0d13" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SpotFPV">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d5dfc'/%3E%3Cstop offset='1' stop-color='%2300b4d8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='118' font-size='90' text-anchor='middle'%3E%F0%9F%9A%81%3C/text%3E%3C/svg%3E">
 <title>SpotFPV · Dónde volar tu dron</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://tile.openstreetmap.org"><link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 <style>
 :root{
   --bg:#f5f6fb;--card:#ffffff;--card2:#f1f3f9;--ink:#0f172a;--ink2:#334155;--mute:#64748b;--line:#e6e8f0;
@@ -287,33 +285,130 @@ input[type=range]{width:100%;accent-color:var(--brand)}
   #top{left:462px;right:16px;padding-left:0}
   #areaBtn{left:calc(50% + 230px)}
 }
+
+/* ================= Rediseño profesional ================= */
+:root{
+  --bg:#f4f6f9;--card:#ffffff;--card2:#eef1f5;--ink:#0b1220;--ink2:#334155;--mute:#6b7686;--line:#e3e7ee;
+  --brand:#2563eb;--brandSoft:#e8efff;--grad:linear-gradient(135deg,#2563eb,#3b82f6);
+  --ok:#15803d;--okbg:#e7f6ec;--info:#1d4ed8;--infobg:#e8efff;--warn:#b45309;--warnbg:#fff4e2;--bad:#b91c1c;--badbg:#fdecec;
+  --shadow:0 8px 24px rgba(11,18,32,.10),0 1px 2px rgba(11,18,32,.06);--shadow2:0 1px 2px rgba(11,18,32,.06),0 0 0 1px rgba(11,18,32,.05);
+  --r:16px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0a0d13;--card:#121722;--card2:#1a2030;--ink:#e8edf5;--ink2:#c3cbd8;--mute:#8a94a6;--line:#232a3a;
+  --brand:#4f8bff;--brandSoft:rgba(79,139,255,.14);--grad:linear-gradient(135deg,#3b74f6,#4f8bff);
+  --ok:#4ade80;--okbg:rgba(34,197,94,.13);--info:#8fb3ff;--infobg:rgba(79,139,255,.14);--warn:#fbbf24;--warnbg:rgba(251,191,36,.13);--bad:#f87171;--badbg:rgba(248,113,113,.13);
+  --shadow:0 8px 24px rgba(0,0,0,.45);--shadow2:0 0 0 1px rgba(255,255,255,.05);
+}}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;letter-spacing:-.005em}
+.i{display:inline-block;vertical-align:-.2em;flex:none}
+h1{font-size:24px;font-weight:700;letter-spacing:-.02em}
+h2{font-size:18px;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;gap:8px}
+h3{font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:22px 0 8px}
+label.f{font-weight:600;letter-spacing:.05em;font-size:11.5px}
+.btn{background:var(--brand);border-radius:12px;font-weight:650;letter-spacing:-.01em;box-shadow:0 1px 2px rgba(11,18,32,.12)}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:var(--shadow2)}
+.card,details.sec,.spot,.dcard,.flag,.ctxc,.act,.fact,.hr,.wxStats div,.wday,.notice{box-shadow:var(--shadow2)}
+.card,details.sec{border-radius:16px}
+/* top */
+#q{height:48px;border-radius:14px;padding-left:44px;font-size:16px;box-shadow:var(--shadow)}
+#searchBox .lens{left:14px;top:14px;opacity:1;color:var(--mute)}
+.fab{width:48px;height:48px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow)}
+#catBar{gap:6px;padding-top:8px}
+.cchip{border:0;padding:7px 12px;border-radius:999px;font-weight:600;font-size:12.5px;box-shadow:var(--shadow);background:var(--card);color:var(--ink2);opacity:1!important;gap:7px}
+.cchip .cd{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.cchip:not(.on){color:var(--mute);background:color-mix(in srgb,var(--card) 82%,transparent)}
+.cchip:not(.on) .cd{background:transparent;box-shadow:inset 0 0 0 1.5px var(--mute)}
+.cchip.on{color:var(--ink)}
+/* sheet & nav */
+#sheet{border-radius:20px 20px 0 0;box-shadow:0 -6px 30px rgba(11,18,32,.14)}
+#nav{border-top:1px solid var(--line)}
+#nav button{font-size:10.5px;font-weight:600;gap:3px}
+#nav button .i{width:23px;height:23px}
+#nav button.on{color:var(--brand)}
+.sheetHead h2{font-size:20px}
+.ctxc{border-radius:10px;padding:7px 11px;font-weight:600;font-size:12.5px;gap:6px}
+.ctxc .i{color:var(--mute)}
+#addSpotBtn{background:var(--brand)!important;color:#fff!important;border-radius:12px!important}
+/* spots list */
+.spot{border-radius:14px;padding:11px 12px;gap:12px}
+.spot .ic{width:42px;height:42px;border-radius:12px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+.spot .nm{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.spot .go{color:var(--line)}
+.pill{font-weight:650;border-radius:6px;padding:3px 8px;font-size:11.5px}
+/* markers */
+.mk{width:30px;height:30px;background:var(--c);color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.mk.l0{box-shadow:0 0 0 2.5px #22c55e,0 2px 6px rgba(0,0,0,.35)}.mk.l1{box-shadow:0 0 0 2.5px #3b82f6,0 2px 6px rgba(0,0,0,.35)}.mk.l2{box-shadow:0 0 0 2.5px #f59e0b,0 2px 6px rgba(0,0,0,.35)}.mk.l3{box-shadow:0 0 0 2.5px #ef4444,0 2px 6px rgba(0,0,0,.35)}
+.mk.l0,.mk.l1,.mk.l2,.mk.l3{border-color:#fff}
+.mkr{width:24px;height:24px;border-radius:7px;background:#fff;color:#b91c1c;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+/* detail */
+#dBox{border-radius:20px 20px 0 0}
+.hero{border-radius:20px 20px 0 0;height:220px}
+.hero:before{border-radius:20px 20px 0 0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.65))}
+.hero .big{opacity:.25;color:#fff}
+.hero .tag{border-radius:6px;font-weight:650;letter-spacing:.02em;text-transform:uppercase;font-size:10.5px}
+.hero h1{font-size:24px}
+.act{border-radius:12px;font-weight:600;font-size:11.5px;color:var(--ink2);padding:11px 4px}
+.act .i{color:var(--brand)}
+.act .i.fav{color:#e11d48;fill:#e11d48}
+.fact{border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.fact .i{color:var(--mute)}
+.verdict{border-radius:14px;padding:14px}
+.verdict .vi{display:flex}
+.req .st{border-radius:9px;width:30px;height:30px}
+.st.ok{color:var(--ok)}.st.need,.st.warn{color:var(--warn)}.st.bad{color:var(--bad)}.st.info,.st.q{color:var(--info)}
+details.sec summary{font-weight:650}
+details.sec summary .i{color:var(--mute)}
+.hero2{background:#0f172a;border-radius:16px}
+@media (prefers-color-scheme:dark){.hero2{background:var(--card2)}}
+.wxHero .wi{display:flex}
+.hr{border-top-width:3px;border-radius:12px}
+.hr .e{display:flex;justify-content:center;color:var(--ink2);margin:4px 0}
+.dcard{border-radius:14px}.dcard .e{color:var(--brand)}
+.dcard.on{background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box}
+.flag{border-radius:12px}
+.seg{border-radius:12px}.seg button{border-radius:9px;font-weight:650}
+.myDr button{border-radius:12px}
+.obHero{background:#0f172a;border-radius:20px;text-align:left;padding:26px 22px}
+.obHero .logo{width:52px;height:52px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:14px}
+.obHero h1{font-size:28px}
+.feat i{background:var(--brandSoft);color:var(--brand);box-shadow:none;border-radius:12px}
+#peg{border-radius:14px;color:#b45309;background:#fbbf24;box-shadow:var(--shadow)}
+#peg.on{background:#f59e0b}
+#pegGhost{color:#f59e0b}
+#aim .pinA{color:var(--brand)}
+#areaBtn{border-radius:12px;font-weight:650;display:none;align-items:center;gap:6px}
+#toast{border-radius:12px;font-weight:600}
+.notice{border-radius:12px}
+.empty b{display:flex;justify-content:center;color:var(--mute);margin-bottom:8px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol><symbol id="i-locate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol><symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2 5.6-5.6 2 2-5.6z"/></symbol><symbol id="i-drone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="5.5" r="2.5"/><circle cx="18.5" cy="5.5" r="2.5"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/><path d="m7.5 7.5 2.5 2.5M16.5 7.5 14 10M7.5 16.5 10 14M16.5 16.5 14 14"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/></symbol><symbol id="i-id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M5.8 16c.6-1.4 1.8-2 3.2-2s2.6.6 3.2 2M14.5 10h4M14.5 13.5h3"/></symbol><symbol id="i-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.2 13.8 3 11l1.5-1.5 8 .8 4.3-4.3c.9-.9 2.3-1.1 3.2-.2s.7 2.3-.2 3.2l-4.3 4.3.8 8L14.8 23 12 15.8l-3.3 3.3.3 2.4-1.3 1.3-1.6-3.6-3.6-1.6 1.3-1.3 2.4.3z"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20v-6M4 10V4M12 20v-8M12 8V4M20 20v-4M20 12V4M2 14h4M10 8h4M18 16h4"/></symbol><symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol><symbol id="i-wind" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"/></symbol><symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 10c0 5.5-7 12-7 12s-7-6.5-7-12a7 7 0 0 1 14 0z"/><circle cx="12" cy="10" r="2.6"/></symbol><symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-9.3-9A4.9 4.9 0 0 1 12 6.5 4.9 4.9 0 0 1 21.3 11c-1.8 4.4-9.3 9-9.3 9z"/></symbol><symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M16 7l-4-4-4 4M12 3v13"/></symbol><symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.6" r="2.4"/><path d="M9.5 22v-6.5H7.5V11a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v4.5h-2V22"/></symbol><symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol><symbol id="i-checkc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol><symbol id="i-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m5.3 5.3 13.4 13.4"/></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 16v-4.5M12 8h.01"/></symbol><symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></symbol><symbol id="i-mountain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 4 4 7 3-3 6 12H3z"/></symbol><symbol id="i-view" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 20V10l6-6 6 6v10"/><path d="M10 20v-5h4v5"/></symbol><symbol id="i-ruins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l3-2v14M11 21V5l3 1.5V21M17 21v-9l2 1v8"/></symbol><symbol id="i-castle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8h3V5h2.5v3h5V5H17v3h3v13z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/></symbol><symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5a6.5 6.5 0 0 0 6.5-6.5c0-4.5-6.5-12-6.5-12S5.5 10.5 5.5 15a6.5 6.5 0 0 0 6.5 6.5z"/></symbol><symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h6a3 3 0 0 1 3 3V20a2.5 2.5 0 0 0-2.5-2.5H3zM21 4.5h-6a3 3 0 0 0-3 3V20a2.5 2.5 0 0 1 2.5-2.5H21z"/></symbol><symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol><symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .3-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18.5z"/></symbol><symbol id="i-cloudsun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5v1.2M3.9 5.9l.9.8M2.5 11h1.2"/><path d="M6.5 9.3a3.3 3.3 0 0 1 5.6-1.3"/><path d="M9 19.5h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.7 1.3A2.9 2.9 0 0 0 9 19.5z"/></symbol><symbol id="i-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15h10.5a3.8 3.8 0 0 0 .3-7.6 5.8 5.8 0 0 0-11.3 1.4A3.1 3.1 0 0 0 7 15z"/><path d="m9 18-1 2.5M13 18l-1 2.5M17 18l-1 2.5"/></symbol><symbol id="i-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15h10.5a3.8 3.8 0 0 0 .3-7.6 5.8 5.8 0 0 0-11.3 1.4A3.1 3.1 0 0 0 7 15z"/><path d="M8 18.5h.01M12 19.5h.01M16 18.5h.01M10 21.5h.01M14 21.5h.01"/></symbol><symbol id="i-storm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15h10.5a3.8 3.8 0 0 0 .3-7.6 5.8 5.8 0 0 0-11.3 1.4A3.1 3.1 0 0 0 7 15z"/><path d="m12.5 15-2 3.5h3l-2 3.5"/></symbol><symbol id="i-fog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13h10.5a3.5 3.5 0 0 0 .3-7 5.5 5.5 0 0 0-10.7 1.3A2.9 2.9 0 0 0 7 13z"/><path d="M4 17h16M6 20.5h12"/></symbol><symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></symbol><symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9.5 5-9.5 5-9.5-5z"/><path d="m2.5 13 9.5 5 9.5-5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5s7.5-3.8 7.5-9.5V5.5L12 2.8 4.5 5.5V12c0 5.7 7.5 9.5 7.5 9.5z"/></symbol><symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 10 8.5-6.5 8.5 6.5v10a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M9.5 21.5V14h5v7.5"/></symbol><symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5"/></symbol><symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5a14.5 14.5 0 0 1 0 19M12 2.5a14.5 14.5 0 0 0 0 19"/></symbol><symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6h17M9 6V4h6v2M18.5 6l-1 14a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20l-1-14"/></symbol><symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 15v4a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol><symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8M7 21v-7h10v7"/></symbol><symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 15.5-12.5-12.5a1 1 0 0 0-1.4 0L3 7.1a1 1 0 0 0 0 1.4L15.5 21a1 1 0 0 0 1.4 0l4.1-4.1a1 1 0 0 0 0-1.4z"/><path d="m7.5 10.5 2-2M10.5 13.5l2-2M13.5 16.5l2-2"/></symbol><symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8.5V20l-4-2v-4.5z"/></symbol><symbol id="i-satellite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 4-4 4 4-4 4M7 13l-4 4 4 4 4-4M9.5 9.5l5 5M8 8l8 8"/><path d="M15.5 19.5a4 4 0 0 0 4-4M15 22.5a7.5 7.5 0 0 0 7.5-7.5"/></symbol><symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 2.5v14L9 18l6 2.5 6-2.5v-14L15 6.5z"/><path d="M9 4v14M15 6.5v14"/></symbol><symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h3l1.8-2.5h6.4L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5z"/><circle cx="12" cy="13.5" r="3.5"/></symbol><symbol id="i-goggles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h18v5a2 2 0 0 1-2 2h-3.5l-2-2.5h-3l-2 2.5H5a2 2 0 0 1-2-2z"/></symbol><symbol id="i-toy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/></symbol><symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v4M10 10V4.5a1.5 1.5 0 0 1 3 0V10M13 10V5.5a1.5 1.5 0 0 1 3 0V12M16 10.5a1.5 1.5 0 0 1 3 0V15a7 7 0 0 1-7 7h-.5a6.5 6.5 0 0 1-5.4-2.9L3.3 15a1.5 1.5 0 0 1 2.4-1.8L7 15"/></symbol></svg>
 <div id="map"></div>
 
 <div id="top">
   <div class="searchRow">
     <div id="searchBox">
-      <span class="lens">🔎</span>
+      <span class="lens"><svg class="i " width="20" height="20"><use href="#i-search"/></svg></span>
       <input id="q" type="search" placeholder="¿Dónde quieres volar?" autocomplete="off" enterkeyhint="search">
       <div id="suggest"></div>
     </div>
-    <button class="fab" id="locBtn" aria-label="Mi ubicación">📍</button>
+    <button class="fab" id="locBtn" aria-label="Mi ubicación"><svg class="i " width="22" height="22"><use href="#i-locate"/></svg></button>
   </div>
   <div id="catBar"></div>
 </div>
 <div id="toast"></div>
-<div id="addHint">👆 Toca el mapa donde está tu spot</div>
-<button id="areaBtn">🔄 Buscar en esta zona</button>
-<button id="peg" aria-label="Muñequito: arrastra al mapa">🧍</button>
-<div id="pegGhost">🧍</div>
-<div id="aim"><div class="pinA">📍</div></div><div id="aimDot"></div>
-<div id="aimTop"><b>🎯 Mueve el mapa hasta el punto exacto</b><span class="mute">Arrastra con el dedo y haz zoom. Las líneas azules son calles con Street View.</span></div>
-<div id="aimBar"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="aimName" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Punto elegido</b><button class="btn ghost" id="aimSat" style="padding:7px 11px;font-size:12.5px;flex:none">🛰️ Satélite</button></div><div class="coords" id="aimCoords"></div>
-<div class="row3"><button class="btn ghost" id="aimSV">👀 Ver calle aquí</button><button class="btn" id="aimOk">✔ Usar este punto</button></div>
+<div id="addHint">Toca el mapa donde está tu spot</div>
+<button id="areaBtn"><svg class="i " width="16" height="16"><use href="#i-refresh"/></svg> Buscar en esta zona</button>
+<button id="peg" aria-label="Muñequito: arrastra al mapa"><svg class="i " width="26" height="26"><use href="#i-person"/></svg></button>
+<div id="pegGhost"><svg class="i " width="40" height="40"><use href="#i-person"/></svg></div>
+<div id="aim"><div class="pinA"><svg class="i " width="46" height="46"><use href="#i-pin"/></svg></div></div><div id="aimDot"></div>
+<div id="aimTop"><b>Mueve el mapa hasta el punto exacto</b><span class="mute">Arrastra con el dedo y haz zoom. Las líneas azules son calles con Street View.</span></div>
+<div id="aimBar"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="aimName" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Punto elegido</b><button class="btn ghost" id="aimSat" style="padding:7px 11px;font-size:12.5px;flex:none">Satélite</button></div><div class="coords" id="aimCoords"></div>
+<div class="row3"><button class="btn ghost" id="aimSV"><svg class="i " width="17" height="17"><use href="#i-person"/></svg> Ver calle aquí</button><button class="btn" id="aimOk"><svg class="i " width="17" height="17"><use href="#i-check"/></svg> Usar este punto</button></div>
 <button class="btn ghost block" id="aimCancel" style="margin-top:8px;padding:9px">Cancelar</button></div>
-<div id="sv"><div class="svHead"><button class="xbtn" id="svClose" style="position:static;background:var(--card2);color:var(--ink)">✕</button><b>👀 Vista de calle<br><span class="small mute" style="font-weight:500">Muévete con las flechas · es la calle más cercana al punto</span></b></div><iframe id="svFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="svFoot"><a class="btn ghost" id="svExt" target="_blank" rel="noopener" style="flex:1">Abrir en Google Maps ↗</a><button class="btn" id="svBack" style="flex:1">🎯 Elegir punto</button></div></div>
+<div id="sv"><div class="svHead"><button class="xbtn" id="svClose" style="position:static;background:var(--card2);color:var(--ink)">✕</button><b>Vista de calle<br><span class="small mute" style="font-weight:500">Muévete con las flechas · es la calle más cercana al punto</span></b></div><iframe id="svFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="svFoot"><a class="btn ghost" id="svExt" target="_blank" rel="noopener" style="flex:1">Abrir en Google Maps ↗</a><button class="btn" id="svBack" style="flex:1">🎯 Elegir punto</button></div></div>
 <div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · también: doble toque o mantener pulsado</span></div>
 
 <section id="sheet">
@@ -322,16 +417,16 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 
     <div class="pane on" id="p-spots">
       <div class="sheetHead">
-        <div><h2 id="spotsTitle">Explora spots</h2><div class="sub" id="refLine" style="margin:0">Busca un lugar o toca 📍</div></div>
-        <button class="fab" id="addSpotBtn" style="width:44px;height:44px;font-size:22px;background:var(--grad);color:#fff" aria-label="Añadir spot">＋</button>
+        <div><h2 id="spotsTitle">Explora spots</h2><div class="sub" id="refLine" style="margin:0">Busca un lugar o usa tu ubicación</div></div>
+        <button class="fab" id="addSpotBtn" style="width:42px;height:42px" aria-label="Añadir spot"><svg class="i " width="22" height="22"><use href="#i-plus"/></svg></button>
       </div>
       <div class="ctx">
-        <button class="ctxc" id="ctxDrone">🚁 <span></span></button>
-        <button class="ctxc" id="ctxWx">🌤️ <span>Tiempo</span></button>
-        <button class="ctxc" id="ctxCountry">🌍 <span>—</span></button>
-        <button class="ctxc" id="ctxRadius">📏 <span></span></button>
-        <button class="ctxc" id="ctxReload">🔄 <span>Actualizar</span></button>
-        <button class="ctxc" id="ctxGood">✨ <span>Todos</span></button>
+        <button class="ctxc" id="ctxDrone"><svg class="i " width="16" height="16"><use href="#i-drone"/></svg> <span></span></button>
+        <button class="ctxc" id="ctxWx"><svg class="i " width="16" height="16"><use href="#i-wind"/></svg> <span>Tiempo</span></button>
+        <button class="ctxc" id="ctxCountry"><svg class="i " width="16" height="16"><use href="#i-globe"/></svg> <span>—</span></button>
+        <button class="ctxc" id="ctxRadius"><svg class="i " width="16" height="16"><use href="#i-ruler"/></svg> <span></span></button>
+        <button class="ctxc" id="ctxReload"><svg class="i " width="16" height="16"><use href="#i-refresh"/></svg> <span>Actualizar</span></button>
+        <button class="ctxc" id="ctxGood"><svg class="i " width="16" height="16"><use href="#i-filter"/></svg> <span>Todos</span></button>
       </div>
       <div id="spotList"></div>
     </div>
@@ -358,11 +453,11 @@ input[type=range]{width:100%;accent-color:var(--brand)}
         <input type="range" id="dWind" min="8" max="70" step="1">
         <p class="small mute" style="margin:4px 0 0">Lo uso para decirte si compensa ir según el viento y las rachas.</p>
         <div style="margin-top:6px">
-          <div class="toggle"><div class="t"><b>📷 Lleva cámara</b><small>Graba o transmite imagen</small></div><label class="sw"><input type="checkbox" id="dCam"><span></span></label></div>
-          <div class="toggle"><div class="t"><b>🥽 Vuelo con gafas FPV</b><small>Necesitarás observador</small></div><label class="sw"><input type="checkbox" id="dFpv"><span></span></label></div>
-          <div class="toggle"><div class="t"><b>🧸 Es un juguete</b><small>Directiva 2009/48/CE</small></div><label class="sw"><input type="checkbox" id="dToy"><span></span></label></div>
+          <div class="toggle"><div class="t"><b>Lleva cámara</b><small>Graba o transmite imagen</small></div><label class="sw"><input type="checkbox" id="dCam"><span></span></label></div>
+          <div class="toggle"><div class="t"><b>Vuelo con gafas FPV</b><small>Necesitarás observador</small></div><label class="sw"><input type="checkbox" id="dFpv"><span></span></label></div>
+          <div class="toggle"><div class="t"><b>Es un juguete</b><small>Directiva 2009/48/CE</small></div><label class="sw"><input type="checkbox" id="dToy"><span></span></label></div>
         </div>
-        <div class="row" style="margin-top:10px"><button class="btn" id="saveDroneBtn" style="flex:1">💾 Guardar en mis drones</button><button class="btn ghost" id="delDroneBtn">🗑️</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="saveDroneBtn" style="flex:1"><svg class="i " width="17" height="17"><use href="#i-save"/></svg> Guardar en mis drones</button><button class="btn ghost" id="delDroneBtn" aria-label="Borrar"><svg class="i " width="18" height="18"><use href="#i-trash"/></svg></button></div>
       </div>
       <h3>Empezar desde una plantilla</h3>
       <div class="grid2" id="dronePresets"></div>
@@ -376,7 +471,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
         <label class="f" style="margin-top:0">Nacionalidad</label><select id="pNat"></select>
         <label class="f">Dónde vives</label><select id="pRes"></select>
         <label class="f">Tipo de vuelo</label>
-        <div class="seg" id="pPurpose"><button data-v="recreativo">🎮 Hobby</button><button data-v="profesional">💼 Profesional</button></div>
+        <div class="seg" id="pPurpose"><button data-v="recreativo">Hobby</button><button data-v="profesional">Profesional</button></div>
       </div>
       <h3>Lo que ya tienes</h3>
       <div id="certList"></div>
@@ -395,16 +490,16 @@ input[type=range]{width:100%;accent-color:var(--brand)}
     <div class="pane" id="p-capas">
       <h1>Ajustes del mapa</h1>
       <label class="f">Estilo de mapa</label>
-      <div class="seg" id="baseSeg"><button data-b="voy" class="on">🗺️ Calles</button><button data-b="dark">🌙 Oscuro</button><button data-b="sat">🛰️ Satélite</button><button data-b="topo">⛰️ Relieve</button></div>
+      <div class="seg" id="baseSeg"><button data-b="voy" class="on">Calles</button><button data-b="dark">Oscuro</button><button data-b="sat">Satélite</button><button data-b="topo">Relieve</button></div>
       <label class="f">Radio de búsqueda</label>
       <div class="seg" id="radiusSeg"><button data-r="5">5 km</button><button data-r="15">15 km</button><button data-r="30">30 km</button><button data-r="50">50 km</button></div>
       <h3>Capas</h3>
       <div class="card" style="padding:4px 14px">
-        <div class="toggle"><div class="t"><b>🇪🇸 Zonas oficiales ENAIRE</b><small>Aeropuertos, urbanas, infraestructuras</small></div><label class="sw"><input type="checkbox" id="lyEnaire" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>🇪🇸 Zonas oficiales ENAIRE</b><small>Aeropuertos, espacio aéreo e infraestructuras</small></div><label class="sw"><input type="checkbox" id="lyEnaire" checked><span></span></label></div>
         <div class="toggle"><div class="t"><b>🇪🇸 Parcelas del Catastro</b><small>Se ven al acercarte mucho (zoom 16+)</small></div><label class="sw"><input type="checkbox" id="lyCat" checked><span></span></label></div>
         <div class="toggle"><div class="t"><b>🇩🇪 Zonas oficiales DiPUL</b><small>Alemania, con zoom</small></div><label class="sw"><input type="checkbox" id="lyDipul" checked><span></span></label></div>
-        <div class="toggle"><div class="t"><b>✈️ Aeródromos y zonas sensibles</b><small>Todo el mundo, datos OSM</small></div><label class="sw"><input type="checkbox" id="lyOsmR" checked><span></span></label></div>
-        <div class="toggle"><div class="t"><b>📍 Spots</b><small>Mostrar en el mapa</small></div><label class="sw"><input type="checkbox" id="lySpots" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>Aeródromos y zonas sensibles</b><small>Todo el mundo, datos OSM</small></div><label class="sw"><input type="checkbox" id="lyOsmR" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>Spots</b><small>Mostrar en el mapa</small></div><label class="sw"><input type="checkbox" id="lySpots" checked><span></span></label></div>
       </div>
       <h3>Colores del mapa</h3>
       <div class="card legend">
@@ -418,18 +513,18 @@ input[type=range]{width:100%;accent-color:var(--brand)}
       <h3>Mapas oficiales</h3>
       <div id="officialMaps" class="card"></div>
       <h3>Mis spots</h3>
-      <div class="row"><button class="btn ghost" id="exportBtn">⬇️ Exportar</button><button class="btn ghost" id="obAgain">👋 Ver bienvenida</button></div>
+      <div class="row"><button class="btn ghost" id="exportBtn">Exportar</button><button class="btn ghost" id="obAgain">Ver bienvenida</button></div>
       <div class="notice"><span>ℹ️</span><span>Datos en vivo de OpenStreetMap, Wikipedia, ENAIRE y DiPUL. Es una ayuda: revisa siempre el mapa oficial y los NOTAM el día del vuelo. No es asesoría legal.</span></div>
     </div>
   </div>
 </section>
 
 <nav id="nav">
-  <button data-p="spots" class="on"><i>🧭</i>Explorar</button>
-  <button data-p="dron"><i>🚁</i>Mi dron</button>
-  <button data-p="piloto"><i>🪪</i>Perfil</button>
-  <button data-p="viaje"><i>✈️</i>Viajar</button>
-  <button data-p="capas"><i>⚙️</i>Ajustes</button>
+  <button data-p="spots" class="on"><svg class="i " width="23" height="23"><use href="#i-compass"/></svg>Explorar</button>
+  <button data-p="dron"><svg class="i " width="23" height="23"><use href="#i-drone"/></svg>Mi dron</button>
+  <button data-p="piloto"><svg class="i " width="23" height="23"><use href="#i-id"/></svg>Perfil</button>
+  <button data-p="viaje"><svg class="i " width="23" height="23"><use href="#i-plane"/></svg>Viajar</button>
+  <button data-p="capas"><svg class="i " width="23" height="23"><use href="#i-sliders"/></svg>Ajustes</button>
 </nav>
 
 <div id="detail"><div id="dBox"></div></div>
@@ -648,6 +743,9 @@ function certValidity(cc){
 
 
 /* ===================== UI: utilidades ===================== */
+const I=(n,s=18,c="")=>`<svg class="i ${c}" width="${s}" height="${s}"><use href="#i-${n}"/></svg>`;
+const EMO=/^(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}][\u{FE0F}\u{200D}]*)+\s*/u;
+const noE=s=>String(s||"").replace(EMO,"");
 function status(msg,ms){const s=$("#toast");if(!msg){s.style.display="none";return}s.innerHTML=msg;s.style.display="block";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>s.style.display="none",ms)}
 const dark=()=>window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -662,8 +760,15 @@ const BASES={
 let baseKey=LS.get("sf_base2","voy");if(!BASES[baseKey])baseKey="voy";
 let base=BASES[baseKey].addTo(map);
 const ENAIRE_URL="https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer";
-let enaireLayer=null;
-try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.45,f:"image",layers:[0,2,3],attribution:"Zonas UAS © ENAIRE"})}catch(e){}
+const EnaireLayer=L.Layer.extend({
+  onAdd(m){this._m=m;this._u=()=>{clearTimeout(this._t);this._t=setTimeout(()=>this._update(),250)};m.on("moveend",this._u);this._update()},
+  onRemove(m){m.off("moveend",this._u);if(this._img)m.removeLayer(this._img);this._img=null},
+  _update(){const m=this._m;if(!m)return;const b=m.getBounds(),sz=m.getSize(),p=L.CRS.EPSG3857,sw=p.project(b.getSouthWest()),ne=p.project(b.getNorthEast());
+    const url=`${ENAIRE_URL}/export?bbox=${sw.x},${sw.y},${ne.x},${ne.y}&bboxSR=3857&imageSR=3857&size=${sz.x},${sz.y}&format=png32&transparent=true&layers=show:0,2&f=image`;
+    const img=L.imageOverlay(url,b,{opacity:.42,interactive:false,attribution:"Zonas UAS © ENAIRE"}),old=this._img;this._img=img;img.addTo(m);
+    const drop=()=>{if(old&&m.hasLayer(old))m.removeLayer(old)};img.on("load",drop);setTimeout(drop,5000)}
+});
+let enaireLayer=new EnaireLayer();
 const catLayer=L.tileLayer.wms("https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",{layers:"Catastro",format:"image/png",transparent:true,version:"1.1.1",opacity:.6,attribution:"Parcelas © Dirección General del Catastro",minZoom:16});
 function inES(){const c=map.getCenter();return c.lat>35.9&&c.lat<43.9&&c.lng>-9.5&&c.lng<4.4||(c.lat>27.5&&c.lat<29.5&&c.lng>-18.3&&c.lng<-13.3)}
 function syncCatastro(){const want=$("#lyCat")&&$("#lyCat").checked&&map.getZoom()>=16&&inES();if(want&&!map.hasLayer(catLayer))catLayer.addTo(map);else if(!want&&map.hasLayer(catLayer))map.removeLayer(catLayer)}
@@ -679,16 +784,16 @@ const icon=(html,size=36)=>L.divIcon({className:"",html,iconSize:[size,size],ico
 
 /* ===================== categorías ===================== */
 const CATS={
- view:{ic:"🌄",n:"Miradores",c:"#fde7c2",m:"#f59e0b",q:'node["tourism"="viewpoint"]'},
- peak:{ic:"⛰️",n:"Cumbres",c:"#d4f5e6",m:"#10b981",q:'node["natural"="peak"]["name"]'},
- ruins:{ic:"🏚️",n:"Abandonados",c:"#ece4ff",m:"#8b5cf6",q:['nwr["historic"="ruins"]','nwr["ruins"="yes"]["name"]','nwr["abandoned"="yes"]["name"]','nwr["building"="ruins"]["name"]']},
- castle:{ic:"🏰",n:"Castillos",c:"#ffe1e6",m:"#e11d48",q:'nwr["historic"="castle"]'},
- water:{ic:"💧",n:"Agua",c:"#d9f2fd",m:"#0ea5e9",q:['nwr["water"~"^(reservoir|lake)$"]["name"]','nwr["landuse"="reservoir"]["name"]','nwr["natural"="beach"]["name"]']},
- field:{ic:"🛩️",n:"Pistas RC",c:"#e1e5ff",m:"#6366f1",q:['nwr["sport"="model_aerodrome"]','nwr["aeroway"="model_runway"]']},
- wiki:{ic:"📖",n:"Destacados",c:"#e9edf3",m:"#64748b"},
- mine:{ic:"⭐",n:"Mis spots",c:"#ffe4ef",m:"#f43f5e"},
- fav:{ic:"❤️",n:"Favoritos",c:"#ffe4ef",m:"#f43f5e",virtual:true},
- point:{ic:"📍",n:"Punto elegido",c:"#e1e5ff",m:"#6d5dfc",hidden:true}
+ view:{g:"view",ic:"🌄",n:"Miradores",c:"#fde7c2",m:"#f59e0b",q:'node["tourism"="viewpoint"]'},
+ peak:{g:"mountain",ic:"⛰️",n:"Cumbres",c:"#d4f5e6",m:"#10b981",q:'node["natural"="peak"]["name"]'},
+ ruins:{g:"ruins",ic:"🏚️",n:"Abandonados",c:"#ece4ff",m:"#8b5cf6",q:['nwr["historic"="ruins"]','nwr["ruins"="yes"]["name"]','nwr["abandoned"="yes"]["name"]','nwr["building"="ruins"]["name"]']},
+ castle:{g:"castle",ic:"🏰",n:"Castillos",c:"#ffe1e6",m:"#e11d48",q:'nwr["historic"="castle"]'},
+ water:{g:"drop",ic:"💧",n:"Agua",c:"#d9f2fd",m:"#0ea5e9",q:['nwr["water"~"^(reservoir|lake)$"]["name"]','nwr["landuse"="reservoir"]["name"]','nwr["natural"="beach"]["name"]']},
+ field:{g:"plane",ic:"🛩️",n:"Pistas RC",c:"#e1e5ff",m:"#6366f1",q:['nwr["sport"="model_aerodrome"]','nwr["aeroway"="model_runway"]']},
+ wiki:{g:"book",ic:"📖",n:"Destacados",c:"#e9edf3",m:"#64748b"},
+ mine:{g:"star",ic:"⭐",n:"Mis spots",c:"#ffe4ef",m:"#f43f5e"},
+ fav:{g:"heart",ic:"❤️",n:"Favoritos",c:"#ffe4ef",m:"#f43f5e",virtual:true},
+ point:{g:"pin",ic:"📍",n:"Punto elegido",c:"#e1e5ff",m:"#6d5dfc",hidden:true}
 };
 const HERO={view:"linear-gradient(135deg,#f59e0b,#f97316)",peak:"linear-gradient(135deg,#10b981,#0d9488)",ruins:"linear-gradient(135deg,#8b5cf6,#6366f1)",castle:"linear-gradient(135deg,#e11d48,#f97316)",water:"linear-gradient(135deg,#0ea5e9,#6366f1)",field:"linear-gradient(135deg,#6366f1,#00b4d8)",wiki:"linear-gradient(135deg,#475569,#6d5dfc)",mine:"linear-gradient(135deg,#f43f5e,#6d5dfc)",point:"linear-gradient(135deg,#334155,#6d5dfc)"};
 let activeCats=LS.get("sf_cats2",["view","peak","ruins","castle","water","field","wiki","mine"]);
@@ -697,7 +802,7 @@ let ref=LS.get("sf_ref",null);
 let spots=[],rFeatures=[],mySpots=LS.get("sf_mine",[]),favs=LS.get("sf_favs",{}),refCountry=null,onlyGood=false;
 
 function renderCatBar(){
-  $("#catBar").innerHTML=Object.entries(CATS).filter(([,c])=>!c.hidden).map(([k,c])=>`<span class="cchip ${(k==="fav"?onlyFav:activeCats.includes(k))?"on":""}" style="--c:${c.m}" data-c="${k}">${c.ic} ${c.n}</span>`).join("");
+  $("#catBar").innerHTML=Object.entries(CATS).filter(([,c])=>!c.hidden).map(([k,c])=>`<span class="cchip ${(k==="fav"?onlyFav:activeCats.includes(k))?"on":""}" style="--c:${c.m}" data-c="${k}"><span class="cd"></span>${c.n}</span>`).join("");
 }
 let onlyFav=false;
 $("#catBar").addEventListener("click",e=>{const ch=e.target.closest(".cchip");if(!ch)return;const k=ch.dataset.c;
@@ -714,8 +819,8 @@ let sugT;
 $("#q").addEventListener("input",()=>{clearTimeout(sugT);const v=$("#q").value.trim();if(v.length<3){$("#suggest").style.display="none";return}sugT=setTimeout(()=>doSuggest(v),400)});
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSearch()}});
 $("#q").addEventListener("focus",()=>{$("#q").select()});
-async function doSuggest(v){try{const r=await geocode(v);const box=$("#suggest");if(!r.length){box.style.display="none";return}box.innerHTML=r.map((x,i)=>{const p=x.display_name.split(",");return `<div data-i="${i}"><span>📍</span><span><b>${esc(p[0])}</b><br><span class="mute small">${esc(p.slice(1,4).join(","))}</span></span></div>`}).join("");box.style.display="block";box.onclick=e=>{const d=e.target.closest("div[data-i]");if(!d)return;const x=r[+d.dataset.i];pickPlace(+x.lat,+x.lon,x.display_name);box.style.display="none"}}catch(e){}}
-async function doSearch(){const v=$("#q").value.trim();if(!v)return;$("#suggest").style.display="none";status('<span class="spin"></span> Buscando…');try{const r=await geocode(v);if(!r.length){status("😕 No encontré ese sitio",3000);return}pickPlace(+r[0].lat,+r[0].lon,r[0].display_name)}catch(e){status("📡 Sin conexión con el buscador",4000)}}
+async function doSuggest(v){try{const r=await geocode(v);const box=$("#suggest");if($("#q").value.trim()!==v||document.activeElement!==$("#q")){box.style.display="none";return}if(!r.length){box.style.display="none";return}box.innerHTML=r.map((x,i)=>{const p=x.display_name.split(",");return `<div data-i="${i}"><span>📍</span><span><b>${esc(p[0])}</b><br><span class="mute small">${esc(p.slice(1,4).join(","))}</span></span></div>`}).join("");box.style.display="block";box.onclick=e=>{const d=e.target.closest("div[data-i]");if(!d)return;const x=r[+d.dataset.i];pickPlace(+x.lat,+x.lon,x.display_name);box.style.display="none"}}catch(e){}}
+async function doSearch(){clearTimeout(sugT);const v=$("#q").value.trim();if(!v)return;$("#suggest").style.display="none";$("#q").blur();status('<span class="spin"></span> Buscando…');try{const r=await geocode(v);if(!r.length){status("😕 No encontré ese sitio",3000);return}pickPlace(+r[0].lat,+r[0].lon,r[0].display_name)}catch(e){status("📡 Sin conexión con el buscador",4000)}}
 $("#locBtn").onclick=()=>{if(!navigator.geolocation){status("Tu navegador no da la ubicación",3000);return}status('<span class="spin"></span> Buscándote…');navigator.geolocation.getCurrentPosition(p=>pickPlace(p.coords.latitude,p.coords.longitude,"Tu ubicación"),()=>status("📍 Activa el permiso de ubicación",4000),{enableHighAccuracy:true,timeout:15000})};
 function zoomFor(r){return r<=5?13:r<=15?12:r<=30?11:10}
 function pickPlace(lat,lon,label){
@@ -800,7 +905,7 @@ function drawR(){
   osmRLayer.clearLayers();if(!$("#lyOsmR").checked)return;
   rFeatures.forEach(f=>{const i=RINFO[f.k];if(!i)return;
     L.circle([f.lat,f.lon],{radius:i.r,color:i.c,weight:1.5,fillOpacity:.1}).addTo(osmRLayer);
-    L.marker([f.lat,f.lon],{icon:icon(`<div class="mkr">${i.ic}</div>`,24)}).addTo(osmRLayer).bindPopup(`<b>${esc(f.n)}</b><br><span class="small">${i.t} · radio orientativo ${fmtD(i.r/1000)}</span>`);
+    L.marker([f.lat,f.lon],{icon:icon(`<div class="mkr">${I(f.k==="aero"||f.k==="strip"||f.k==="heli"?"plane":f.k==="power"?"alert":"shield",14)}</div>`,24)}).addTo(osmRLayer).bindPopup(`<b>${esc(f.n)}</b><br><span class="small">${i.t} · radio orientativo ${fmtD(i.r/1000)}</span>`);
   });
 }
 function prelim(s){
@@ -816,13 +921,13 @@ const LV=[{t:"Pinta bien",e:"🟢"},{t:"Revisar",e:"🔵"},{t:"Con condiciones",
 function visibleSpots(){return spots.filter(s=>(onlyFav?favs[s.id]:activeCats.includes(s.cat))&&(!onlyGood||s.pre.lv<=1))}
 function renderSpots(pending){
   spotLayer.clearLayers();
-  if(!ref){$("#spotList").innerHTML='<div class="empty"><b>🗺️</b>Escribe arriba dónde quieres volar o toca 📍 para usar tu ubicación.<br><span class="small">También puedes arrastrar el muñequito 🧍 a cualquier punto del mapa.</span></div>';return}
+  if(!ref){$("#spotList").innerHTML='<div class="empty"><b>${I("map",34)}</b>Escribe arriba dónde quieres volar o toca 📍 para usar tu ubicación.<br><span class="small">También puedes arrastrar el muñequito 🧍 a cualquier punto del mapa.</span></div>';return}
   const list=visibleSpots();
   $("#spotsTitle").textContent=list.length?`${list.length} spot${list.length>1?"s":""} cerca`:"Explora spots";
   if(!list.length&&(pending||loading)){$("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="small mute" style="text-align:center">Buscando spots… puede tardar unos segundos</div>';return}
-  if(!list.length){$("#spotList").innerHTML=`<div class="empty"><b>${onlyFav?"💔":"🔭"}</b>${onlyFav?"Aún no tienes favoritos aquí. Toca ❤️ en un spot para guardarlo.":"No hay spots de esos tipos. Amplía el radio en ⚙️ Ajustes o activa más categorías arriba."}</div>`;return}
-  $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.c}">${c.ic}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?"❤️ ":""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">›</div></div>`}).join("")+(pending||loading?'<div class="skel"></div><div class="small mute" style="text-align:center">Cargando más spots…</div>':"");
-  if($("#lySpots").checked)list.slice(0,150).forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.c}">${c.ic}</div>`)}).addTo(spotLayer).on("click",()=>openSpot(s))});
+  if(!list.length){$("#spotList").innerHTML=`<div class="empty"><b>${I(onlyFav?"heart":"search",34)}</b>${onlyFav?"Aún no tienes favoritos aquí. Toca ❤️ en un spot para guardarlo.":"No hay spots de esos tipos. Amplía el radio en ⚙️ Ajustes o activa más categorías arriba."}</div>`;return}
+  $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.m}">${I(c.g,21)}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?`<span style="color:#e11d48">${I("heart",13)}</span> `:""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">${I("chev",18)}</div></div>`}).join("")+(pending||loading?'<div class="skel"></div><div class="small mute" style="text-align:center">Cargando más spots…</div>':"");
+  if($("#lySpots").checked)list.slice(0,150).forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.m}">${I(c.g,15)}</div>`,30)}).addTo(spotLayer).on("click",()=>openSpot(s))});
 }
 $("#spotList").addEventListener("click",e=>{const el=e.target.closest(".spot");if(!el)return;const s=spots.find(x=>x.id===el.dataset.id);if(s){map.setView([s.lat,s.lon],Math.max(map.getZoom(),14));openSpot(s)}});
 
@@ -832,8 +937,8 @@ function renderCtx(){
   $("#ctxGood span").textContent=onlyGood?"Solo los buenos":"Todos";
   $("#ctxGood").style.outline=onlyGood?"2px solid var(--ok)":"none";
   const b=$("#ctxCountry");
-  if(refCountry){const r=requirements(refCountry,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad").length;b.innerHTML=`${(CDB[refCountry]&&CDB[refCountry].flag)||"🌍"} <span>${esc(cName(refCountry))}${r.sub?" · "+r.sub:""}</span> ${need?`<span class="pill p2">${need} pendiente${need>1?"s":""}</span>`:'<span class="pill p0">✓</span>'}`}
-  else b.innerHTML="🌍 <span>País</span>";
+  if(refCountry){const r=requirements(refCountry,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad").length;b.innerHTML=`${(CDB[refCountry]&&CDB[refCountry].flag)||I("globe",16)} <span>${esc(cName(refCountry))}${r.sub?" · "+r.sub:""}</span> ${need?`<span class="pill p2">${need} pendiente${need>1?"s":""}</span>`:'<span class="pill p0">✓</span>'}`}
+  else b.innerHTML=I("globe",16)+" <span>País</span>";
 }
 $("#ctxDrone").onclick=()=>showPane("dron");
 $("#ctxReload").onclick=()=>{if(!ref)return;Object.keys(localStorage).filter(x=>x.startsWith("sf_c_")).forEach(x=>localStorage.removeItem(x));loadAll()};
@@ -846,34 +951,34 @@ function addOpt(cc){const sel=$("#vDest");if(![...sel.options].some(o=>o.value==
 async function openSpot(s){
   $("#detail").classList.add("on");
   const c=CATS[s.cat];
-  $("#dBox").innerHTML=`<div class="hero" id="hero" style="--hg:${HERO[s.cat]||HERO.wiki}"><button class="xbtn" id="dClose">✕</button><div class="big">${c.ic}</div><div><span class="tag">${c.n}</span><h1>${esc(s.name)}</h1></div></div>
+  $("#dBox").innerHTML=`<div class="hero" id="hero" style="--hg:${HERO[s.cat]||HERO.wiki}"><button class="xbtn" id="dClose">✕</button><div class="big">${I(c.g,72)}</div><div><span class="tag">${c.n}</span><h1>${esc(s.name)}</h1></div></div>
   <div class="dIn">
-   ${s.cat==="point"?`<button class="btn ghost block" id="adjBtn" style="margin-top:12px">🎯 Ajustar el punto con precisión</button>`:""}
-   <div class="facts">${s.dist!=null?`<span class="fact">📏 ${fmtD(s.dist)}</span>`:""}${s.ele?`<span class="fact">⛰️ ${esc(s.ele)} m</span>`:""}<span class="fact">🔗 <a href="${esc(s.url||"#")}" target="_blank" rel="noopener">${esc(s.src)}</a></span></div>
+   ${s.cat==="point"?`<button class="btn ghost block" id="adjBtn" style="margin-top:12px">${I("target",17)} Ajustar el punto con precisión</button>`:""}
+   <div class="facts">${s.dist!=null?`<span class="fact">${I("ruler",14)} ${fmtD(s.dist)}</span>`:""}${s.ele?`<span class="fact">${I("mountain",14)} ${esc(s.ele)} m</span>`:""}<span class="fact">${I("globe",14)} <a href="${esc(s.url||"#")}" target="_blank" rel="noopener">${esc(s.src)}</a></span></div>
    <div class="acts">
-    <a class="act" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>🧭</i>Cómo llegar</a>
-    <button class="act" id="favBtn"><i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}</button>
-    <button class="act" id="svBtn" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}><i>🧍</i>Street View</button>
-    <button class="act" id="shareBtn"><i>📤</i>Compartir</button>
+    <a class="act" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener">${I("route",20)}Cómo llegar</a>
+    <button class="act" id="favBtn">${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}</button>
+    <button class="act" id="svBtn" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}>${I("person",20)}Street View</button>
+    <button class="act" id="shareBtn">${I("share",20)}Compartir</button>
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
    <div id="wikiBox"></div>
-   <h2 style="margin-top:6px">🌤️ ¿Compensa ir?</h2>
+   <h2 style="margin-top:8px">${I("wind",20)} ¿Compensa ir?</h2>
    <div id="wxBox"></div>
-   <h2 style="margin-top:18px">¿Puedo volar aquí?</h2>
+   <h2 style="margin-top:20px">${I("shield",20)} ¿Puedo volar aquí?</h2>
    <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
    <div id="chk"><div class="verdict v1"><span class="vi"><span class="spin" style="width:28px;height:28px"></span></span><div><b>Comprobando…</b><span>Zonas oficiales, espacios protegidos, casas cercanas y aeródromos</span></div></div></div>
-   <h2 style="margin-top:18px">🧭 Plan y recomendaciones</h2>
+   <h2 style="margin-top:20px">${I("compass",20)} Plan y recomendaciones</h2>
    <p class="sub" style="margin-bottom:6px">Para tu ${esc(drone.name)} (${drone.g} g), según el día que elijas arriba en el tiempo</p>
    <div id="recBox"><div class="skel" style="height:120px"></div></div>
-   ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">🗑️ Borrar este spot</button>`:""}
-   ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">🔒 Guardar como mi spot privado</button><p class="small mute" style="text-align:center;margin-top:6px">Tus spots se guardan solo en tu móvil: nadie más los ve.</p>`:""}
+   ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">${I("trash",17)} Borrar este spot</button>`:""}
+   ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">${I("star",17)} Guardar como mi spot privado</button><p class="small mute" style="text-align:center;margin-top:6px">Tus spots se guardan solo en tu móvil: nadie más los ve.</p>`:""}
   </div>`;
   $("#dClose").onclick=closeDetail;
   $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
   if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
-  $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
+  $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
@@ -968,7 +1073,7 @@ async function getWx(lat,lon){
   const d=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_speed_80m,wind_gusts_10m,wind_direction_10m,visibility&daily=sunrise,sunset&timezone=auto&forecast_days=7&wind_speed_unit=kmh`,{},15000);
   wxMem[k]={t:Date.now(),d};try{localStorage.setItem(k,JSON.stringify(wxMem[k]))}catch(e){}return d;
 }
-const WXE=c=>c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"🌨️":c<=82?"🌦️":"⛈️";
+const WXE=c=>I(c===0?"sun":c<=2?"cloudsun":c===3?"cloud":c<=48?"fog":c<=67?"rain":c<=77?"snow":c<=82?"rain":"storm",20);
 const DIRS=["N","NE","E","SE","S","SO","O","NO"];
 function wxHours(d){
   const H=d.hourly,D=d.daily,out=[];
@@ -1014,13 +1119,13 @@ function wxHTML(d,dayIdx){
   const avgW=lh.length?Math.round(lh.reduce((a,h)=>a+h.w10,0)/lh.length):0,maxG=lh.length?Math.round(Math.max(...lh.map(h=>h.g))):0,maxP=lh.length?Math.max(...lh.map(h=>h.pp)):0;
   const tmin=lh.length?Math.round(Math.min(...lh.map(h=>h.temp))):0,tmax=lh.length?Math.round(Math.max(...lh.map(h=>h.temp))):0;
   const dir=lh.length?DIRS[Math.round(lh[Math.floor(lh.length/2)].dir/45)%8]:"";
-  const ic=["🟢","🟡","🔴","🌙"][sm.lv];
+  const ic=I(["checkc","alert","ban","moon"][sm.lv],32);
   const week=days.map((x,i)=>({i,x,s:daySummary(hours,x,lim,i===0)}));
   return `<div class="seg days" data-wxseg>${days.map((x,i)=>`<button data-d="${i}" class="${i===dayIdx?"on":""}">${dayName(x,i)}</button>`).join("")}</div>
    <div class="wxHero v${sm.lv===3?1:sm.lv}" style="margin-top:10px"><span class="wi">${ic}</span><div><b>${sm.title}</b><span>${sm.sub}</span></div></div>
-   <div class="hours">${all.map(h=>`<div class="hr ${h.light?"":"night"}" style="--c:${WXC[h.r.lv]}" title="${h.r.why}">${String(h.hr).padStart(2,"0")}h<span class="e">${h.light?WXE(h.code):"🌙"}</span><b>${Math.round(h.w10)}</b><small>↯${Math.round(h.g)}</small><small>${h.pp}%💧</small></div>`).join("")}</div>
+   <div class="hours">${all.map(h=>`<div class="hr ${h.light?"":"night"}" style="--c:${WXC[h.r.lv]}" title="${h.r.why}">${String(h.hr).padStart(2,"0")}h<span class="e">${h.light?WXE(h.code):I("moon",18)}</span><b>${Math.round(h.w10)}</b><small>racha ${Math.round(h.g)}</small><small>${h.pp}% lluvia</small></div>`).join("")}</div>
    <div class="wxStats"><div><b>${avgW} km/h ${dir}</b>Viento medio</div><div><b>${maxG} km/h</b>Rachas máx.</div><div><b>${maxP}%</b>Prob. de lluvia</div><div><b>${tmin}–${tmax} °C</b>Temperatura</div></div>
-   <h3 style="margin:14px 0 4px">📅 Próximos 7 días</h3><div class="week">${week.map(w=>`<button class="wday" data-d="${w.i}"><span>${["🟢","🟡","🔴","🌙"][w.s.lv]}</span><b>${dayName(w.x,w.i)}</b><span class="m">${w.s.title}${w.s.best?" · "+String(w.s.best.a).padStart(2,"0")+"–"+String(w.s.best.b+1).padStart(2,"0")+"h":""}</span></button>`).join("")}</div>
+   <h3 style="margin:16px 0 6px">Próximos 7 días</h3><div class="week">${week.map(w=>`<button class="wday" data-d="${w.i}"><span class="dot" style="width:10px;height:10px;color:${["#22c55e","#f59e0b","#ef4444","#94a3b8"][w.s.lv]}"></span><b>${dayName(w.x,w.i)}</b><span class="m">${w.s.title}${w.s.best?" · "+String(w.s.best.a).padStart(2,"0")+"–"+String(w.s.best.b+1).padStart(2,"0")+"h":""}</span></button>`).join("")}</div>
    <p class="small mute" style="margin:8px 2px 0">Tu dron aguanta unos <b>${lim} km/h</b> (rachas hasta ${Math.round(lim*1.35)}). Ajústalo en 🚁 Mi dron. Luz: ${sm.hs[0]?sm.hs[0].sunrise:""}–${sm.hs[0]?sm.hs[0].sunset:""}. Datos: Open-Meteo.</p>`;
 }
 async function mountWx(el,lat,lon){
@@ -1031,7 +1136,7 @@ async function mountWx(el,lat,lon){
 async function refreshWxChip(){
   const b=$("#ctxWx");if(!ref||!b)return;
   try{const d=await getWx(ref.lat,ref.lon);const hours=wxHours(d);const sm=daySummary(hours,hours[0].day,windLim(),true);const t=sm.lv===3?daySummary(hours,[...new Set(hours.map(h=>h.day))][1],windLim(),false):sm;
-    b.innerHTML=`${["🟢","🟡","🔴","🌙"][t.lv]} <span>${sm.lv===3?"Mañana":"Hoy"}: ${t.title.replace(" para volar","")}</span>`}catch(e){b.innerHTML="🌤️ <span>Tiempo</span>"}
+    b.innerHTML=`<span class="dot" style="width:9px;height:9px;color:${["#22c55e","#f59e0b","#ef4444","#94a3b8"][t.lv]}"></span> <span>${sm.lv===3?"Mañana":"Hoy"}: ${t.title.replace(" para volar","")}</span>`}catch(e){b.innerHTML=I("wind",16)+" <span>Tiempo</span>"}
 }
 $("#ctxWx").onclick=()=>{if(!ref){status("Primero busca un lugar",2000);return}
   $("#detail").classList.add("on");$("#dBox").innerHTML=`<div class="hero" style="--hg:linear-gradient(135deg,#0ea5e9,#6d5dfc);height:130px;cursor:default"><button class="xbtn" id="dClose">✕</button><div class="big">🌤️</div><div><span class="tag">Tiempo para volar</span><h1>${esc(ref.label.split(",")[0])}</h1></div></div><div class="dIn"><div id="wxBox" style="margin-top:14px"></div></div>`;
@@ -1165,18 +1270,18 @@ function buildCheck(s,st){
   if(drone.fpv)tips.push(IT("warn","Con gafas FPV","Lleva un observador que vea el dron."));
   const missing=req.items.filter(x=>x.st==="need"||x.st==="bad");
   if(missing.length)bump(2);
-  const V=[["✅","¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],["🔎","Se puede, con ojo","Hay cosas que revisar antes de despegar."],["⚠️","Solo con condiciones","Necesitas permiso, coordinación o más distancia."],["⛔","Mejor no","Restringido con tu dron o tus títulos actuales."]];
+  const V=[[I("checkc",30),"¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],[I("info",30),"Se puede, con ojo","Hay cosas que revisar antes de despegar."],[I("alert",30),"Solo con condiciones","Necesitas permiso, coordinación o más distancia."],[I("ban",30),"Mejor no","Restringido con tu dron o tus títulos actuales."]];
   const sorted=items.sort((a,b)=>"bad warn need q info ok".indexOf(a.st)-"bad warn need q info ok".indexOf(b.st));
   lastCheck={s,cc,lv,items:sorted,pend,req,missing,terrain,sub};setTimeout(()=>{if(curSpotObj&&curSpotObj.id===s.id)renderRec(s)},0);
   const pendHTML=pend.length?`<div class="req"><div class="st info"><span class="spin"></span></div><div class="tx"><b>Comprobando ${pend.join(", ")}…</b><div class="d">Lo demás ya está listo abajo.</div></div></div>`:"";
   return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}${pend.length?" <span class='spin' style='width:14px;height:14px'></span>":""}</b><span>${pend.length?"Resultado provisional, sigo comprobando…":V[lv][2]}</span></div></div>
-   <details class="sec" open><summary>📍 Qué hay en este punto</summary><div class="in">${pendHTML}${reqHTML(sorted)}</div></details>
-   ${tips.length?`<details class="sec"><summary>💡 Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
-   <details class="sec" ${missing.length?"open":""}><summary>🪪 Tus papeles en ${esc(cName(cc))} ${missing.length?`<span class="pill p2">${missing.length} pendiente${missing.length>1?"s":""}</span>`:'<span class="pill p0">Todo OK</span>'}</summary><div class="in">${reqHTML(req.items)}</div></details>
+   <details class="sec" open><summary>Qué hay en este punto</summary><div class="in">${pendHTML}${reqHTML(sorted)}</div></details>
+   ${tips.length?`<details class="sec"><summary>Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
+   <details class="sec" ${missing.length?"open":""}><summary>Tus papeles en ${esc(cName(cc))} ${missing.length?`<span class="pill p2">${missing.length} pendiente${missing.length>1?"s":""}</span>`:'<span class="pill p0">Todo OK</span>'}</summary><div class="in">${reqHTML(req.items)}</div></details>
    <p class="small mute" style="text-align:center">Datos en vivo de ${cc==="es"?"ENAIRE y ":cc==="de"?"DFS dipul y ":""}OpenStreetMap · Orientativo</p>`;
 }
-const STI={ok:"✅",need:"📝",warn:"⚠️",bad:"⛔",info:"ℹ️",q:"🔎"};
-function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(x.t)}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
+const STI={ok:I("check",17),need:I("file",16),warn:I("alert",16),bad:I("ban",16),info:I("info",16),q:I("search",16)};
+function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(noE(x.t))}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
 
 
 
@@ -1346,9 +1451,9 @@ function renderRec(s){
   }else steps.push(['<span class="spin"></span> Comprobando permisos','Zonas de ENAIRE, espacios protegidos y casas cercanas…']);
   // ----- checklist del día
   const chk=["Revisa ENAIRE Drones y los NOTAM el mismo día (pueden aparecer zonas temporales)","Baterías cargadas (y alguna de repuesto)",drone.fpv?"Lleva un observador: con gafas FPV es obligatorio":"Mantén el dron siempre a la vista","Número de operador pegado en el dron"+(g<250&&!drone.cam?" (si lleva cámara)":""),"Máximo 120 m de altura (60 m si estás en espacio aéreo controlado)","No sobrevueles personas ajenas ni grupos de gente"];
-  box.innerHTML=`${good.map(x=>`<div class="card small" style="line-height:1.5">${x}</div>`).join("")}${warn.map(x=>`<div class="card small" style="line-height:1.5;border-left:4px solid var(--warn)">${x}</div>`).join("")}
-   <details class="sec" open><summary>📋 Qué tienes que hacer</summary><div class="in plan">${steps.map((p,i)=>`<div class="step"><span class="n">${i+1}</span><div><b>${p[0]}</b><div class="small mute" style="margin-top:2px">${p[1]}</div>${p[2]?`<div class="small" style="margin-top:4px"><a href="${esc(p[2].u)}" target="_blank" rel="noopener">${esc(p[2].t)} ↗</a></div>`:""}</div></div>`).join("")}</div></details>
-   <details class="sec"><summary>🎒 Checklist antes de despegar</summary><div class="in">${chk.map(c=>`<div class="toggle"><div class="t"><b style="font-weight:600;font-size:13.5px">${esc(c)}</b></div><label class="sw"><input type="checkbox"><span></span></label></div>`).join("")}</div></details>`;
+  box.innerHTML=`${good.map(x=>`<div class="card small" style="line-height:1.55;border-left:3px solid var(--ok)">${noE(x)}</div>`).join("")}${warn.map(x=>`<div class="card small" style="line-height:1.55;border-left:3px solid var(--warn)">${noE(x)}</div>`).join("")}
+   <details class="sec" open><summary>Qué tienes que hacer</summary><div class="in plan">${steps.map((p,i)=>`<div class="step"><span class="n">${i+1}</span><div><b>${noE(p[0])}</b><div class="small mute" style="margin-top:2px">${p[1]}</div>${p[2]?`<div class="small" style="margin-top:4px"><a href="${esc(p[2].u)}" target="_blank" rel="noopener">${esc(p[2].t)} ↗</a></div>`:""}</div></div>`).join("")}</div></details>
+   <details class="sec"><summary>Checklist antes de despegar</summary><div class="in">${chk.map(c=>`<div class="toggle"><div class="t"><b style="font-weight:600;font-size:13.5px">${esc(c)}</b></div><label class="sw"><input type="checkbox"><span></span></label></div>`).join("")}</div></details>`;
 }
 
 /* ===================== añadir spots ===================== */
@@ -1378,8 +1483,8 @@ let myDrones=LS.get("sf_drones",null);
 if(!myDrones){myDrones=[{...drone,uid:"d"+Date.now()}];LS.set("sf_drones",myDrones)}
 if(!drone.uid){drone.uid=myDrones[0].uid}
 function renderDrone(){
-  $("#myDrones").innerHTML=myDrones.map(d=>`<button data-u="${d.uid}" class="${d.uid===drone.uid?"on":""}">${d.ic||"🚁"} ${esc(d.name.split("(")[0].trim())} <small>${d.g} g${["propio","legado"].includes(d.cls)?"":" · "+d.cls}</small></button>`).join("")+`<button data-u="new">＋ Nuevo</button>`;
-  $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""} · ${defWind(p.g)} km/h</small></div>`).join("");
+  $("#myDrones").innerHTML=myDrones.map(d=>`<button data-u="${d.uid}" class="${d.uid===drone.uid?"on":""}">${I("drone",16)} ${esc(d.name.split("(")[0].trim())} <small>${d.g} g${["propio","legado"].includes(d.cls)?"":" · "+d.cls}</small></button>`).join("")+`<button data-u="new">＋ Nuevo</button>`;
+  $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard" data-id="${p.id}"><span class="e">${I("drone",24)}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""} · ${defWind(p.g)} km/h</small></div>`).join("");
   $("#dName").value=drone.name;$("#dWeight").value=drone.g;$("#dWeightR").value=Math.min(3000,drone.g);$("#wVal").textContent=drone.g;
   const wb=weightBadge(drone.g);$("#wBadge").className="pill "+wb[1];$("#wBadge").textContent=wb[0];
   $("#dClass").value=drone.cls;$$("#dClassChips button").forEach(b=>b.classList.toggle("on",b.dataset.c===drone.cls));
@@ -1429,11 +1534,11 @@ function renderTravel(){
   const need=r.items.filter(x=>x.st==="need"||x.st==="bad"),total=r.items.filter(x=>x.st!=="info").length||1,okN=r.items.filter(x=>x.st==="ok").length;
   const antes=r.items.filter(x=>x.when==="antes"&&(x.st==="need"||x.st==="bad")),sitio=r.items.filter(x=>!antes.includes(x)&&x.st!=="ok"),ok=r.items.filter(x=>x.st==="ok");
   $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||"🌍"} ${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
-  ${v.length?`<details class="sec"><summary>🪪 Tus títulos allí</summary><div class="in">${reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d})))}</div></details>`:""}
-  ${antes.length?`<details class="sec" open><summary>📋 Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
-  <details class="sec" open><summary>📍 Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
-  ${ok.length?`<details class="sec"><summary>✅ Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
-  <details class="sec"><summary>🔗 Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
+  ${v.length?`<details class="sec"><summary>Tus títulos allí</summary><div class="in">${reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d})))}</div></details>`:""}
+  ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
+  <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
+  ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
+  <details class="sec"><summary>Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
   <div class="notice"><span>⏱️</span><span>Plazos orientativos. Las normas cambian: confírmalas antes de viajar.</span></div>`;
 }
 $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
@@ -1452,17 +1557,18 @@ let obStep=0;
 function startOb(){obStep=0;$("#ob").classList.add("on");renderOb()}
 function renderOb(){
   const steps=[
-   ()=>`<div class="obHero"><div class="e">🚁</div><h1>SpotFPV</h1><div>Encuentra dónde volar tu dron, sin líos.</div></div>
-    <div class="feat"><i>🗺️</i><div><b>Spots cerca de ti</b><span>Miradores, cumbres, ruinas, embalses y pistas RC, en todo el mundo.</span></div></div>
-    <div class="feat"><i>🚦</i><div><b>Semáforo de vuelo</b><span>Te digo si puedes volar en cada spot con tu dron.</span></div></div>
-    <div class="feat"><i>✈️</i><div><b>Listo para viajar</b><span>Qué títulos te valen en cada país y qué te falta.</span></div></div>`,
-   ()=>`<h1>¿Qué dron vuelas?</h1><p class="sub">Puedes cambiarlo cuando quieras.</p><div class="grid2" id="obDrones">${PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g</small></div>`).join("")}</div>`,
+   ()=>`<div class="obHero"><div class="logo">${I("drone",30)}</div><h1>SpotFPV</h1><div style="opacity:.8;margin-top:4px">Dónde volar tu dron, con normas, tiempo y permisos claros.</div></div>
+    <div class="feat"><i>${I("map",22)}</i><div><b>Spots y cualquier punto</b><span>Miradores, cumbres, ruinas, embalses… o el punto exacto que elijas.</span></div></div>
+    <div class="feat"><i>${I("shield",22)}</i><div><b>¿Puedo volar aquí?</b><span>Zonas oficiales, Catastro, distancia a casas y permisos.</span></div></div>
+    <div class="feat"><i>${I("wind",22)}</i><div><b>¿Compensa ir?</b><span>Viento y tiempo por horas según lo que aguanta tu dron.</span></div></div>
+    <div class="feat"><i>${I("plane",22)}</i><div><b>Listo para viajar</b><span>Qué títulos te valen en cada país y qué te falta.</span></div></div>`,
+   ()=>`<h1>¿Qué dron vuelas?</h1><p class="sub">Puedes cambiarlo cuando quieras.</p><div class="grid2" id="obDrones">${PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${I("drone",24)}</span><b>${esc(p.name)}</b><small>${p.g} g</small></div>`).join("")}</div>`,
    ()=>`<h1>¿Qué títulos tienes?</h1><p class="sub">Así sé qué te vale en cada país.</p><div class="card" style="padding:4px 14px">${["eu_a1a3","eu_a2","eu_sts","eu_reg","insur"].map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div><label class="f">Dónde vives</label><select id="obRes"></select>`,
-   ()=>`<div class="obHero"><div class="e">📍</div><h1>¡Todo listo!</h1><div>Escribe arriba el sitio donde quieres volar, toca 📍 para usar tu ubicación o arrastra el muñequito 🧍 a cualquier punto del mapa.</div></div><div class="notice"><span>⚠️</span><span>SpotFPV te orienta con datos en vivo, pero el responsable del vuelo eres tú: mira siempre el mapa oficial antes de despegar.</span></div>`
+   ()=>`<div class="obHero"><div class="logo">${I("check",28)}</div><h1>Todo listo</h1><div>Escribe arriba el sitio donde quieres volar, toca 📍 para usar tu ubicación o arrastra el muñequito 🧍 a cualquier punto del mapa.</div></div><div class="notice"><span>⚠️</span><span>SpotFPV te orienta con datos en vivo, pero el responsable del vuelo eres tú: mira siempre el mapa oficial antes de despegar.</span></div>`
   ];
   $("#obBody").innerHTML=steps[obStep]();
   $("#obDots").innerHTML=steps.map((_,i)=>`<span class="${i===obStep?"on":""}"></span>`).join("");
-  $("#obNext").textContent=obStep===0?"Empezar":obStep===steps.length-1?"Ir al mapa 🚀":"Siguiente";
+  $("#obNext").textContent=obStep===0?"Empezar":obStep===steps.length-1?"Ir al mapa":"Siguiente";
   if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id),uid:drone.uid};LS.set("sf_drone",drone);const k=myDrones.findIndex(x=>x.uid===drone.uid);if(k>=0){myDrones[k]={...drone};LS.set("sf_drones",myDrones)}$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
   if(obStep===2){fillCountrySelect("#obRes",profile.res);$("#obRes").onchange=()=>{profile.res=$("#obRes").value;LS.set("sf_profile",profile)};$("#obBody").onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){profile.certs[k]=e.target.checked;LS.set("sf_profile",profile)}}}
 }
