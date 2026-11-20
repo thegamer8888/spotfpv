@@ -66,6 +66,7 @@ input,select{font:inherit}
 #pickHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--ink);color:var(--bg);font-weight:700;padding:10px 16px;border-radius:20px;display:none;box-shadow:var(--shadow);font-size:13.5px;text-align:center;max-width:92vw}
 .distTip{background:var(--brand)!important;color:#fff!important;border:0!important;font-weight:800;border-radius:10px!important;box-shadow:var(--shadow2)}
 .distTip:before{display:none}
+.okTip{background:#16a34a!important}
 #aim{position:fixed;left:50%;top:50%;z-index:1100;pointer-events:none;display:none;transform:translate(-50%,-100%)}
 #aim .pinA{font-size:44px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.45));transition:transform .15s}
 #aim.moving .pinA{transform:translateY(-10px)}
@@ -1106,8 +1107,8 @@ function buildCheck(s,st){
   if(cc==="es"){
     if(st.ena===undefined)pend.push("zonas de ENAIRE");
     else if(st.ena){const z=st.ena;
-      if(!z.length)items.push(IT("ok","Fuera de zonas de ENAIRE","No hay zona aeronáutica, urbana ni de infraestructuras en este punto."));
-      z.forEach(a=>{const msg=cleanHTML(a.message||a.reasons||a.otherReasonInfo||"");const open60=/altura m[aá]xima de 60 ?m/i.test(msg)&&a.lid===2;
+      if(!z.filter(a=>!(a.lid===3&&(a.identifier==="NPDRID"||String(a.reasons).includes("POPULATION")))).length)items.push(IT("ok","Fuera de zonas restringidas de ENAIRE","No hay zona aeronáutica ni de infraestructuras en este punto."));
+      z.forEach(a=>{if(a.lid===3&&(a.identifier==="NPDRID"||String(a.reasons).includes("POPULATION")))return;const msg=cleanHTML(a.message||a.reasons||a.otherReasonInfo||"");const open60=/altura m[aá]xima de 60 ?m/i.test(msg)&&a.lid===2;
         const contact=[a.email,a.phone].filter(Boolean).join(" · ");const nm=cleanHTML(a.name||a.identifier||"");
         if(open60){bump(1);items.push(IT("info",`Espacio aéreo controlado${nm?": "+nm:""}`,"Puedes volar sin pedir nada hasta 60 m de altura y siempre a la vista. Para subir más, pide coordinación en ENAIRE Planea.",{link:LK("ENAIRE Planea","https://planea.enaire.es/")}));return}
         const t=String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn";bump(t==="bad"?3:2);
@@ -1145,7 +1146,9 @@ function buildCheck(s,st){
       else items.push(IT("ok",`🏠 ${near}`,`Fuera de zona habitada (más de 150 m). ${det}`));
     }}
   else items.push(IT("q","No pude medir la distancia a casas","El servicio no respondió. Vuelve a abrir el punto en un momento."));
-  if(cc==="es"&&st.ena&&!st.ena.some(a=>a.lid===3))items.push(IT("ok","Fuera de entorno urbano (según ENAIRE)","Aquí no hace falta avisar al Ministerio del Interior."));
+  if(st.D&&(st.A!==undefined)){const U=urbanEval(st.D,terrain,popNames,cc);if(U.urban){bump(2);items.push(IT("warn","Entorno urbano (probable)",`Por qué: ${U.why.join("; ")}.${cc==="es"?" Según el RD 517/2024, entorno urbano es: (a) núcleos de población con edificación consolidada, (b) zonas residenciales, comerciales o industriales con calles, alumbrado y alcantarillado, o (c) áreas recreativas públicas con instalaciones. Si vuelas aquí hay que avisar al Ministerio del Interior 5 días antes.":""} ${U.exitTxt}`,{time:cc==="es"?"Aviso con 5 días de antelación":"",link:cc==="es"?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):undefined}))}
+    else items.push(IT("ok","Fuera de entorno urbano",`Por qué: ${U.why.join("; ")}.${cc==="es"?" ENAIRE muestra en toda España un aviso genérico de “compruebe si es entorno urbano”; con estos datos, este punto no lo es, así que no hace falta avisar al Ministerio del Interior.":""}`))}
+  else if(cc==="es"&&st.ena)pend.push("si es entorno urbano");
 
   if(st.N===undefined)pend.push("aeródromos");
   else if(st.N){st.N.forEach(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
@@ -1207,21 +1210,42 @@ async function osmBuildings(lat,lon,r){
   return d.elements.filter(e=>e.geometry).map(e=>({ring:e.geometry.map(p=>[p.lat,p.lon]),use:e.tags&&e.tags.building&&e.tags.building!=="yes"?e.tags.building:""}));
 }
 async function distAnalysis(lat,lon,cc){
-  const R=300;let blds=null,src="OpenStreetMap",parcel=null;
+  const R=450;let blds=null,src="OpenStreetMap",parcel=null;
   if(cc==="es"){const[b,p]=await Promise.allSettled([catastroBuildings(lat,lon,R),catastroParcel(lat,lon)]);if(b.status==="fulfilled"){blds=b.value;src="Catastro"}if(p.status==="fulfilled")parcel=p.value}
   if(!blds)blds=await osmBuildings(lat,lon,R);
   const xy=toXY(lat,lon),P=[0,0];let nearest=null,n150=0;
   blds.forEach(b=>{const poly=b.ring.map(([a,o])=>xy(a,o));if(poly.length<3)return;const r=polyDist(P,poly);if(r.d<=150)n150++;if(!nearest||r.d<nearest.d)nearest={d:r.d,inside:r.inside,use:b.use,ring:b.ring,cp:r.cp}});
   if(nearest&&nearest.cp){const kx=111320*Math.cos(lat*Math.PI/180);nearest.cll=[lat+nearest.cp[1]/110540,lon+nearest.cp[0]/kx]}
-  const D={src,nearest,n150,radius:R,parcel};
+  // número de edificios a 100 m y búsqueda de la salida más corta (punto sin casas a 150 m)
+  const polys=blds.map(b=>b.ring.map(([a,o])=>xy(a,o))).filter(p=>p.length>=3);
+  const minD=(x,y)=>{let m=1e9;for(const p of polys){const bb=p._bb||(p._bb=p.reduce((a,[px,py])=>[Math.min(a[0],px),Math.min(a[1],py),Math.max(a[2],px),Math.max(a[3],py)],[1e9,1e9,-1e9,-1e9]));const dbb=Math.hypot(Math.max(bb[0]-x,0,x-bb[2]),Math.max(bb[1]-y,0,y-bb[3]));if(dbb>=m)continue;const r=polyDist([x,y],p);if(r.d<m)m=r.d;if(m===0)break}return m};
+  const n100=polys.filter(p=>polyDist(P,p).d<=100).length;
+  let exit=null;const DIR=["N","NE","E","SE","S","SO","O","NO"];
+  if(nearest&&nearest.d<150){for(let dist=25;dist<=R-150&&!exit;dist+=25){let bestB=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8,x=Math.sin(ang)*dist,y=Math.cos(ang)*dist;const md=minD(x,y);if(md>=150&&(!bestB||md>bestB.md))bestB={md,ang,x,y}}if(bestB){const kx=111320*Math.cos(lat*Math.PI/180);exit={d:dist,dir:DIR[Math.round(bestB.ang/(Math.PI/4))%8],ll:[lat+bestB.y/110540,lon+bestB.x/kx]}}}
+    if(!exit){let best=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8;let cnt=0;for(let s=50;s<=R-50;s+=50){if(minD(Math.sin(ang)*s,Math.cos(ang)*s)<60)cnt++}if(!best||cnt<best.cnt)best={cnt,ang}}exit={far:true,dir:DIR[Math.round(best.ang/(Math.PI/4))%8]}}}
+  const D={src,nearest,n150,n100,radius:R,parcel,exit};
   if(curSpotId&&curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawDistance(lat,lon,D);
   return D;
+}
+function urbanEval(D,terrain,popNames,cc){
+  const why=[],no=[];const lu=(terrain||[]).map(t=>t.landuse).filter(Boolean);
+  if(D.parcel&&D.parcel.cls==="urbano")why.push("la parcela es suelo urbano en el Catastro");
+  if(lu.some(x=>/^(residential|commercial|industrial|retail)$/.test(x)))why.push(`OpenStreetMap lo marca como zona ${lu.includes("industrial")?"industrial":lu.includes("commercial")||lu.includes("retail")?"comercial":"residencial"}`);
+  if(D.n100>=6)why.push(`hay ${D.n100} edificios a menos de 100 m (núcleo edificado)`);
+  if(popNames.some(p=>/parque|polideportivo|estadio|campo deportivo|parque acuático|golf/.test(p)))why.push(`hay una zona recreativa pública cerca (${popNames.filter(p=>/parque|polideportivo|estadio|campo deportivo|parque acuático|golf/.test(p)).join(", ")})`);
+  const urban=why.length>0;
+  if(!urban){if(D.parcel)no.push(`la parcela es suelo ${D.parcel.cls}`);no.push(D.nearest?`la casa más cercana está a ${Math.round(D.nearest.d)} m`:"no hay edificios cerca");if(D.n100<6)no.push(`solo ${D.n100} edificio${D.n100===1?"":"s"} a 100 m`);if(!lu.length)no.push("no está en zona residencial, comercial ni industrial")}
+  let exitTxt="";const e=D.exit;
+  if(e&&!e.far)exitTxt=`👉 Si te alejas unos ${e.d} m hacia el ${e.dir}, quedas a más de 150 m de cualquier casa: ahí ya no es zona edificada y puedes volar en A3 (incluso con drones de más de 250 g sin etiqueta).`;
+  else if(e&&e.far)exitTxt=`👉 La zona edificada sigue más allá de ${D.radius} m. La salida más despejada parece ser hacia el ${e.dir}: busca un punto a las afueras con el muñequito.`;
+  return{urban,why:urban?why:no,exitTxt};
 }
 function drawDistance(lat,lon,D){
   const nb=D.nearest,far=!nb||nb.d>=150,col=far?"#22c55e":"#f59e0b";
   L.circle([lat,lon],{radius:150,color:col,weight:2,fillOpacity:.08,dashArray:"6 6"}).addTo(ptLayer).bindTooltip(far?"150 m libres de casas ✅":"Hay casas a menos de 150 m",{direction:"top"});
   if(nb){L.polygon(nb.ring,{color:"#6d5dfc",weight:2,fillOpacity:.35}).addTo(ptLayer);
     if(nb.cll&&!nb.inside)L.polyline([[lat,lon],nb.cll],{color:"#6d5dfc",weight:3,dashArray:"4 6"}).addTo(ptLayer).bindTooltip(`🏠 ${Math.round(nb.d)} m`,{permanent:true,direction:"center",className:"distTip"})}
+  if(D.exit&&!D.exit.far){L.polyline([[lat,lon],D.exit.ll],{color:"#16a34a",weight:4}).addTo(ptLayer);L.circleMarker(D.exit.ll,{radius:9,color:"#fff",weight:3,fillColor:"#16a34a",fillOpacity:1}).addTo(ptLayer).bindTooltip(`✅ ${D.exit.d} m al ${D.exit.dir}: sin casas a 150 m`,{permanent:true,direction:"right",className:"distTip okTip"}).on("click",()=>openPoint(D.exit.ll[0],D.exit.ll[1]));L.circle(D.exit.ll,{radius:150,color:"#16a34a",weight:1.5,fillOpacity:.05}).addTo(ptLayer)}
 }
 
 /* ===================== plan y recomendaciones ===================== */
@@ -1266,7 +1290,7 @@ function renderRec(s){
     const fmt=w=>`${String(w.a).padStart(2,"0")}:00 y las ${String(w.b+1).padStart(2,"0")}:00`;
     let blocked="";if(lc){const lim5=new Date(flyDate);lim5.setDate(lim5.getDate()-5);
       if(lc.items.some(x=>x.st==="bad"&&/militar|Prisión|Terreno privado/.test(x.t)))blocked="este punto está restringido";
-      else if(lc.items.some(x=>/Zona urbana/.test(x.t))&&lim5<new Date(new Date().toDateString()))blocked="al ser entorno urbano necesitas avisar con 5 días y ya no llegas para ese día";
+      else if(lc.items.some(x=>/Entorno urbano \(probable\)|Zona urbana/.test(x.t))&&lim5<new Date(new Date().toDateString()))blocked="al ser entorno urbano necesitas avisar con 5 días y ya no llegas para ese día";
       else if(lc.items.some(x=>/Seguramente estás en su zona|^Zona aeronáutica/.test(x.t)))blocked="antes necesitas la coordinación con ENAIRE o el aeródromo";
       else if(lc.items.some(x=>/Demasiado cerca de zonas habitadas/.test(x.t)))blocked="con tu dron tienes que alejarte a 150 m de las casas"}
     if(sm.lv===0&&blocked)warn.push(`<b>🌤️ El tiempo acompaña ${dayLabel}</b> (mejor entre las ${fmt(sm.best)}, viento medio ${avgW} km/h, rachas de ${maxG}), <b>pero ${blocked}.</b> Mira los pasos de abajo.`);
@@ -1283,9 +1307,9 @@ function renderRec(s){
   }else warn.push('<span class="spin"></span> Cargando el tiempo…');
   // ----- permisos según ENAIRE/OSM
   if(lc){
-    const urban=lc.items.find(x=>/Zona urbana/.test(x.t)),aero=lc.items.find(x=>/^Zona aeronáutica|Seguramente estás en su zona/.test(x.t+" "+(x.d||""))),ctr=lc.items.find(x=>/Espacio aéreo controlado/.test(x.t)),prot=lc.items.find(x=>/Espacio protegido/.test(x.t)),priv=lc.items.find(x=>/Terreno privado/.test(x.t)),a3=lc.items.find(x=>/Demasiado cerca de zonas habitadas/.test(x.t)),mil=lc.items.find(x=>/militar|Prisión/.test(x.t)&&x.st==="bad");
+    const urban=lc.items.find(x=>/Entorno urbano \(probable\)|Zona urbana/.test(x.t)),aero=lc.items.find(x=>/^Zona aeronáutica|Seguramente estás en su zona/.test(x.t+" "+(x.d||""))),ctr=lc.items.find(x=>/Espacio aéreo controlado/.test(x.t)),prot=lc.items.find(x=>/Espacio protegido/.test(x.t)),priv=lc.items.find(x=>/Terreno privado/.test(x.t)),a3=lc.items.find(x=>/Demasiado cerca de zonas habitadas/.test(x.t)),mil=lc.items.find(x=>/militar|Prisión/.test(x.t)&&x.st==="bad");
     if(mil)steps.push(["⛔ No vueles aquí",mil.t+". Busca otro punto."]);
-    if(urban){const lim5=new Date(flyDate);lim5.setDate(lim5.getDate()-5);const late=lim5<new Date(new Date().toDateString());steps.push(["📨 Avisa al Ministerio del Interior",`Es entorno urbano. Para volar ${dayLabel} tendrías que haberlo comunicado como tarde el ${fmtDate(lim5)}${late?" — ya no llegas para ese día: elige una fecha al menos 5 días después de hoy.":"."}`,LK("Formulario de comunicación","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/")])}
+    if(urban){const lim5=new Date(flyDate);lim5.setDate(lim5.getDate()-5);const late=lim5<new Date(new Date().toDateString());steps.push(["📨 Avisa al Ministerio del Interior… o aléjate",`${(urban.d.match(/👉[^]*$/)||[""])[0]} Si prefieres volar aquí: es entorno urbano y, para volar ${dayLabel} tendrías que haberlo comunicado como tarde el ${fmtDate(lim5)}${late?" — ya no llegas para ese día: elige una fecha al menos 5 días después de hoy.":"."}`,LK("Formulario de comunicación","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/")])}
     if(aero)steps.push(["🛫 Coordina con ENAIRE o el aeródromo","Estás dentro de una zona de aeródromo. Pide la coordinación en ENAIRE Planea con días o semanas de antelación y espera la respuesta antes de volar.",LK("ENAIRE Planea","https://planea.enaire.es/")]);
     else if(ctr)steps.push(["📏 Máximo 60 m de altura","Estás en espacio aéreo controlado: puedes volar sin pedir nada si no pasas de 60 m y lo tienes siempre a la vista. Para subir más, coordina en ENAIRE Planea."]);
     if(prot)steps.push(["🌳 Pregunta al espacio protegido",prot.t.replace("Espacio protegido: ","")+": consulta al órgano gestor (en Madrid, la Comunidad de Madrid) si se puede volar. En primavera suele estar prohibido por la cría de aves."]);
