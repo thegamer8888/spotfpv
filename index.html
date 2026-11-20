@@ -59,6 +59,35 @@ input,select{font:inherit}
 #areaBtn{position:fixed;left:50%;transform:translateX(-50%);z-index:999;border:0;background:var(--ink);color:var(--bg);border-radius:22px;padding:10px 18px;font-weight:700;font-size:14px;box-shadow:var(--shadow);display:none}
 #toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(122px + var(--safe-t));z-index:1500;background:var(--card);color:var(--ink);border-radius:18px;padding:9px 16px;font-size:13px;font-weight:600;box-shadow:var(--shadow);display:none;max-width:92vw;text-align:center}
 #addHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--grad);color:#fff;font-weight:700;padding:10px 18px;border-radius:20px;display:none;box-shadow:var(--shadow)}
+/* ---------- pegman & wx ---------- */
+#peg{position:fixed;right:12px;z-index:1003;width:50px;height:50px;border-radius:16px;border:0;background:var(--card);box-shadow:var(--shadow);font-size:26px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+#peg.on{background:var(--grad)}
+#pegGhost{position:fixed;z-index:3500;font-size:38px;pointer-events:none;display:none;transform:translate(-50%,-90%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+#pickHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--ink);color:var(--bg);font-weight:700;padding:10px 16px;border-radius:20px;display:none;box-shadow:var(--shadow);font-size:13.5px;text-align:center;max-width:92vw}
+.mkpt{font-size:30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));transform:translateY(-12px)}
+.wxHero{border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.wxHero .wi{font-size:40px;flex:none}
+.wxHero b{display:block;font-size:16px;color:var(--ink)}
+.wxHero span{font-size:13px;color:var(--ink2)}
+.hours{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 6px;scrollbar-width:none}
+.hours::-webkit-scrollbar{display:none}
+.hr{flex:none;width:52px;background:var(--card);border-radius:14px;padding:8px 4px;text-align:center;box-shadow:var(--shadow2);font-size:11.5px;font-weight:600;color:var(--ink2);border-top:4px solid var(--c)}
+.hr .e{font-size:18px;display:block;margin:2px 0}
+.hr b{display:block;font-size:13px;color:var(--ink)}
+.hr small{display:block;color:var(--mute);font-size:10.5px}
+.hr.night{opacity:.45}
+.wxStats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.wxStats div{background:var(--card);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow2);font-size:12px;color:var(--mute)}
+.wxStats b{display:block;font-size:16px;color:var(--ink)}
+.myDr{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.myDr::-webkit-scrollbar{display:none}
+.myDr button{flex:none;border:2px solid transparent;background:var(--card);box-shadow:var(--shadow2);border-radius:16px;padding:10px 12px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.myDr button.on{border-color:var(--brand)}
+.myDr button small{color:var(--mute);font-weight:600}
+.clsChips{display:flex;flex-wrap:wrap;gap:6px}
+.clsChips button{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 11px;font-weight:800;font-size:13px;color:var(--ink2)}
+.clsChips button.on{border-color:var(--brand);background:var(--infobg);color:var(--ink)}
+.clsChips button small{display:block;font-weight:600;font-size:10.5px;color:var(--mute)}
 /* ---------- sheet ---------- */
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:var(--bg);border-radius:26px 26px 0 0;box-shadow:0 -10px 40px rgba(15,23,42,.18);display:flex;flex-direction:column;height:46vh;transition:height .3s cubic-bezier(.2,.8,.2,1);padding-bottom:calc(64px + var(--safe-b))}
 #sheet.big{height:90vh}
@@ -251,6 +280,9 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 <div id="toast"></div>
 <div id="addHint">👆 Toca el mapa donde está tu spot</div>
 <button id="areaBtn">🔄 Buscar en esta zona</button>
+<button id="peg" aria-label="Muñequito: arrastra al mapa">🧍</button>
+<div id="pegGhost">🧍</div>
+<div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · mantén pulsado el mapa</span></div>
 
 <section id="sheet">
   <div id="grab"><span></span></div>
@@ -263,6 +295,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
       </div>
       <div class="ctx">
         <button class="ctxc" id="ctxDrone">🚁 <span></span></button>
+        <button class="ctxc" id="ctxWx">🌤️ <span>Tiempo</span></button>
         <button class="ctxc" id="ctxCountry">🌍 <span>—</span></button>
         <button class="ctxc" id="ctxRadius">📏 <span></span></button>
         <button class="ctxc" id="ctxReload">🔄 <span>Actualizar</span></button>
@@ -273,31 +306,34 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 
     <div class="pane" id="p-dron">
       <h1>Tu dron</h1>
-      <p class="sub">Elige el tipo que más se parezca. El peso es lo que más cambia las normas.</p>
-      <div class="grid2" id="dronePresets"></div>
-      <div class="card" style="margin-top:14px">
-        <label class="f" style="margin-top:0">Peso al despegar (con batería y cámara)</label>
+      <p class="sub">Configúralo una vez y la app lo tiene en cuenta en todo: normas, distancias y viento.</p>
+      <label class="f" style="margin-top:4px">Mis drones</label>
+      <div class="myDr" id="myDrones"></div>
+      <div class="card">
+        <label class="f" style="margin-top:0">Nombre</label>
+        <input type="text" id="dName" placeholder="Ej.: Mi Aquila16">
+        <label class="f">Etiqueta de clase (mira la pegatina del dron o la caja)</label>
+        <div class="clsChips" id="dClassChips">
+          <button data-c="C0">C0<small>&lt;250 g</small></button><button data-c="C1">C1<small>&lt;900 g</small></button><button data-c="C2">C2<small>&lt;4 kg</small></button><button data-c="C3">C3<small>&lt;25 kg</small></button><button data-c="C4">C4<small>aeromodelo</small></button><button data-c="propio">Sin etiqueta<small>montado/FPV</small></button><button data-c="legado">Sin etiqueta<small>antes de 2024</small></button>
+        </div>
+        <select id="dClass" style="display:none"><option value="propio"></option><option value="legado"></option><option value="C0"></option><option value="C1"></option><option value="C2"></option><option value="C3"></option><option value="C4"></option></select>
+        <label class="f">Peso al despegar (con batería y cámara)</label>
         <div class="row" style="justify-content:space-between"><span class="wbig"><span id="wVal">0</span> g</span><span id="wBadge" class="pill p0"></span></div>
         <input type="range" id="dWeightR" min="10" max="3000" step="5">
         <input type="number" id="dWeight" min="1" max="30000" style="margin-top:8px">
-        <label class="f">Nombre</label>
-        <input type="text" id="dName">
-        <label class="f">Marcado de clase</label>
-        <select id="dClass">
-          <option value="propio">Montado por mí / sin marcado</option>
-          <option value="legado">Comercial sin marcado (antes de 2024)</option>
-          <option value="C0">C0 · menos de 250 g</option>
-          <option value="C1">C1 · menos de 900 g</option>
-          <option value="C2">C2 · menos de 4 kg</option>
-          <option value="C3">C3</option>
-          <option value="C4">C4 · aeromodelo</option>
-        </select>
+        <label class="f">Viento máximo que aguanta</label>
+        <div class="row" style="justify-content:space-between"><span class="wbig"><span id="windVal">0</span> km/h</span><button class="btn ghost" id="windAuto" style="padding:7px 12px;font-size:12.5px">Automático</button></div>
+        <input type="range" id="dWind" min="8" max="70" step="1">
+        <p class="small mute" style="margin:4px 0 0">Lo uso para decirte si compensa ir según el viento y las rachas.</p>
         <div style="margin-top:6px">
           <div class="toggle"><div class="t"><b>📷 Lleva cámara</b><small>Graba o transmite imagen</small></div><label class="sw"><input type="checkbox" id="dCam"><span></span></label></div>
           <div class="toggle"><div class="t"><b>🥽 Vuelo con gafas FPV</b><small>Necesitarás observador</small></div><label class="sw"><input type="checkbox" id="dFpv"><span></span></label></div>
           <div class="toggle"><div class="t"><b>🧸 Es un juguete</b><small>Directiva 2009/48/CE</small></div><label class="sw"><input type="checkbox" id="dToy"><span></span></label></div>
         </div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="saveDroneBtn" style="flex:1">💾 Guardar en mis drones</button><button class="btn ghost" id="delDroneBtn">🗑️</button></div>
       </div>
+      <h3>Empezar desde una plantilla</h3>
+      <div class="grid2" id="dronePresets"></div>
       <div id="droneSummary"></div>
     </div>
 
@@ -583,7 +619,7 @@ function status(msg,ms){const s=$("#toast");if(!msg){s.style.display="none";retu
 const dark=()=>window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
 
 /* ===================== mapa ===================== */
-const map=L.map("map",{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([40.42,-4.21],6);
+const map=L.map("map",{zoomControl:false,attributionControl:true,worldCopyJump:true,preferCanvas:true}).setView([40.42,-4.21],6);
 const BASES={
  voy:L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}),
  dark:L.layerGroup([L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:16,attribution:"© Esri"}),L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:16})]),
@@ -597,7 +633,8 @@ let enaireLayer=null;
 try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.45,f:"image",layers:[0,2,3],attribution:"Zonas UAS © ENAIRE"})}catch(e){}
 const dipulLayer=L.tileLayer.wms("https://uas-betrieb.de/geoservices/dipul/wms",{layers:["flughaefen","flugplaetze","kontrollzonen","flugbeschraenkungsgebiete","militaerische_anlagen","justizvollzugsanstalten","naturschutzgebiete","nationalparks","wohngrundstuecke","industrieanlagen","kraftwerke","krankenhaeuser","temporaere_betriebseinschraenkungen"].map(x=>"dipul:"+x).join(","),format:"image/png",transparent:true,version:"1.3.0",opacity:.5,attribution:"Zonas UAS © DFS dipul"});
 const spotLayer=L.layerGroup().addTo(map),osmRLayer=L.layerGroup().addTo(map),refLayer=L.layerGroup().addTo(map);
-if(enaireLayer)enaireLayer.addTo(map);
+function syncEnaire(){if(!enaireLayer)return;const want=$("#lyEnaire")&&$("#lyEnaire").checked&&map.getZoom()>=8;if(want&&!map.hasLayer(enaireLayer))enaireLayer.addTo(map);else if(!want&&map.hasLayer(enaireLayer))map.removeLayer(enaireLayer)}
+map.on("zoomend",syncEnaire);
 function inDE(){const c=map.getCenter();return c.lat>47.2&&c.lat<55.1&&c.lng>5.8&&c.lng<15.1}
 function syncOfficialByZoom(){if($("#lyDipul").checked&&map.getZoom()>=8&&inDE()){if(!map.hasLayer(dipulLayer))dipulLayer.addTo(map)}else if(map.hasLayer(dipulLayer))map.removeLayer(dipulLayer)}
 map.on("zoomend moveend",syncOfficialByZoom);
@@ -613,16 +650,17 @@ const CATS={
  field:{ic:"🛩️",n:"Pistas RC",c:"#e1e5ff",m:"#6366f1",q:['nwr["sport"="model_aerodrome"]','nwr["aeroway"="model_runway"]']},
  wiki:{ic:"📖",n:"Destacados",c:"#e9edf3",m:"#64748b"},
  mine:{ic:"⭐",n:"Mis spots",c:"#ffe4ef",m:"#f43f5e"},
- fav:{ic:"❤️",n:"Favoritos",c:"#ffe4ef",m:"#f43f5e",virtual:true}
+ fav:{ic:"❤️",n:"Favoritos",c:"#ffe4ef",m:"#f43f5e",virtual:true},
+ point:{ic:"📍",n:"Punto elegido",c:"#e1e5ff",m:"#6d5dfc",hidden:true}
 };
-const HERO={view:"linear-gradient(135deg,#f59e0b,#f97316)",peak:"linear-gradient(135deg,#10b981,#0d9488)",ruins:"linear-gradient(135deg,#8b5cf6,#6366f1)",castle:"linear-gradient(135deg,#e11d48,#f97316)",water:"linear-gradient(135deg,#0ea5e9,#6366f1)",field:"linear-gradient(135deg,#6366f1,#00b4d8)",wiki:"linear-gradient(135deg,#475569,#6d5dfc)",mine:"linear-gradient(135deg,#f43f5e,#6d5dfc)"};
+const HERO={view:"linear-gradient(135deg,#f59e0b,#f97316)",peak:"linear-gradient(135deg,#10b981,#0d9488)",ruins:"linear-gradient(135deg,#8b5cf6,#6366f1)",castle:"linear-gradient(135deg,#e11d48,#f97316)",water:"linear-gradient(135deg,#0ea5e9,#6366f1)",field:"linear-gradient(135deg,#6366f1,#00b4d8)",wiki:"linear-gradient(135deg,#475569,#6d5dfc)",mine:"linear-gradient(135deg,#f43f5e,#6d5dfc)",point:"linear-gradient(135deg,#334155,#6d5dfc)"};
 let activeCats=LS.get("sf_cats2",["view","peak","ruins","castle","water","field","wiki","mine"]);
 let radiusKm=LS.get("sf_r",15);
 let ref=LS.get("sf_ref",null);
 let spots=[],rFeatures=[],mySpots=LS.get("sf_mine",[]),favs=LS.get("sf_favs",{}),refCountry=null,onlyGood=false;
 
 function renderCatBar(){
-  $("#catBar").innerHTML=Object.entries(CATS).map(([k,c])=>`<span class="cchip ${(k==="fav"?onlyFav:activeCats.includes(k))?"on":""}" style="--c:${c.m}" data-c="${k}">${c.ic} ${c.n}</span>`).join("");
+  $("#catBar").innerHTML=Object.entries(CATS).filter(([,c])=>!c.hidden).map(([k,c])=>`<span class="cchip ${(k==="fav"?onlyFav:activeCats.includes(k))?"on":""}" style="--c:${c.m}" data-c="${k}">${c.ic} ${c.n}</span>`).join("");
 }
 let onlyFav=false;
 $("#catBar").addEventListener("click",e=>{const ch=e.target.closest(".cchip");if(!ch)return;const k=ch.dataset.c;
@@ -649,7 +687,7 @@ function pickPlace(lat,lon,label){
 }
 function drawRef(){refLayer.clearLayers();if(!ref)return;L.marker([ref.lat,ref.lon],{icon:icon('<div class="mkref"></div>',22),zIndexOffset:1000}).addTo(refLayer);L.circle([ref.lat,ref.lon],{radius:radiusKm*1000,color:"#6d5dfc",weight:1.5,fillOpacity:.04,dashArray:"6 8"}).addTo(refLayer)}
 map.on("moveend",()=>{if(!ref||loading)return;const c=map.getCenter();const d=km(c.lat,c.lng,ref.lat,ref.lon);const b=$("#areaBtn");b.style.display=d>Math.max(2,radiusKm*.4)?"block":"none";positionAreaBtn()});
-function positionAreaBtn(){const h=$("#sheet").getBoundingClientRect().top;$("#areaBtn").style.top=(h-56)+"px"}
+function positionAreaBtn(){const r=$("#sheet").getBoundingClientRect();$("#areaBtn").style.top=(r.top-56)+"px";const p=$("#peg");if(p)p.style.top=(window.innerWidth>=900?(window.innerHeight-80):(r.top-64))+"px"}
 $("#areaBtn").onclick=async()=>{const c=map.getCenter();$("#areaBtn").style.display="none";const r=await revCountry(c.lat,c.lng);const lbl=(r.label||"Esta zona").split(",").slice(0,2).join(",");ref={lat:c.lat,lon:c.lng,label:lbl};LS.set("sf_ref",ref);$("#q").value=lbl.split(",")[0];loadAll()};
 
 /* ===================== datos en vivo ===================== */
@@ -675,16 +713,18 @@ async function loadAll(){
   if(cached){osmSpots=cached.s;rFeatures=cached.r}
   $("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
   revCountry(lat,lon).then(c=>{if(id!==loadId)return;refCountry=c.cc;renderCtx()});
+  refreshWxChip();
   wikiNear(lat,lon,Math.min(radiusKm*1000,10000)).then(w=>{if(id!==loadId)return;wikiSpots=w;mergeSpots();drawR();renderSpots(!cached)}).catch(()=>{});
   if(cached){mergeSpots();drawR();renderSpots(false);status(`✅ ${spots.length} spots`,2000);loading=false;return}
   status('<span class="spin"></span> Buscando spots en directo…');
-  const parts=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>parts.push(`${s}(${b});`))});
-  const qSpots=`[out:json][timeout:40];(${parts.join("")});out center tags 400;`;
+  const fast=[],slow=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>{if(s.startsWith("nwr")){fast.push(s.replace(/^nwr/,"node")+`(${b});`);slow.push(s.replace(/^nwr/,"wr")+`(${b});`)}else fast.push(`${s}(${b});`)})});
+  const qFast=`[out:json][timeout:25];(${fast.join("")});out tags 300;`,qSlow=`[out:json][timeout:40];(${slow.join("")});out center tags 200;`;
   const qR=`[out:json][timeout:40];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](${b2});nwr["landuse"="military"](${b});nwr["amenity"="prison"](${b});nwr["power"="plant"](${b}););out center tags 300;`;
-  const pS=overpass(qSpots).then(r=>{if(id!==loadId)return;osmSpots=r.elements.map(fromOsm).filter(Boolean);mergeSpots();renderSpots(false);status(`✅ ${spots.length} spots encontrados`,2500)}).catch(()=>{if(id!==loadId)return;mergeSpots();renderSpots(false);status("🐢 El servidor de mapas va lento. Toca 🔄 en un momento.",6000)});
+  let gotAny=false;const addOsm=r=>{if(id!==loadId)return;gotAny=true;const ids=new Set(osmSpots.map(x=>x.id));r.elements.map(fromOsm).filter(Boolean).forEach(x=>{if(!ids.has(x.id))osmSpots.push(x)});mergeSpots();renderSpots(true)};
+  const pS=Promise.allSettled([overpass(qFast,40000).then(addOsm),overpass(qSlow,60000).then(addOsm)]).then(rs=>{if(id!==loadId)return;mergeSpots();renderSpots(false);status(gotAny?`✅ ${spots.length} spots encontrados`:"🐢 El servidor de mapas va lento. Toca 🔄 en un momento.",gotAny?2500:6000)});
   const pR=overpass(qR).then(r=>{if(id!==loadId)return;rFeatures=r.elements.map(fromOsmR).filter(Boolean);mergeSpots();drawR();renderSpots(false)}).catch(()=>{});
   await Promise.allSettled([pS,pR]);
-  if(id===loadId){if(osmSpots.length)cacheSet(key,{s:osmSpots,r:rFeatures});loading=false}
+  if(id===loadId){if(osmSpots.length)cacheSet(key,{s:osmSpots,r:rFeatures});loading=false;renderSpots(false)}
 }
 function catOf(t){
   if(t.sport==="model_aerodrome"||t.aeroway==="model_runway")return"field";
@@ -745,7 +785,7 @@ function renderSpots(pending){
   if(!list.length&&(pending||loading)){$("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="small mute" style="text-align:center">Buscando spots… puede tardar unos segundos</div>';return}
   if(!list.length){$("#spotList").innerHTML=`<div class="empty"><b>${onlyFav?"💔":"🔭"}</b>${onlyFav?"Aún no tienes favoritos aquí. Toca ❤️ en un spot para guardarlo.":"No hay spots de esos tipos. Amplía el radio en ⚙️ Ajustes o activa más categorías arriba."}</div>`;return}
   $("#spotList").innerHTML=list.slice(0,150).map(s=>{const c=CATS[s.cat];const p=s.pre;return `<div class="spot" data-id="${esc(s.id)}"><div class="ic" style="--c:${c.c}">${c.ic}</div><div style="flex:1;min-width:0"><div class="nm">${favs[s.id]?"❤️ ":""}${esc(s.name)}</div><div class="meta">${fmtD(s.dist)} · ${c.n}${s.ele?" · "+esc(s.ele)+" m":""}</div><div style="margin-top:5px"><span class="pill p${p.lv}"><span class="dot"></span>${LV[p.lv].t}</span> <span class="meta">${esc(p.why)}</span></div></div><div class="go">›</div></div>`}).join("")+(pending||loading?'<div class="skel"></div><div class="small mute" style="text-align:center">Cargando más spots…</div>':"");
-  if($("#lySpots").checked)list.forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.c}">${c.ic}</div>`)}).addTo(spotLayer).on("click",()=>openSpot(s))});
+  if($("#lySpots").checked)list.slice(0,150).forEach(s=>{const c=CATS[s.cat];L.marker([s.lat,s.lon],{icon:icon(`<div class="mk l${s.pre.lv}" style="--c:${c.c}">${c.ic}</div>`)}).addTo(spotLayer).on("click",()=>openSpot(s))});
 }
 $("#spotList").addEventListener("click",e=>{const el=e.target.closest(".spot");if(!el)return;const s=spots.find(x=>x.id===el.dataset.id);if(s){map.setView([s.lat,s.lon],Math.max(map.getZoom(),14));openSpot(s)}});
 
@@ -775,27 +815,32 @@ async function openSpot(s){
    <div class="acts">
     <a class="act" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>🧭</i>Cómo llegar</a>
     <button class="act" id="favBtn"><i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}</button>
-    <a class="act" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>👀</i>Street View</a>
+    <a class="act" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lon}" target="_blank" rel="noopener" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}><i>🧍</i>Street View</a>
     <button class="act" id="shareBtn"><i>📤</i>Compartir</button>
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
    <div id="wikiBox"></div>
-   <h2 style="margin-top:6px">¿Puedo volar aquí?</h2>
+   <h2 style="margin-top:6px">🌤️ ¿Compensa ir?</h2>
+   <div id="wxBox"></div>
+   <h2 style="margin-top:18px">¿Puedo volar aquí?</h2>
    <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
    <div id="chk"><div class="verdict v1"><span class="vi"><span class="spin" style="width:28px;height:28px"></span></span><div><b>Comprobando…</b><span>Zonas oficiales, espacios protegidos, casas cercanas y aeródromos</span></div></div></div>
    ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">🗑️ Borrar este spot</button>`:""}
+   ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">⭐ Guardar como mi spot</button>`:""}
   </div>`;
   $("#dClose").onclick=closeDetail;
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
+  if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
   loadPhotos(s);if(s.wiki)loadWiki(s);
   $("#hero").onclick=e=>{if(e.target.closest(".xbtn"))return;openViewer(curPhoto)};
-  try{const res=await checkSpot(s);const box=$("#chk");if(box)box.innerHTML=res}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
+  curSpotId=s.id;mountWx($("#wxBox"),s.lat,s.lon);
+  try{await checkSpot(s,html=>{const box=$("#chk");if(box){const open=[...box.querySelectorAll("details")].map(d=>d.open);box.innerHTML=html;if(open.length)box.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i]})}})}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
 }
 async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
-function closeDetail(){$("#detail").classList.remove("on");photoSpot=null}
+function closeDetail(){$("#detail").classList.remove("on");photoSpot=null;curSpotId=null;ptLayer&&ptLayer.clearLayers()}
 /* ===================== fotos del spot ===================== */
 let photos=[],curPhoto=0,photoSpot=null;
 function satHTML(lat,lon,z,w,hgt){
@@ -873,39 +918,145 @@ async function dipulAt(lat,lon){
   const u=`https://uas-betrieb.de/geoservices/dipul/wms?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=${lay}&query_layers=${lay}&styles=&crs=EPSG:4326&bbox=${bbox}&width=101&height=101&i=50&j=50&info_format=application/json&feature_count=20`;
   const d=await jget(u,{},15000);return(d.features||[]).map(f=>({layer:(f.id||"").split(".")[0],...f.properties}));
 }
-async function checkSpot(s){
+/* ===================== tiempo ===================== */
+const wxMem={};
+async function getWx(lat,lon){
+  const k="sf_wx_"+lat.toFixed(2)+"_"+lon.toFixed(2);const m=wxMem[k]||LS.get(k,null);if(m&&Date.now()-m.t<45*60e3)return m.d;
+  const d=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_speed_80m,wind_gusts_10m,wind_direction_10m,visibility&daily=sunrise,sunset&timezone=auto&forecast_days=3&wind_speed_unit=kmh`,{},15000);
+  wxMem[k]={t:Date.now(),d};try{localStorage.setItem(k,JSON.stringify(wxMem[k]))}catch(e){}return d;
+}
+const WXE=c=>c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"🌨️":c<=82?"🌦️":"⛈️";
+const DIRS=["N","NE","E","SE","S","SO","O","NO"];
+function wxHours(d){
+  const H=d.hourly,D=d.daily,out=[];
+  for(let i=0;i<H.time.length;i++){const t=H.time[i],day=t.slice(0,10),di=D.time.indexOf(day);
+    const light=di>=0&&t>=D.sunrise[di].slice(0,13)+":00"&&t<D.sunset[di];
+    out.push({t,day,hr:+t.slice(11,13),temp:H.temperature_2m[i],pp:H.precipitation_probability[i]??0,pr:H.precipitation[i]??0,code:H.weather_code[i],w10:H.wind_speed_10m[i],w80:H.wind_speed_80m[i],g:H.wind_gusts_10m[i],dir:H.wind_direction_10m[i],vis:H.visibility?H.visibility[i]:null,light,sunrise:di>=0?D.sunrise[di].slice(11):"",sunset:di>=0?D.sunset[di].slice(11):""})}
+  return out;
+}
+function rateHour(h,lim){
+  const w=Math.max(h.w10,(h.w80||0)*.8),gl=lim*1.35;
+  if(!h.light)return{lv:3,why:"Noche"};
+  if(h.pp>=60||h.pr>=.3)return{lv:2,why:"Lluvia"};
+  if(w>lim||h.g>gl)return{lv:2,why:"Mucho viento"};
+  if(h.vis!=null&&h.vis<1500)return{lv:2,why:"Niebla"};
+  if(w>lim*.7||h.g>lim*1.1)return{lv:1,why:"Algo de viento"};
+  if(h.pp>=30)return{lv:1,why:"Puede llover"};
+  if(h.temp<3)return{lv:1,why:"Frío (baterías)"};
+  return{lv:0,why:"Bueno"};
+}
+const WXC=["#22c55e","#f59e0b","#ef4444","#94a3b8"];
+function daySummary(hours,day,lim,fromNow){
+  const nowH=new Date().getHours();
+  const hs=hours.filter(h=>h.day===day&&h.light&&(!fromNow||h.hr>=nowH));
+  if(!hs.length)return{lv:3,title:fromNow?"Ya es de noche":"Sin horas de luz",sub:"Mira mañana",hs};
+  hs.forEach(h=>h.r=rateHour(h,lim));
+  let best=null,cur=null;for(const h of hs){if(h.r.lv===0){if(!cur)cur={a:h.hr,b:h.hr};else cur.b=h.hr;if(!best||cur.b-cur.a>best.b-best.a)best={...cur}}else cur=null}
+  let ok=null;if(!best){let c2=null;for(const h of hs){if(h.r.lv<=1){if(!c2)c2={a:h.hr,b:h.hr};else c2.b=h.hr;if(!ok||c2.b-c2.a>ok.b-ok.a)ok={...c2}}else c2=null}}
+  const maxG=Math.max(...hs.map(h=>h.g)),maxW=Math.max(...hs.map(h=>Math.max(h.w10,(h.w80||0)*.8))),maxP=Math.max(...hs.map(h=>h.pp));
+  const reason=maxP>=60?`lluvia (${maxP}%)`:maxG>lim*1.35?`rachas de ${Math.round(maxG)} km/h`:maxW>lim?`viento de ${Math.round(maxW)} km/h`:"";
+  const fmt=w=>`${String(w.a).padStart(2,"0")}:00–${String(w.b+1).padStart(2,"0")}:00`;
+  if(best&&best.b-best.a>=1)return{lv:0,title:"Buen día para volar",sub:`Mejor franja: ${fmt(best)}`,hs,best};
+  if(best)return{lv:1,title:"Una ventana corta",sub:`Hacia las ${String(best.a).padStart(2,"0")}:00${reason?" · luego "+reason:""}`,hs,best};
+  if(ok)return{lv:1,title:"Día regular",sub:`Se puede de ${fmt(ok)}, con algo de viento`,hs,best:ok};
+  return{lv:2,title:"No compensa ir",sub:reason?`Por ${reason}`:"Malas condiciones todo el día",hs};
+}
+function wxHTML(d,dayIdx){
+  const lim=windLim(),hours=wxHours(d),days=[...new Set(hours.map(h=>h.day))].slice(0,3);
+  const day=days[dayIdx]||days[0],sm=daySummary(hours,day,lim,dayIdx===0);
+  const all=hours.filter(h=>h.day===day&&h.hr>=(dayIdx===0?new Date().getHours():6)&&h.hr<=21);all.forEach(h=>h.r=rateHour(h,lim));
+  const lh=sm.hs.length?sm.hs:all;
+  const avgW=lh.length?Math.round(lh.reduce((a,h)=>a+h.w10,0)/lh.length):0,maxG=lh.length?Math.round(Math.max(...lh.map(h=>h.g))):0,maxP=lh.length?Math.max(...lh.map(h=>h.pp)):0;
+  const tmin=lh.length?Math.round(Math.min(...lh.map(h=>h.temp))):0,tmax=lh.length?Math.round(Math.max(...lh.map(h=>h.temp))):0;
+  const dir=lh.length?DIRS[Math.round(lh[Math.floor(lh.length/2)].dir/45)%8]:"";
+  const names=["Hoy","Mañana","Pasado"];const ic=["🟢","🟡","🔴","🌙"][sm.lv];
+  return `<div class="seg" data-wxseg>${days.map((x,i)=>`<button data-d="${i}" class="${i===dayIdx?"on":""}">${names[i]}</button>`).join("")}</div>
+   <div class="wxHero v${sm.lv===3?1:sm.lv}" style="margin-top:10px"><span class="wi">${ic}</span><div><b>${sm.title}</b><span>${sm.sub}</span></div></div>
+   <div class="hours">${all.map(h=>`<div class="hr ${h.light?"":"night"}" style="--c:${WXC[h.r.lv]}" title="${h.r.why}">${String(h.hr).padStart(2,"0")}h<span class="e">${h.light?WXE(h.code):"🌙"}</span><b>${Math.round(h.w10)}</b><small>↯${Math.round(h.g)}</small><small>${h.pp}%💧</small></div>`).join("")}</div>
+   <div class="wxStats"><div><b>${avgW} km/h ${dir}</b>Viento medio</div><div><b>${maxG} km/h</b>Rachas máx.</div><div><b>${maxP}%</b>Prob. de lluvia</div><div><b>${tmin}–${tmax} °C</b>Temperatura</div></div>
+   <p class="small mute" style="margin:8px 2px 0">Tu dron aguanta unos <b>${lim} km/h</b> (rachas hasta ${Math.round(lim*1.35)}). Ajústalo en 🚁 Mi dron. Luz: ${sm.hs[0]?sm.hs[0].sunrise:""}–${sm.hs[0]?sm.hs[0].sunset:""}. Datos: Open-Meteo.</p>`;
+}
+async function mountWx(el,lat,lon){
+  if(!el)return;el.innerHTML='<div class="skel" style="height:110px"></div>';
+  try{const d=await getWx(lat,lon);let di=0;const draw=()=>{el.innerHTML=wxHTML(d,di);el.querySelector("[data-wxseg]").onclick=e=>{const b=e.target.closest("button");if(!b)return;di=+b.dataset.d;draw()}};draw()}
+  catch(e){el.innerHTML='<div class="card small">🌐 No pude cargar el tiempo ahora. Prueba en un momento.</div>'}
+}
+async function refreshWxChip(){
+  const b=$("#ctxWx");if(!ref||!b)return;
+  try{const d=await getWx(ref.lat,ref.lon);const hours=wxHours(d);const sm=daySummary(hours,hours[0].day,windLim(),true);const t=sm.lv===3?daySummary(hours,[...new Set(hours.map(h=>h.day))][1],windLim(),false):sm;
+    b.innerHTML=`${["🟢","🟡","🔴","🌙"][t.lv]} <span>${sm.lv===3?"Mañana":"Hoy"}: ${t.title.replace(" para volar","")}</span>`}catch(e){b.innerHTML="🌤️ <span>Tiempo</span>"}
+}
+$("#ctxWx").onclick=()=>{if(!ref){status("Primero busca un lugar",2000);return}
+  $("#detail").classList.add("on");$("#dBox").innerHTML=`<div class="hero" style="--hg:linear-gradient(135deg,#0ea5e9,#6d5dfc);height:130px;cursor:default"><button class="xbtn" id="dClose">✕</button><div class="big">🌤️</div><div><span class="tag">Tiempo para volar</span><h1>${esc(ref.label.split(",")[0])}</h1></div></div><div class="dIn"><div id="wxBox" style="margin-top:14px"></div></div>`;
+  $("#dClose").onclick=closeDetail;mountWx($("#wxBox"),ref.lat,ref.lon)};
+
+/* ===================== muñequito y punto libre ===================== */
+let picking=false;
+function setPicking(on){picking=on;$("#peg").classList.toggle("on",on);$("#pickHint").style.display=on?"block":"none";if(on&&$("#sheet").className!=="min"){$("#sheet").className="min";setTimeout(positionAreaBtn,320)}}
+$("#peg").addEventListener("click",()=>{if(pegDragged)return;setPicking(!picking)});
+let pegDragged=false,pegStart=null;
+$("#peg").addEventListener("pointerdown",e=>{pegStart={x:e.clientX,y:e.clientY};pegDragged=false;$("#peg").setPointerCapture(e.pointerId)});
+$("#peg").addEventListener("pointermove",e=>{if(!pegStart)return;if(!pegDragged&&Math.hypot(e.clientX-pegStart.x,e.clientY-pegStart.y)>8){pegDragged=true;$("#pegGhost").style.display="block"}if(pegDragged){const g=$("#pegGhost");g.style.left=e.clientX+"px";g.style.top=e.clientY+"px"}});
+$("#peg").addEventListener("pointerup",e=>{const was=pegDragged;pegStart=null;$("#pegGhost").style.display="none";if(!was)return;setTimeout(()=>pegDragged=false,50);
+  const r=$("#map").getBoundingClientRect(),sh=$("#sheet").getBoundingClientRect();if(e.clientY>=sh.top&&e.clientX>=sh.left&&e.clientX<=sh.right)return;
+  const ll=map.containerPointToLatLng([e.clientX-r.left,e.clientY-r.top]);setPicking(false);openPoint(ll.lat,ll.lng)});
+map.on("contextmenu",e=>{openPoint(e.latlng.lat,e.latlng.lng)});
+const ptLayer=L.layerGroup().addTo(map);
+async function openPoint(lat,lon){
+  ptLayer.clearLayers();L.marker([lat,lon],{icon:icon('<div class="mkpt">📍</div>',30),zIndexOffset:2000}).addTo(ptLayer);
+  const s={id:`pt/${lat.toFixed(5)},${lon.toFixed(5)}`,lat,lon,cat:"point",name:"Punto elegido",src:"Tu selección",dist:ref?km(ref.lat,ref.lon,lat,lon):null,url:`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`};
+  openSpot(s);
+  try{const r=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=es&lat=${lat}&lon=${lon}`,{},8000);const a=r.address||{};const nm=r.name||a.road||a.hamlet||a.village||a.town||a.city||"";if(nm&&$("#hero h1")&&curSpotId===s.id){$("#hero h1").textContent=nm;s.name=nm}}catch(e){}
+}
+
+/* ===================== comprobación progresiva ===================== */
+let curSpotId=null;
+async function checkSpot(s,paint){
   const{lat,lon}=s;
-  const qA=`[out:json][timeout:25];is_in(${lat},${lon})->.a;(area.a["boundary"~"^(protected_area|national_park)$"];area.a["leisure"="nature_reserve"];area.a["landuse"="military"];area.a["access"~"^(private|no)$"];);out tags;`;
-  const qB=`[out:json][timeout:25];(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon}););out tags 40;way["building"](around:150,${lat},${lon});out count;`;
+  const qA=`[out:json][timeout:20];is_in(${lat},${lon})->.a;(area.a["boundary"~"^(protected_area|national_park)$"];area.a["leisure"="nature_reserve"];area.a["landuse"="military"];area.a["access"~"^(private|no)$"];);out tags;`;
+  const qB=`[out:json][timeout:20];(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon}););out tags 40;way["building"](around:150,${lat},${lon});out count;`;
   const cc=(await revCountry(lat,lon)).cc||refCountry;
-  const known=ref&&km(lat,lon,ref.lat,ref.lon)<=radiusKm&&rFeatures.length>=0;
-  const nearQ=known?Promise.resolve({elements:rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags}))}):overpass(`[out:json][timeout:25];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,45000);
-  const[oA,oB,oN,ena,dip]=await Promise.allSettled([overpass(qA,20000),overpass(qB,25000),nearQ,cc==="es"?enaireAt(lat,lon):Promise.resolve(null),cc==="de"?dipulAt(lat,lon):Promise.resolve(null)]);
-  const osm=(oA.status==="fulfilled"||oB.status==="fulfilled"||oN.status==="fulfilled")?{status:"fulfilled",value:{elements:[...(oA.value?oA.value.elements:[]),...(oB.value?oB.value.elements:[]),...(oN.value?oN.value.elements.filter(e=>{const la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);const t=e.tags||{};const lim=t.aeroway?8:t.power?1:2;return la!=null&&km(lat,lon,la,lo)<=lim}):[])]},partial:oA.status!=="fulfilled"||oB.status!=="fulfilled"}:{status:"rejected"};
-  const items=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
+  const known=ref&&km(lat,lon,ref.lat,ref.lon)<=radiusKm;
+  const st={cc,ena:undefined,dip:undefined,A:undefined,B:undefined,N:undefined};
+  const go=()=>{if(curSpotId===s.id)paint(buildCheck(s,st))};
+  const track=(p,k)=>p.then(v=>{st[k]=v;go()},()=>{st[k]=null;go()});
+  st.N=known?rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags})):undefined;
+  if(cc!=="es")st.ena=false;if(cc!=="de")st.dip=false;
+  go();
+  const ps=[track(overpass(qA,20000),"A"),track(overpass(qB,22000),"B")];
+  if(!known)ps.push(track(overpass(`[out:json][timeout:20];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,25000).then(r=>r.elements),"N"));
+  if(cc==="es")ps.push(track(enaireAt(lat,lon),"ena"));
+  if(cc==="de")ps.push(track(dipulAt(lat,lon),"dip"));
+  await Promise.allSettled(ps);
+}
+function buildCheck(s,st){
+  const{lat,lon}=s,cc=st.cc,items=[],pend=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
   const req=requirements(cc,drone,profile);const sub=req.sub;
   if(cc==="es"){
-    if(ena.status==="fulfilled"){const z=ena.value;
+    if(st.ena===undefined)pend.push("zonas de ENAIRE");
+    else if(st.ena){const z=st.ena;
       if(!z.length)items.push(IT("ok","Fuera de zonas de ENAIRE","No hay zona aeronáutica, urbana ni de infraestructuras en este punto."));
       z.forEach(a=>{const msg=cleanHTML(a.message||a.reasons||a.otherReasonInfo||"");const open60=/altura m[aá]xima de 60 ?m/i.test(msg)&&a.lid===2;
         const contact=[a.email,a.phone].filter(Boolean).join(" · ");const nm=cleanHTML(a.name||a.identifier||"");
         if(open60){bump(1);items.push(IT("info",`Espacio aéreo controlado${nm?": "+nm:""}`,"Puedes volar sin pedir nada hasta 60 m de altura y siempre a la vista. Para subir más, pide coordinación en ENAIRE Planea.",{link:LK("ENAIRE Planea","https://planea.enaire.es/")}));return}
-        const st=String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn";bump(st==="bad"?3:2);
+        const t=String(a.type).toUpperCase().includes("PROHIB")?"bad":"warn";bump(t==="bad"?3:2);
         const short=msg.length>240?msg.slice(0,240).replace(/\s\S*$/,"")+"…":msg;
-        items.push(IT(st,a.lid===3?"Zona urbana (entorno urbano)":`Zona ${a.layer}${nm?": "+nm:""}`,a.lid===3?"Si vuelas aquí hay que avisar al Ministerio del Interior al menos 5 días antes.":(short||"Zona con condiciones.")+(contact?" Contacto: "+contact:""),{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.lid===3?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
+        items.push(IT(t,a.lid===3?"Zona urbana (entorno urbano)":`Zona ${a.layer}${nm?": "+nm:""}`,a.lid===3?"Si vuelas aquí hay que avisar al Ministerio del Interior al menos 5 días antes.":(short||"Zona con condiciones.")+(contact?" Contacto: "+contact:""),{time:a.lid===3?"Aviso con 5 días de antelación":"Coordinación previa (días o semanas)",link:a.lid===3?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):LK("Ver en ENAIRE Drones","https://drones.enaire.es/")}))});
     }else items.push(IT("q","No pude consultar ENAIRE","Mira este punto en el mapa oficial.",{link:LK("Abrir ENAIRE Drones","https://drones.enaire.es/")}));
   }else if(cc==="de"){
-    if(dip.status==="fulfilled"){const z=dip.value;if(!z.length)items.push(IT("ok","Fuera de zonas DiPUL","Sin zonas geográficas en este punto."));z.forEach(a=>{bump(2);items.push(IT("warn",`Zona DiPUL: ${a.name||a.layer}`,"Zona geográfica con restricciones (§ 21h LuftVO).",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}))})}
+    if(st.dip===undefined)pend.push("zonas DiPUL");
+    else if(st.dip){const z=st.dip;if(!z.length)items.push(IT("ok","Fuera de zonas DiPUL","Sin zonas geográficas en este punto."));z.forEach(a=>{bump(2);items.push(IT("warn",`Zona DiPUL: ${a.name||a.layer}`,"Zona geográfica con restricciones (§ 21h LuftVO).",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}))})}
     else items.push(IT("q","No pude consultar DiPUL","Las zonas se ven en el mapa; el detalle, en el mapa oficial.",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}));
   }else{const c=CDB[cc];bump(1);items.push(IT("q",`Mapa oficial de ${cName(cc)}`,"No tengo conexión directa con él: compruébalo antes de volar.",c&&c.map?{link:c.map}:{}))}
-  if(osm.status==="fulfilled"){
-    const els=osm.value.elements,areas=els.filter(e=>e.type==="area"),cnt=els.find(e=>e.type==="count");
-    const pop=els.filter(e=>e.type!=="area"&&e.type!=="count"&&e.tags&&(e.tags.landuse||e.tags.leisure)&&!e.tags.aeroway&&!e.tags.amenity&&!e.tags.power&&e.tags.landuse!=="military");
-    const near=els.filter(e=>e.tags&&e.type!=="area"&&(e.tags.aeroway||e.tags.amenity==="prison"||e.tags.power==="plant"||e.tags.landuse==="military"));
-    areas.forEach(a=>{const t=a.tags||{};
+  if(st.A===undefined)pend.push("espacios protegidos");
+  else if(st.A){st.A.elements.forEach(a=>{const t=a.tags||{};
       if(t.landuse==="military"){bump(3);items.push(IT("bad","Zona militar"+(t.name?": "+t.name:""),"No vueles aquí."))}
       else if(t.access==="private"||t.access==="no"){bump(3);items.push(IT("bad","Terreno privado"+(t.name?": "+t.name:""),"Necesitas permiso del dueño para entrar y despegar."))}
       else{bump(2);items.push(IT("warn","Espacio protegido: "+(t.name||t.protection_title||""),`${t.protection_title?t.protection_title+". ":""}Puede limitar los drones por la fauna. Pregunta al órgano gestor.`,{time:"Permiso con días o semanas de margen"}))}});
+    if(!st.A.elements.length)items.push(IT("ok","Sin espacios protegidos ni terreno privado marcado","Según OpenStreetMap."))}
+  else items.push(IT("q","No pude comprobar espacios protegidos","El servidor de mapas va lento. Vuelve a abrir el spot en un rato."));
+  if(st.B===undefined)pend.push("casas cercanas");
+  else if(st.B){const els=st.B.elements,cnt=els.find(e=>e.type==="count");const pop=els.filter(e=>e.type!=="count"&&e.tags&&(e.tags.landuse||e.tags.leisure));
     const buildings=cnt?(+cnt.tags.ways||+cnt.tags.total||0):0;
     const popNames=[...new Set(pop.map(p=>({residential:"casas",commercial:"comercios",industrial:"polígono",retail:"comercios",park:"parque",playground:"parque infantil",pitch:"campo deportivo",sports_centre:"polideportivo",stadium:"estadio",water_park:"parque acuático",golf_course:"golf"})[p.tags.landuse||p.tags.leisure]).filter(Boolean))];
     if(sub==="A3"){
@@ -914,27 +1065,29 @@ async function checkSpot(s){
     }else if(sub){
       if(popNames.length||buildings>3){bump(1);items.push(IT("info","Hay gente o casas cerca",`${popNames.join(", ")||buildings+" edificios"} a menos de 150 m. Con tu dron (${sub}) puedes volar, sin pasar sobre personas ni aglomeraciones.`))}
       else items.push(IT("ok","Zona despejada","Nada habitado a 150 m según OSM."));
-    }
-    near.forEach(e=>{const t=e.tags,la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
-      if(t.aeroway){const k=t.aeroway==="heliport"?"heli":t.aeroway==="airstrip"?"strip":"aero";const lim=k==="aero"?(cc==="es"?8:5):k==="heli"?1.5:2;const l=d<lim?2:1;bump(l);items.push(IT(l===2?"warn":"info",`${RINFO[k].ic} ${t.name||RINFO[k].t} a ${fmtD(d)}`,l===2?"Seguramente estás en su zona de seguridad: hay que coordinar.":"Fuera de su radio inmediato, pero puede haber tráfico bajo."))}
-      else if(t.amenity==="prison"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🔒 Prisión a ${fmtD(d)}`,"No te acerques ni la sobrevueles."))}
-      else if(t.landuse==="military"){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🪖 Zona militar a ${fmtD(d)}`,"No la sobrevueles."))}
-      else if(t.power==="plant"){bump(1);items.push(IT("info",`⚡ Central eléctrica a ${fmtD(d)}`,"No la sobrevueles."))}});
-    if(osm.partial)items.push(IT("q","Parte de los alrededores no cargó","El servidor de mapas va lento: espacios protegidos o casas cercanas pueden faltar. Vuelve a abrir el spot en un rato."));
-  }else items.push(IT("q","No pude consultar los alrededores","Servidor ocupado. Vuelve a abrir el spot en un momento."));
+    }}
+  else items.push(IT("q","No pude comprobar casas cercanas","El servidor de mapas va lento."));
+  if(st.N===undefined)pend.push("aeródromos");
+  else if(st.N){st.N.forEach(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
+      if(t.aeroway){if(d>8)return;const k=t.aeroway==="heliport"?"heli":t.aeroway==="airstrip"?"strip":"aero";const lim=k==="aero"?(cc==="es"?8:5):k==="heli"?1.5:2;const l=d<lim?2:1;bump(l);items.push(IT(l===2?"warn":"info",`${RINFO[k].ic} ${t.name||RINFO[k].t} a ${fmtD(d)}`,l===2?"Seguramente estás en su zona de seguridad: hay que coordinar.":"Fuera de su radio inmediato, pero puede haber tráfico bajo."))}
+      else if(t.amenity==="prison"&&d<2){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🔒 Prisión a ${fmtD(d)}`,"No te acerques ni la sobrevueles."))}
+      else if((t.landuse==="military"||t.military)&&d<2){bump(d<.5?3:2);items.push(IT(d<.5?"bad":"warn",`🪖 Zona militar a ${fmtD(d)}`,"No la sobrevueles."))}
+      else if(t.power==="plant"&&d<1){bump(1);items.push(IT("info",`⚡ Central eléctrica a ${fmtD(d)}`,"No la sobrevueles."))}})}
   const tips=[];
   if(s.cat==="ruins"){bump(1);tips.push(IT("q","Sitio abandonado: ¿se puede entrar?","Casi todos tienen dueño. Despega desde suelo público (camino, mirador) salvo que sepas que el acceso es libre. Ojo con estructuras inestables."))}
   if(s.cat==="field")tips.push(IT("info","Pista de aeromodelismo","Suele ser de un club: pide permiso y respeta sus horarios. Ideal para FPV."));
   if(s.cat==="castle"||s.cat==="wiki")tips.push(IT("info","Lugar turístico","Puede tener normas propias y mucha gente. Ve temprano."));
   if(s.cat==="water")tips.push(IT("info","Agua cerca","Si cae al agua, casi seguro que lo pierdes. Algunos embalses están protegidos."));
+  if(s.cat==="point")tips.push(IT("info","Punto elegido por ti","Mira la vista de satélite y Street View para ver si hay sitio para despegar."));
   if(drone.fpv)tips.push(IT("warn","Con gafas FPV","Lleva un observador que vea el dron."));
   const missing=req.items.filter(x=>x.st==="need"||x.st==="bad");
   if(missing.length)bump(2);
   const V=[["✅","¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],["🔎","Se puede, con ojo","Hay cosas que revisar antes de despegar."],["⚠️","Solo con condiciones","Necesitas permiso, coordinación o más distancia."],["⛔","Mejor no","Restringido con tu dron o tus títulos actuales."]];
   const sorted=items.sort((a,b)=>"bad warn need q info ok".indexOf(a.st)-"bad warn need q info ok".indexOf(b.st));
-  return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}</b><span>${V[lv][2]}</span></div></div>
-   <details class="sec" open><summary>📍 Qué hay en este punto</summary><div class="in">${reqHTML(sorted)}</div></details>
-   ${tips.length?`<details class="sec" open><summary>💡 Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
+  const pendHTML=pend.length?`<div class="req"><div class="st info"><span class="spin"></span></div><div class="tx"><b>Comprobando ${pend.join(", ")}…</b><div class="d">Lo demás ya está listo abajo.</div></div></div>`:"";
+  return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}${pend.length?" <span class='spin' style='width:14px;height:14px'></span>":""}</b><span>${pend.length?"Resultado provisional, sigo comprobando…":V[lv][2]}</span></div></div>
+   <details class="sec" open><summary>📍 Qué hay en este punto</summary><div class="in">${pendHTML}${reqHTML(sorted)}</div></details>
+   ${tips.length?`<details class="sec"><summary>💡 Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
    <details class="sec" ${missing.length?"open":""}><summary>🪪 Tus papeles en ${esc(cName(cc))} ${missing.length?`<span class="pill p2">${missing.length} pendiente${missing.length>1?"s":""}</span>`:'<span class="pill p0">Todo OK</span>'}</summary><div class="in">${reqHTML(req.items)}</div></details>
    <p class="small mute" style="text-align:center">Datos en vivo de ${cc==="es"?"ENAIRE y ":cc==="de"?"DFS dipul y ":""}OpenStreetMap · Orientativo</p>`;
 }
@@ -944,7 +1097,7 @@ function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x
 /* ===================== añadir spots ===================== */
 let adding=false;
 $("#addSpotBtn").onclick=()=>{adding=true;$("#addHint").style.display="block";$("#sheet").className="min";positionAreaBtn()};
-map.on("click",e=>{if(!adding)return;adding=false;$("#addHint").style.display="none";openAddForm(e.latlng.lat,e.latlng.lng)});
+map.on("click",e=>{if(picking){setPicking(false);openPoint(e.latlng.lat,e.latlng.lng);return}if(!adding)return;adding=false;$("#addHint").style.display="none";openAddForm(e.latlng.lat,e.latlng.lng)});
 function openAddForm(lat,lon){
   $("#detail").classList.add("on");
   $("#dBox").innerHTML=`<div class="hero" style="--hg:${HERO.mine};height:120px"><button class="xbtn" id="dClose">✕</button><div class="big">⭐</div><div><h1>Nuevo spot</h1></div></div><div class="dIn"><label class="f">Nombre</label><input type="text" id="nsName" placeholder="Ej.: Prado junto al embalse"><label class="f">Notas</label><input type="text" id="nsNote" placeholder="Acceso, mejor hora, viento…"><p class="small mute">${lat.toFixed(5)}, ${lon.toFixed(5)}</p><button class="btn block" id="nsSave">Guardar spot</button></div>`;
@@ -962,20 +1115,38 @@ $("#grab").addEventListener("touchend",e=>{if(ty0==null)return;const dy=e.change
 
 /* ===================== mi dron ===================== */
 function weightBadge(g){return g<100?["Menos de 100 g","p0"]:g<250?["Menos de 250 g · A1","p0"]:g<900?["250–900 g","p2"]:["Más de 900 g","p3"]}
+function defWind(g){return g<50?15:g<120?20:g<250?28:g<500?32:g<900?38:45}
+function windLim(){return +drone.wind||defWind(+drone.g||0)}
+let myDrones=LS.get("sf_drones",null);
+if(!myDrones){myDrones=[{...drone,uid:"d"+Date.now()}];LS.set("sf_drones",myDrones)}
+if(!drone.uid){drone.uid=myDrones[0].uid}
 function renderDrone(){
-  $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""}</small></div>`).join("")+`<div class="dcard ${drone.id==="custom"?"on":""}" data-id="custom"><span class="e">✏️</span><b>Otro dron</b><small>Pon tu peso</small></div>`;
+  $("#myDrones").innerHTML=myDrones.map(d=>`<button data-u="${d.uid}" class="${d.uid===drone.uid?"on":""}">${d.ic||"🚁"} ${esc(d.name.split("(")[0].trim())} <small>${d.g} g${["propio","legado"].includes(d.cls)?"":" · "+d.cls}</small></button>`).join("")+`<button data-u="new">＋ Nuevo</button>`;
+  $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""} · ${defWind(p.g)} km/h</small></div>`).join("");
   $("#dName").value=drone.name;$("#dWeight").value=drone.g;$("#dWeightR").value=Math.min(3000,drone.g);$("#wVal").textContent=drone.g;
   const wb=weightBadge(drone.g);$("#wBadge").className="pill "+wb[1];$("#wBadge").textContent=wb[0];
-  $("#dClass").value=drone.cls;$("#dCam").checked=!!drone.cam;$("#dFpv").checked=!!drone.fpv;$("#dToy").checked=!!drone.toy;
+  $("#dClass").value=drone.cls;$$("#dClassChips button").forEach(b=>b.classList.toggle("on",b.dataset.c===drone.cls));
+  $("#dWind").value=windLim();$("#windVal").textContent=windLim();$("#windAuto").style.opacity=drone.wind?1:.5;
+  $("#dCam").checked=!!drone.cam;$("#dFpv").checked=!!drone.fpv;$("#dToy").checked=!!drone.toy;
   const s=euSub(drone);
+  const warnCls=drone.cls==="C0"&&drone.g>=250?'<div class="notice"><span>⚠️</span><span>Un C0 debe pesar menos de 250 g. Revisa el peso o la etiqueta.</span></div>':drone.cls==="C1"&&drone.g>=900?'<div class="notice"><span>⚠️</span><span>Un C1 debe pesar menos de 900 g. Revisa el peso o la etiqueta.</span></div>':"";
   const countries=[...new Set(["es","de","fr","it","gb","us","co",refCountry].filter(Boolean))];
-  $("#droneSummary").innerHTML=`<div class="hero2"><b>En Europa vuelas en ${s.sub}</b><span>${esc(s.why)}</span></div><h3>Y en otros países</h3>`+countries.map(cc=>{const r=requirements(cc,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad");return `<details class="sec"><summary>${(CDB[cc]&&CDB[cc].flag)||"🌍"} ${esc(cName(cc))} ${need.length?`<span class="pill p2">${need.length} pendiente${need.length>1?"s":""}</span>`:'<span class="pill p0">Listo</span>'}</summary><div class="in"><p class="small mute">${esc(r.head)}</p>${reqHTML(r.items)}</div></details>`}).join("")+`<div class="notice"><span>⚖️</span><span>Pesa tu dron con batería y cámara. Por debajo de 250 g vuelas casi en cualquier sitio abierto; desde 250 g, uno montado por ti necesita 150 m de distancia a casas y parques.</span></div>`;
+  $("#droneSummary").innerHTML=warnCls+`<div class="hero2"><b>En Europa vuelas en ${s.sub}</b><span>${esc(s.why)}</span></div><h3>Y en otros países</h3>`+countries.map(cc=>{const r=requirements(cc,drone,profile);const need=r.items.filter(x=>x.st==="need"||x.st==="bad");return `<details class="sec"><summary>${(CDB[cc]&&CDB[cc].flag)||"🌍"} ${esc(cName(cc))} ${need.length?`<span class="pill p2">${need.length} pendiente${need.length>1?"s":""}</span>`:'<span class="pill p0">Listo</span>'}</summary><div class="in"><p class="small mute">${esc(r.head)}</p>${reqHTML(r.items)}</div></details>`}).join("")+`<div class="notice"><span>⚖️</span><span>Pesa tu dron con batería y cámara. Por debajo de 250 g vuelas casi en cualquier sitio abierto; desde 250 g, uno sin etiqueta necesita 150 m de distancia a casas y parques.</span></div>`;
 }
-$("#dronePresets").addEventListener("click",e=>{const c=e.target.closest(".dcard");if(!c)return;const p=PRESETS.find(x=>x.id===c.dataset.id);drone=p?{...p}:{...drone,id:"custom",name:"Mi dron"};saveDrone()});
-$("#dWeightR").addEventListener("input",()=>{$("#wVal").textContent=$("#dWeightR").value;$("#dWeight").value=$("#dWeightR").value});
+$("#myDrones").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.u==="new"){drone={...PRESETS[0],name:"Nuevo dron",uid:"d"+Date.now(),wind:0};myDrones.push(drone);LS.set("sf_drones",myDrones);saveDrone();$("#dName").focus();return}const d=myDrones.find(x=>x.uid===b.dataset.u);if(d){drone={...d};saveDrone(true)}});
+$("#dronePresets").addEventListener("click",e=>{const c=e.target.closest(".dcard");if(!c)return;const p=PRESETS.find(x=>x.id===c.dataset.id);if(!p)return;drone={...p,uid:drone.uid,wind:0};saveDrone();status(`${p.ic} Plantilla aplicada. Ajusta peso y etiqueta y guarda.`,2500)});
+$("#dClassChips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;drone.cls=b.dataset.c;saveDrone()});
+$("#dWeightR").addEventListener("input",()=>{$("#wVal").textContent=$("#dWeightR").value;$("#dWeight").value=$("#dWeightR").value;if(!drone.wind)$("#windVal").textContent=defWind(+$("#dWeightR").value)});
 $("#dWeightR").addEventListener("change",()=>{drone.g=+$("#dWeightR").value;saveDrone()});
-["#dName","#dWeight","#dClass","#dCam","#dFpv","#dToy"].forEach(id=>$(id).addEventListener("change",()=>{drone={...drone,name:$("#dName").value||"Mi dron",g:+$("#dWeight").value||0,cls:$("#dClass").value,cam:$("#dCam").checked,fpv:$("#dFpv").checked,toy:$("#dToy").checked};saveDrone()}));
-function saveDrone(){LS.set("sf_drone",drone);renderDrone();renderCtx();renderTravel();if(spots.length){spots.forEach(s=>s.pre=prelim(s));renderSpots()}}
+$("#dWind").addEventListener("input",()=>{$("#windVal").textContent=$("#dWind").value});
+$("#dWind").addEventListener("change",()=>{drone.wind=+$("#dWind").value;saveDrone()});
+$("#windAuto").onclick=()=>{drone.wind=0;saveDrone();status("🌬️ Viento máximo según el peso",1800)};
+["#dName","#dWeight","#dCam","#dFpv","#dToy"].forEach(id=>$(id).addEventListener("change",()=>{drone={...drone,name:$("#dName").value||"Mi dron",g:+$("#dWeight").value||0,cam:$("#dCam").checked,fpv:$("#dFpv").checked,toy:$("#dToy").checked};saveDrone()}));
+$("#saveDroneBtn").onclick=()=>{const i=myDrones.findIndex(x=>x.uid===drone.uid);if(i>=0)myDrones[i]={...drone};else myDrones.push({...drone});LS.set("sf_drones",myDrones);renderDrone();status("💾 Dron guardado",1800)};
+$("#delDroneBtn").onclick=()=>{if(myDrones.length<=1){status("Necesitas al menos un dron",2000);return}myDrones=myDrones.filter(x=>x.uid!==drone.uid);LS.set("sf_drones",myDrones);drone={...myDrones[0]};saveDrone(true)};
+function saveDrone(switched){
+  const i=myDrones.findIndex(x=>x.uid===drone.uid);if(i>=0){myDrones[i]={...drone};LS.set("sf_drones",myDrones)}
+  LS.set("sf_drone",drone);renderDrone();renderCtx();renderTravel();if(spots.length){spots.forEach(s=>s.pre=prelim(s));renderSpots()}refreshWxChip();if(switched)status(`🚁 Volando con ${drone.name}`,1800)}
 
 /* ===================== perfil ===================== */
 const CERT_GROUPS=[["🇪🇺 Europa (EASA)",["eu_a1a3","eu_a2","eu_sts","eu_reg"]],["🛡️ Seguro",["insur"]],["🇬🇧 Reino Unido",["uk_flyer","uk_op","uk_a2"]],["🇺🇸 Estados Unidos",["us_trust","us_reg","us_107"]],["🇨🇴 Colombia",["co_reg","co_idon"]]];
@@ -1014,7 +1185,7 @@ $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
 function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
 $("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base2",baseKey);base=BASES[baseKey].addTo(map);if(base.bringToBack)base.bringToBack();syncSeg()});
 $("#radiusSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;radiusKm=+b.dataset.r;LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}});
-$("#lyEnaire").onchange=e=>{if(!enaireLayer)return;e.target.checked?enaireLayer.addTo(map):map.removeLayer(enaireLayer)};
+$("#lyEnaire").onchange=syncEnaire;
 $("#lyDipul").onchange=syncOfficialByZoom;$("#lyOsmR").onchange=drawR;$("#lySpots").onchange=renderSpots;
 $("#officialMaps").innerHTML=Object.entries(CDB).filter(([,c])=>c.map).map(([cc,c])=>`<div class="req"><div class="st info">${c.flag}</div><div class="tx"><b>${esc(c.name)}</b><div class="lk"><a href="${esc(c.map.u)}" target="_blank" rel="noopener">${esc(c.map.t)} ↗</a></div></div></div>`).join("");
 $("#obAgain").onclick=()=>startOb();
@@ -1035,17 +1206,19 @@ function renderOb(){
   $("#obBody").innerHTML=steps[obStep]();
   $("#obDots").innerHTML=steps.map((_,i)=>`<span class="${i===obStep?"on":""}"></span>`).join("");
   $("#obNext").textContent=obStep===0?"Empezar":obStep===steps.length-1?"Ir al mapa 🚀":"Siguiente";
-  if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id)};LS.set("sf_drone",drone);$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
+  if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id),uid:drone.uid};LS.set("sf_drone",drone);const k=myDrones.findIndex(x=>x.uid===drone.uid);if(k>=0){myDrones[k]={...drone};LS.set("sf_drones",myDrones)}$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
   if(obStep===2){fillCountrySelect("#obRes",profile.res);$("#obRes").onchange=()=>{profile.res=$("#obRes").value;LS.set("sf_profile",profile)};$("#obBody").onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){profile.certs[k]=e.target.checked;LS.set("sf_profile",profile)}}}
 }
-$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}}};
+$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}else setTimeout(positionAreaBtn,300)}};
 
 /* ===================== arranque ===================== */
-function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots()}
+function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
 fillCountrySelect("#vDest","co");
 renderAll();syncOfficialByZoom();
 window.addEventListener("resize",positionAreaBtn);
-if(!LS.get("sf_ob",0))startOb();
+if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+syncEnaire();
+if(!LS.get("sf_ob",0)){startOb();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}}
 else if(ref){$("#q").value=ref.label.split(",")[0];map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}
 else{$("#q").value="Colmenar del Arroyo";doSearch()}
 
