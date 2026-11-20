@@ -1094,7 +1094,7 @@ async function checkSpot(s,paint){
   st.N=known?rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags})):undefined;
   if(cc!=="es")st.ena=false;if(cc!=="de")st.dip=false;
   go();
-  const ps=[track(overpass(qA,20000),"A"),track(overpass(qB,22000),"B"),track(distAnalysis(lat,lon,cc),"D")];
+  const ps=[track(overpass(qA,20000),"A"),track(overpass(qB,22000),"B"),track(distAnalysis(lat,lon,cc,D2=>{st.D=D2;go()}),"D")];
   if(!known)ps.push(track(overpass(`[out:json][timeout:20];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,25000).then(r=>r.elements),"N"));
   if(cc==="es")ps.push(track(enaireAt(lat,lon),"ena"));
   if(cc==="de")ps.push(track(dipulAt(lat,lon),"dip"));
@@ -1139,7 +1139,7 @@ function buildCheck(s,st){
     const det=`${D.n150} edificio${D.n150===1?"":"s"} en 150 m${popNames.length?" · "+popNames.join(", "):""}. Fuente: ${D.src}. En el mapa verás el círculo de 150 m y la línea hasta la casa más cercana.`;
     const far=!nb||nb.d>=150;
     if(sub==="A3"){
-      if(!far||popNames.length){bump(3);items.push(IT("bad","Demasiado cerca de zonas habitadas",`${near}. Con tu dron (A3) necesitas al menos 150 m a casas, parques y polígonos. ${det}`))}
+      if(!far||popNames.length){bump(3);items.push(IT("bad","Demasiado cerca de zonas habitadas",`${near}. Con tu dron (A3) necesitas al menos 150 m a casas, parques y polígonos. ${det} ${exitText(D)}`))}
       else items.push(IT("ok",`A más de 150 m de cualquier casa`,`${near}. Cumples la distancia de A3. ${det}`));
     }else{
       if(!far){bump(1);items.push(IT("info",`🏠 ${near}`,`Con tu dron (${sub||"A1"}) puedes volar cerca de casas, pero sin sobrevolar personas ni aglomeraciones. Respeta la privacidad (no grabes a gente en sus casas). ${det}`))}
@@ -1148,7 +1148,7 @@ function buildCheck(s,st){
   else items.push(IT("q","No pude medir la distancia a casas","El servicio no respondió. Vuelve a abrir el punto en un momento."));
   if(st.D&&(st.A!==undefined)){const U=urbanEval(st.D,terrain,popNames,cc);if(U.urban){bump(2);items.push(IT("warn","Entorno urbano (probable)",`Por qué: ${U.why.join("; ")}.${cc==="es"?" Según el RD 517/2024, entorno urbano es: (a) núcleos de población con edificación consolidada, (b) zonas residenciales, comerciales o industriales con calles, alumbrado y alcantarillado, o (c) áreas recreativas públicas con instalaciones. Si vuelas aquí hay que avisar al Ministerio del Interior 5 días antes.":""} ${U.exitTxt}`,{time:cc==="es"?"Aviso con 5 días de antelación":"",link:cc==="es"?LK("Avisar al Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"):undefined}))}
     else items.push(IT("ok","Fuera de entorno urbano",`Por qué: ${U.why.join("; ")}.${cc==="es"?" ENAIRE muestra en toda España un aviso genérico de “compruebe si es entorno urbano”; con estos datos, este punto no lo es, así que no hace falta avisar al Ministerio del Interior.":""}`))}
-  else if(cc==="es"&&st.ena)pend.push("si es entorno urbano");
+  else if(st.D===undefined||st.A===undefined)pend.push("si es entorno urbano");
 
   if(st.N===undefined)pend.push("aeródromos");
   else if(st.N){st.N.forEach(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
@@ -1188,10 +1188,10 @@ function polyDist(P,poly){ // P=[x,y], poly=[[x,y]...] → {d,inside,cp}
   return{d:inside?0:best,inside,cp};
 }
 const CAT_USE={"1_residential":"vivienda","2_agriculture":"agrícola","3_industrial":"industrial","4_1_office":"oficinas","4_2_retail":"comercio","4_3_publicServices":"servicios públicos"};
-async function catastroBuildings(lat,lon,r){
-  const dLat=r/110540,dLon=r/(111320*Math.cos(lat*Math.PI/180));
-  const u=`https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=BU:Building&srsName=urn:ogc:def:crs:EPSG::4326&bbox=${(lat-dLat).toFixed(6)},${(lon-dLon).toFixed(6)},${(lat+dLat).toFixed(6)},${(lon+dLon).toFixed(6)},urn:ogc:def:crs:EPSG::4326`;
-  const c=new AbortController();const t=setTimeout(()=>c.abort(),20000);
+async function catastroBuildings(lat,lon,r){const dLat=r/110540,dLon=r/(111320*Math.cos(lat*Math.PI/180));return catastroBox(lat-dLat,lon-dLon,lat+dLat,lon+dLon,20000)}
+async function catastroBox(s,w,n,e,ms){
+  const u=`https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=BU:Building&srsName=urn:ogc:def:crs:EPSG::4326&bbox=${s.toFixed(6)},${w.toFixed(6)},${n.toFixed(6)},${e.toFixed(6)},urn:ogc:def:crs:EPSG::4326`;
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);
   try{const txt=await fetch(u,{signal:c.signal}).then(r=>r.text());const doc=new DOMParser().parseFromString(txt,"text/xml");
     const out=[];const feats=doc.getElementsByTagNameNS("*","Building");
     for(const f of feats){const pl=f.getElementsByTagNameNS("*","posList")[0];if(!pl)continue;const n=pl.textContent.trim().split(/\s+/).map(Number);const ring=[];for(let i=0;i+1<n.length;i+=2)ring.push([n[i],n[i+1]]);
@@ -1209,24 +1209,43 @@ async function osmBuildings(lat,lon,r){
   const d=await overpass(`[out:json][timeout:20];way["building"](around:${r},${lat},${lon});out geom 400;`,22000);
   return d.elements.filter(e=>e.geometry).map(e=>({ring:e.geometry.map(p=>[p.lat,p.lon]),use:e.tags&&e.tags.building&&e.tags.building!=="yes"?e.tags.building:""}));
 }
-async function distAnalysis(lat,lon,cc){
-  const R=450;let blds=null,src="OpenStreetMap",parcel=null;
-  if(cc==="es"){const[b,p]=await Promise.allSettled([catastroBuildings(lat,lon,R),catastroParcel(lat,lon)]);if(b.status==="fulfilled"){blds=b.value;src="Catastro"}if(p.status==="fulfilled")parcel=p.value}
-  if(!blds)blds=await osmBuildings(lat,lon,R);
-  const xy=toXY(lat,lon),P=[0,0];let nearest=null,n150=0;
-  blds.forEach(b=>{const poly=b.ring.map(([a,o])=>xy(a,o));if(poly.length<3)return;const r=polyDist(P,poly);if(r.d<=150)n150++;if(!nearest||r.d<nearest.d)nearest={d:r.d,inside:r.inside,use:b.use,ring:b.ring,cp:r.cp}});
-  if(nearest&&nearest.cp){const kx=111320*Math.cos(lat*Math.PI/180);nearest.cll=[lat+nearest.cp[1]/110540,lon+nearest.cp[0]/kx]}
-  // número de edificios a 100 m y búsqueda de la salida más corta (punto sin casas a 150 m)
-  const polys=blds.map(b=>b.ring.map(([a,o])=>xy(a,o))).filter(p=>p.length>=3);
-  const minD=(x,y)=>{let m=1e9;for(const p of polys){const bb=p._bb||(p._bb=p.reduce((a,[px,py])=>[Math.min(a[0],px),Math.min(a[1],py),Math.max(a[2],px),Math.max(a[3],py)],[1e9,1e9,-1e9,-1e9]));const dbb=Math.hypot(Math.max(bb[0]-x,0,x-bb[2]),Math.max(bb[1]-y,0,y-bb[3]));if(dbb>=m)continue;const r=polyDist([x,y],p);if(r.d<m)m=r.d;if(m===0)break}return m};
-  const n100=polys.filter(p=>polyDist(P,p).d<=100).length;
-  let exit=null;const DIR=["N","NE","E","SE","S","SO","O","NO"];
-  if(nearest&&nearest.d<150){for(let dist=25;dist<=R-150&&!exit;dist+=25){let bestB=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8,x=Math.sin(ang)*dist,y=Math.cos(ang)*dist;const md=minD(x,y);if(md>=150&&(!bestB||md>bestB.md))bestB={md,ang,x,y}}if(bestB){const kx=111320*Math.cos(lat*Math.PI/180);exit={d:dist,dir:DIR[Math.round(bestB.ang/(Math.PI/4))%8],ll:[lat+bestB.y/110540,lon+bestB.x/kx]}}}
-    if(!exit){let best=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8;let cnt=0;for(let s=50;s<=R-50;s+=50){if(minD(Math.sin(ang)*s,Math.cos(ang)*s)<60)cnt++}if(!best||cnt<best.cnt)best={cnt,ang}}exit={far:true,dir:DIR[Math.round(best.ang/(Math.PI/4))%8]}}}
-  const D={src,nearest,n150,n100,radius:R,parcel,exit};
-  if(curSpotId&&curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawDistance(lat,lon,D);
+async function distAnalysis(lat,lon,cc,onUpd){
+  const R1=200,R2=450;let blds=null,src="OpenStreetMap",parcel=null;
+  if(cc==="es"){const[b,p]=await Promise.allSettled([catastroBuildings(lat,lon,R1),catastroParcel(lat,lon)]);if(b.status==="fulfilled"){blds=b.value;src="Catastro"}if(p.status==="fulfilled")parcel=p.value}
+  if(!blds)blds=await osmBuildings(lat,lon,R1);
+  const xy=toXY(lat,lon),P=[0,0],kx=111320*Math.cos(lat*Math.PI/180);
+  const analyse=(list,R)=>{
+    const polys=list.map(b=>{const p=b.ring.map(([a,o])=>xy(a,o));p.b=b;return p}).filter(p=>p.length>=3);
+    let nearest=null,n150=0,n100=0;
+    polys.forEach(p=>{const r=polyDist(P,p);if(r.d<=150)n150++;if(r.d<=100)n100++;if(!nearest||r.d<nearest.d)nearest={d:r.d,inside:r.inside,use:p.b.use,ring:p.b.ring,cp:r.cp}});
+    if(nearest&&nearest.cp)nearest.cll=[lat+nearest.cp[1]/110540,lon+nearest.cp[0]/kx];
+    return{polys,nearest,n150,n100,R};
+  };
+  const A=analyse(blds,R1);
+  const D={src,nearest:A.nearest,n150:A.n150,n100:A.n100,radius:R1,parcel,exit:null,exitPending:false};
+  if(D.nearest&&D.nearest.d<150){D.exitPending=true;
+    (async()=>{let big=null;
+      try{if(src==="Catastro"){const dLat=R2/110540,dLon=R2/kx,s=lat-dLat,w=lon-dLon,stepLat=2*dLat/3,stepLon=2*dLon/3,jobs=[];
+          for(let a=0;a<3;a++)for(let b=0;b<3;b++)jobs.push(catastroBox(s+a*stepLat,w+b*stepLon,s+(a+1)*stepLat,w+(b+1)*stepLon,25000));
+          const rs=await Promise.allSettled(jobs);const seen=new Set();big=[];rs.forEach(r=>{if(r.status==="fulfilled")r.value.forEach(x=>{const k=x.ring[0].join(",");if(!seen.has(k)){seen.add(k);big.push(x)}})});if(rs.filter(r=>r.status==="fulfilled").length<6)big=null}
+        if(!big)big=await osmBuildings(lat,lon,R2)}catch(e){big=null}
+      if(big){const B=analyse(big,R2);D.exit=findExit(B.polys,R2,lat,lon,kx);D.radius=R2}
+      D.exitPending=false;if(onUpd)onUpd(D);if(curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawExit(lat,lon,D)})();
+  }
+  if(curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawDistance(lat,lon,D);
   return D;
 }
+function findExit(polys,R,lat,lon,kx){
+  const minD=(x,y)=>{let m=1e9;for(const p of polys){const bb=p._bb||(p._bb=p.reduce((a,[px,py])=>[Math.min(a[0],px),Math.min(a[1],py),Math.max(a[2],px),Math.max(a[3],py)],[1e9,1e9,-1e9,-1e9]));const dbb=Math.hypot(Math.max(bb[0]-x,0,x-bb[2]),Math.max(bb[1]-y,0,y-bb[3]));if(dbb>=m)continue;const r=polyDist([x,y],p);if(r.d<m)m=r.d;if(m===0)break}return m};
+  const DIR=["N","NE","E","SE","S","SO","O","NO"];
+  for(let dist=25;dist<=R-150;dist+=25){let bestB=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8,x=Math.sin(ang)*dist,y=Math.cos(ang)*dist;const md=minD(x,y);if(md>=150&&(!bestB||md>bestB.md))bestB={md,ang,x,y}}
+    if(bestB)return{d:dist,dir:DIR[Math.round(bestB.ang/(Math.PI/4))%8],ll:[lat+bestB.y/110540,lon+bestB.x/kx]}}
+  let best=null;for(let k=0;k<16;k++){const ang=k*Math.PI/8;let cnt=0;for(let s=50;s<=R-50;s+=50){if(minD(Math.sin(ang)*s,Math.cos(ang)*s)<60)cnt++}if(!best||cnt<best.cnt)best={cnt,ang}}
+  return{far:true,dir:DIR[Math.round(best.ang/(Math.PI/4))%8]};
+}
+function exitText(D){if(!D)return"";if(D.exitPending)return"⏳ Calculando hacia dónde alejarte para salir de la zona edificada…";const e=D.exit;
+  if(e&&!e.far)return`👉 Si te alejas unos ${e.d} m hacia el ${e.dir}, quedas a más de 150 m de cualquier casa: ahí ya no es zona edificada y puedes volar en A3 (incluso drones de más de 250 g sin etiqueta). Lo verás marcado en verde en el mapa; tócalo para analizar ese punto.`;
+  if(e&&e.far)return`👉 La zona edificada sigue más allá de ${D.radius} m. La salida más despejada parece ser hacia el ${e.dir}: busca un punto a las afueras con el muñequito.`;return""}
 function urbanEval(D,terrain,popNames,cc){
   const why=[],no=[];const lu=(terrain||[]).map(t=>t.landuse).filter(Boolean);
   if(D.parcel&&D.parcel.cls==="urbano")why.push("la parcela es suelo urbano en el Catastro");
@@ -1235,9 +1254,7 @@ function urbanEval(D,terrain,popNames,cc){
   if(popNames.some(p=>/parque|polideportivo|estadio|campo deportivo|parque acuático|golf/.test(p)))why.push(`hay una zona recreativa pública cerca (${popNames.filter(p=>/parque|polideportivo|estadio|campo deportivo|parque acuático|golf/.test(p)).join(", ")})`);
   const urban=why.length>0;
   if(!urban){if(D.parcel)no.push(`la parcela es suelo ${D.parcel.cls}`);no.push(D.nearest?`la casa más cercana está a ${Math.round(D.nearest.d)} m`:"no hay edificios cerca");if(D.n100<6)no.push(`solo ${D.n100} edificio${D.n100===1?"":"s"} a 100 m`);if(!lu.length)no.push("no está en zona residencial, comercial ni industrial")}
-  let exitTxt="";const e=D.exit;
-  if(e&&!e.far)exitTxt=`👉 Si te alejas unos ${e.d} m hacia el ${e.dir}, quedas a más de 150 m de cualquier casa: ahí ya no es zona edificada y puedes volar en A3 (incluso con drones de más de 250 g sin etiqueta).`;
-  else if(e&&e.far)exitTxt=`👉 La zona edificada sigue más allá de ${D.radius} m. La salida más despejada parece ser hacia el ${e.dir}: busca un punto a las afueras con el muñequito.`;
+  const exitTxt=exitText(D);
   return{urban,why:urban?why:no,exitTxt};
 }
 function drawDistance(lat,lon,D){
@@ -1245,6 +1262,9 @@ function drawDistance(lat,lon,D){
   L.circle([lat,lon],{radius:150,color:col,weight:2,fillOpacity:.08,dashArray:"6 6"}).addTo(ptLayer).bindTooltip(far?"150 m libres de casas ✅":"Hay casas a menos de 150 m",{direction:"top"});
   if(nb){L.polygon(nb.ring,{color:"#6d5dfc",weight:2,fillOpacity:.35}).addTo(ptLayer);
     if(nb.cll&&!nb.inside)L.polyline([[lat,lon],nb.cll],{color:"#6d5dfc",weight:3,dashArray:"4 6"}).addTo(ptLayer).bindTooltip(`🏠 ${Math.round(nb.d)} m`,{permanent:true,direction:"center",className:"distTip"})}
+  drawExit(lat,lon,D);
+}
+function drawExit(lat,lon,D){
   if(D.exit&&!D.exit.far){L.polyline([[lat,lon],D.exit.ll],{color:"#16a34a",weight:4}).addTo(ptLayer);L.circleMarker(D.exit.ll,{radius:9,color:"#fff",weight:3,fillColor:"#16a34a",fillOpacity:1}).addTo(ptLayer).bindTooltip(`✅ ${D.exit.d} m al ${D.exit.dir}: sin casas a 150 m`,{permanent:true,direction:"right",className:"distTip okTip"}).on("click",()=>openPoint(D.exit.ll[0],D.exit.ll[1]));L.circle(D.exit.ll,{radius:150,color:"#16a34a",weight:1.5,fillOpacity:.05}).addTo(ptLayer)}
 }
 
