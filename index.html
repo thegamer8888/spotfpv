@@ -291,6 +291,22 @@ input[type=range]{width:100%;accent-color:var(--brand)}
   #areaBtn{left:calc(50% + 230px)}
 }
 
+/* ================= Ficha por pestañas ================= */
+.dtabs{position:sticky;top:0;z-index:6;margin:12px -16px 10px;padding:8px 16px;background:var(--bg);border-radius:0}
+.dtabs .seg{margin:0}
+.dpane{display:none;animation:fade .2s}.dpane.on{display:block}
+.srow{display:flex;gap:12px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.srow:last-child{border-bottom:0}
+.srow .si{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--card2);color:var(--ink2)}
+.srow.ok .si{background:var(--okbg);color:var(--ok)}.srow.warn .si{background:var(--warnbg);color:var(--warn)}.srow.bad .si{background:var(--badbg);color:var(--bad)}.srow.info .si{background:var(--infobg);color:var(--info)}
+.srow .sl{font-size:11.5px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.srow .sv{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.35}
+.srow .chev{margin-left:auto;color:var(--line)}
+.req .tx .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.req.open .tx .d{-webkit-line-clamp:unset;display:block}
+.req .more{font-size:12px;color:var(--brand);font-weight:600;margin-top:3px;cursor:pointer}
+.req.open .more{display:none}
+.footnote{font-size:12px;color:var(--mute);text-align:center;margin:10px 0;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
 /* ================= Rediseño profesional ================= */
 :root{
   --bg:#f4f6f9;--card:#ffffff;--card2:#eef1f5;--ink:#0b1220;--ink2:#334155;--mute:#6b7686;--line:#e3e7ee;
@@ -690,8 +706,8 @@ function requirements(cc,d,p){
     if(d.fpv)out.items.push(IT("warn","Vuelo con gafas FPV","Hace falta un observador a tu lado que vea el dron directamente (VLOS) y te avise. Sin observador no puedes volar con gafas."));
     if(g>=250&&["C1","C2","C3"].includes(d.cls))out.items.push(IT("info","Identificación remota","Los drones C1, C2 y C3 deben emitir la identificación remota directa (viene de fábrica). Activa tu número de operador en la app."));
     if(pro)out.items.push(IT("info","Vuelos profesionales","En la UE da igual si cobras: si cumples la categoría abierta, puedes hacer trabajos. Fuera de sus límites necesitas categoría específica (STS o autorización)."));
-    (c.extras||[]).forEach(x=>out.items.push({...x}));
-    out.items.push(IT("info","Siempre","Máximo 120 m de altura, siempre a la vista (o con observador), nunca sobre aglomeraciones, nada de soltar objetos. Mira el mapa oficial antes de cada vuelo.",{link:c.map}));
+    (c.extras||[]).forEach(x=>out.items.push({...x,gen:true}));
+    out.items.push(IT("info","Siempre","Máximo 120 m de altura, siempre a la vista (o con observador), nunca sobre aglomeraciones, nada de soltar objetos. Mira el mapa oficial antes de cada vuelo.",{link:c.map,gen:true}));
   }else if(sys==="uk"){
     out.head="Reino Unido · normas CAA (desde 1 ene 2026)";
     out.items.push(IT("warn","Tus títulos de la UE no valen aquí","El Reino Unido no reconoce el certificado ni el registro de la UE."));
@@ -972,19 +988,17 @@ async function openSpot(s){
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
-   <div id="wikiBox"></div>
-   <h2 style="margin-top:8px">${I("wind",20)} ¿Compensa ir?</h2>
-   <div id="wxBox"></div>
-   <h2 style="margin-top:20px">${I("shield",20)} ¿Puedo volar aquí?</h2>
-   <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
-   <div id="chk"><div class="verdict v1"><span class="vi"><span class="spin" style="width:28px;height:28px"></span></span><div><b>Comprobando…</b><span>Zonas oficiales, espacios protegidos, casas cercanas y aeródromos</span></div></div></div>
-   <h2 style="margin-top:20px">${I("compass",20)} Plan y recomendaciones</h2>
-   <p class="sub" style="margin-bottom:6px">Para tu ${esc(drone.name)} (${drone.g} g), según el día que elijas arriba en el tiempo</p>
-   <div id="recBox"><div class="skel" style="height:120px"></div></div>
+   <div class="dtabs"><div class="seg" id="dTabs"><button data-t="res" class="on">Resumen</button><button data-t="nor">Normas</button><button data-t="wx">Tiempo</button><button data-t="plan">Qué hacer</button></div></div>
+   <div class="dpane on" id="t-res"><div id="sumBox"><div class="skel" style="height:90px"></div><div class="skel" style="height:220px"></div></div><div id="wikiBox"></div></div>
+   <div class="dpane" id="t-nor"><p class="sub" style="margin:0 0 6px">Lo que hay en este punto para tu ${esc(drone.name.split("(")[0].trim())} (${drone.g} g). Toca un texto para leerlo entero.</p><div id="chk"><div class="skel" style="height:200px"></div></div></div>
+   <div class="dpane" id="t-wx"><div id="wxBox"></div></div>
+   <div class="dpane" id="t-plan"><p class="sub" style="margin:0 0 6px">Para el día que elijas en Tiempo (ahora: <b id="planDay">hoy</b>).</p><div id="recBox"><div class="skel" style="height:120px"></div></div></div>
    ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">${I("trash",17)} Borrar este spot</button>`:""}
    ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">${I("star",17)} Guardar como mi spot privado</button><p class="small mute" style="text-align:center;margin-top:6px">Tus spots se guardan solo en tu móvil: nadie más los ve.</p>`:""}
   </div>`;
   $("#dClose").onclick=closeDetail;
+  $("#dTabs").onclick=e=>{const b=e.target.closest("button");if(b)showDTab(b.dataset.t)};
+  $("#dBox").onclick=e=>{const r=e.target.closest(".req");if(r&&!e.target.closest("a"))r.classList.toggle("open")};
   $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
   if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
@@ -993,10 +1007,11 @@ async function openSpot(s){
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
   loadPhotos(s);if(s.wiki)loadWiki(s);
   $("#hero").onclick=e=>{if(e.target.closest(".xbtn"))return;openViewer(curPhoto)};
-  curSpotId=s.id;curSpotObj=s;lastCheck=null;curWx=null;mountWx($("#wxBox"),s.lat,s.lon);
+  curSpotId=s.id;curSpotObj=s;lastCheck=null;curWx=null;curWxErr=false;mountWx($("#wxBox"),s.lat,s.lon);
   try{await checkSpot(s,html=>{const box=$("#chk");if(box){const open=[...box.querySelectorAll("details")].map(d=>d.open);box.innerHTML=html;if(open.length)box.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i]})}})}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
 }
 async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
+function showDTab(t){$$("#dTabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));$$(".dpane").forEach(p=>p.classList.toggle("on",p.id==="t-"+t));const tb=$(".dtabs");if(tb&&$("#dBox").scrollTop>tb.offsetTop)$("#dBox").scrollTop=tb.offsetTop}
 function closeDetail(){$("#detail").classList.remove("on");photoSpot=null;curSpotId=null;curSpotObj=null;ptLayer&&ptLayer.clearLayers()}
 /* ===================== fotos del spot ===================== */
 let photos=[],curPhoto=0,photoSpot=null;
@@ -1119,7 +1134,7 @@ function daySummary(hours,day,lim,fromNow){
   return{lv:2,title:"No compensa ir",sub:reason?`Por ${reason}`:"Malas condiciones todo el día",hs};
 }
 function dayName(x,i){if(i===0)return"Hoy";if(i===1)return"Mañana";const dt=new Date(x+"T12:00");return["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"][dt.getDay()]+" "+dt.getDate()}
-let curWx=null,curWxDay=0;
+let curWx=null,curWxDay=0,curWxErr=false;
 function wxHTML(d,dayIdx){
   const lim=windLim(),hours=wxHours(d),days=[...new Set(hours.map(h=>h.day))].slice(0,7);
   const day=days[dayIdx]||days[0],sm=daySummary(hours,day,lim,dayIdx===0);
@@ -1140,7 +1155,7 @@ function wxHTML(d,dayIdx){
 async function mountWx(el,lat,lon){
   if(!el)return;el.innerHTML='<div class="skel" style="height:110px"></div>';
   try{const d=await getWx(lat,lon);let di=0;curWx=d;curWxDay=0;const draw=()=>{el.innerHTML=wxHTML(d,di);const pick=e=>{const b=e.target.closest("button[data-d]");if(!b)return;di=+b.dataset.d;curWxDay=di;draw();if(curSpotObj)renderRec(curSpotObj)};el.querySelector("[data-wxseg]").onclick=pick;el.querySelector(".week").onclick=pick};draw();if(curSpotObj)renderRec(curSpotObj)}
-  catch(e){el.innerHTML='<div class="card small">🌐 No pude cargar el tiempo ahora. Prueba en un momento.</div>'}
+  catch(e){el.innerHTML='<div class="card small">No pude cargar el tiempo ahora. Prueba en un momento.</div>';curWxErr=true;if(curSpotObj)renderRec(curSpotObj)}
 }
 async function refreshWxChip(){
   const b=$("#ctxWx");if(!ref||!b)return;
@@ -1288,16 +1303,16 @@ function buildCheck(s,st){
   if(missing.length)bump(2);
   const V=[[I("checkc",30),"¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],[I("info",30),"Se puede, con ojo","Hay cosas que revisar antes de despegar."],[I("alert",30),"Solo con condiciones","Necesitas permiso, coordinación o más distancia."],[I("ban",30),"Mejor no","Restringido con tu dron o tus títulos actuales."]];
   const sorted=items.sort((a,b)=>"bad warn need q info ok".indexOf(a.st)-"bad warn need q info ok".indexOf(b.st));
-  lastCheck={s,cc,lv,items:sorted,pend,req,missing,terrain,sub};setTimeout(()=>{if(curSpotObj&&curSpotObj.id===s.id)renderRec(s)},0);
-  const pendHTML=pend.length?`<div class="req"><div class="st info"><span class="spin"></span></div><div class="tx"><b>Comprobando ${pend.join(", ")}…</b><div class="d">Lo demás ya está listo abajo.</div></div></div>`:"";
-  return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}${pend.length?" <span class='spin' style='width:14px;height:14px'></span>":""}</b><span>${pend.length?"Resultado provisional, sigo comprobando…":V[lv][2]}</span></div></div>
-   <details class="sec" open><summary>Qué hay en este punto</summary><div class="in">${pendHTML}${reqHTML(sorted)}</div></details>
-   ${tips.length?`<details class="sec"><summary>Consejos</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
-   <details class="sec" ${missing.length?"open":""}><summary>Tus papeles en ${esc(cName(cc))} ${missing.length?`<span class="pill p2">${missing.length} pendiente${missing.length>1?"s":""}</span>`:'<span class="pill p0">Todo OK</span>'}</summary><div class="in">${reqHTML(req.items)}</div></details>
-   <p class="small mute" style="text-align:center">Datos en vivo de ${cc==="es"?"ENAIRE y ":cc==="de"?"DFS dipul y ":""}OpenStreetMap · Orientativo</p>`;
+  lastCheck={s,cc,lv,items:sorted,pend,req,missing,terrain,sub,D:st.D};setTimeout(()=>{if(curSpotObj&&curSpotObj.id===s.id)renderRec(s)},0);
+  const fails=sorted.filter(x=>x.st==="q"&&/^No pude/.test(x.t)),shown=sorted.filter(x=>!fails.includes(x));
+  const pendHTML=pend.length?`<div class="req"><div class="st info"><span class="spin"></span></div><div class="tx"><b>Comprobando ${pend.join(", ")}…</b></div></div>`:"";
+  return `<details class="sec" open><summary>${I("pin",17)} En este punto</summary><div class="in">${pendHTML}${reqHTML(shown)}</div></details>
+   ${tips.length?`<details class="sec" open><summary>${I("info",17)} Consejos para este sitio</summary><div class="in">${reqHTML(tips)}</div></details>`:""}
+   ${fails.length?`<div class="footnote">${I("alert",14)} No respondió: ${fails.map(f=>f.t.replace(/^No pude (comprobar|consultar|medir) (la |los )?/,"")).join(", ")} <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="curSpotObj&&openSpot(curSpotObj)">Reintentar</button></div>`:""}
+   <p class="small mute" style="text-align:center">Datos en vivo de ${cc==="es"?"ENAIRE, Catastro y ":cc==="de"?"DFS dipul y ":""}OpenStreetMap · Orientativo</p>`;
 }
 const STI={ok:I("check",17),need:I("file",16),warn:I("alert",16),bad:I("ban",16),info:I("info",16),q:I("search",16)};
-function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(noE(x.t))}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
+function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(noE(x.t))}</b>${x.d?`<div class="d">${esc(noE(x.d))}</div>${x.d.length>110?'<div class="more">Leer más</div>':""}`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
 
 
 
@@ -1419,7 +1434,35 @@ const TERRAIN_TIPS={
  recreation_ground:["⚽ Zona recreativa","Si hay gente, no la sobrevueles."],
  cemetery:["🕊️ Cementerio","Por respeto, no vueles aquí."]
 };
+function renderSummary(s){
+  const box=$("#sumBox");if(!box||!curSpotObj||curSpotObj.id!==s.id)return;
+  const lc=lastCheck&&lastCheck.s.id===s.id?lastCheck:null,rows=[];
+  if(curWx){const hours=wxHours(curWx),days=[...new Set(hours.map(h=>h.day))].slice(0,7),di=Math.min(curWxDay,days.length-1),sm=daySummary(hours,days[di],windLim(),di===0),hs=sm.hs||[];
+    const avgW=hs.length?Math.round(hs.reduce((a,h)=>a+h.w10,0)/hs.length):0,maxG=hs.length?Math.round(Math.max(...hs.map(h=>h.g))):0;
+    rows.push({ic:"wind",lab:`Tiempo · ${dayName(days[di],di)}`,val:`${sm.title}${sm.best?` · mejor ${String(sm.best.a).padStart(2,"0")}–${String(sm.best.b+1).padStart(2,"0")} h`:""}${hs.length?` · viento ${avgW} km/h, rachas ${maxG}`:""}`,st:["ok","warn","bad","info"][sm.lv],tab:"wx"})}
+  else rows.push({ic:"wind",lab:"Tiempo",val:curWxErr?"No disponible ahora":"Cargando…",st:curWxErr?"info":"",tab:"wx"});
+  if(lc){const has=re=>lc.items.find(x=>re.test(x.t));const perms=[];
+    if(lc.items.some(x=>x.st==="bad"&&/militar|Prisión/.test(x.t)))perms.push("Zona restringida: no vueles");
+    if(has(/Entorno urbano \(probable\)/))perms.push("Avisar al Ministerio del Interior 5 días antes");
+    if(has(/^Zona aeronáutica|Seguramente estás en su zona/))perms.push("Coordinar con ENAIRE o el aeródromo");
+    if(has(/Espacio protegido/))perms.push("Preguntar al espacio protegido");
+    if(has(/Terreno privado/)||(lc.D&&lc.D.parcel&&lc.D.parcel.cls==="rústico"))perms.push("Permiso del dueño si despegas en la parcela");
+    rows.push({ic:"file",lab:"Permisos",val:perms.length?perms.join(" · "):(lc.pend.length?"Comprobando…":"No hace falta pedir nada"),st:perms.length?(perms[0].startsWith("Zona restringida")?"bad":"warn"):(lc.pend.length?"":"ok"),tab:"plan"});
+    const ctr=has(/Espacio aéreo controlado/);rows.push({ic:"mountain",lab:"Altura máxima",val:ctr?"60 m (espacio aéreo controlado de Madrid)":"120 m",st:ctr?"info":"ok",tab:"nor"});
+    if(lc.D){const nb=lc.D.nearest,far=!nb||nb.d>=150;rows.push({ic:"home",lab:"Casas cerca",val:nb?`La más cercana a ${Math.round(nb.d)} m · ${lc.D.n150} en 150 m${!far&&lc.D.exit&&!lc.D.exit.far?` · sin casas a ${lc.D.exit.d} m al ${lc.D.exit.dir}`:""}`:`Ninguna en ${lc.D.radius} m`,st:far?"ok":(lc.sub==="A3"?"bad":"info"),tab:"nor"})}
+    else rows.push({ic:"home",lab:"Casas cerca",val:"Midiendo…",st:"",tab:"nor"});
+    const urb=has(/Entorno urbano \(probable\)/),nurb=has(/Fuera de entorno urbano/);rows.push({ic:"globe",lab:"Entorno urbano",val:urb?"Sí, probablemente (toca para ver por qué)":nurb?"No":"Comprobando…",st:urb?"warn":nurb?"ok":"",tab:"nor"});
+    rows.push({ic:"drone",lab:"Tu dron aquí",val:`Subcategoría ${lc.sub||"—"} · ${lc.missing.length?`te falta${lc.missing.length>1?"n":""} ${lc.missing.length} papel${lc.missing.length>1?"es":""}`:"papeles en regla"}`,st:lc.missing.length?"warn":"ok",tab:"plan"});
+  }
+  const lv=lc?lc.lv:null,pend=!lc||lc.pend.length;
+  const V=[["checkc","Se puede volar","Cumple las normas con tu dron. Revisa el tiempo y el mapa oficial el día del vuelo."],["info","Se puede, con cuidado","Hay detalles que conviene revisar antes de despegar."],["alert","Solo con condiciones","Necesitas un permiso, coordinación o alejarte un poco."],["ban","Mejor no volar aquí","Restringido con tu dron o tus títulos actuales."]];
+  box.innerHTML=`${lv==null?`<div class="verdict v1"><span class="vi"><span class="spin" style="width:26px;height:26px"></span></span><div><b>Analizando el punto…</b><span>Zonas oficiales, Catastro, casas y tiempo</span></div></div>`:`<div class="verdict v${lv}"><span class="vi">${I(V[lv][0],30)}</span><div><b>${V[lv][1]}${pend?" <span class='spin' style='width:13px;height:13px'></span>":""}</b><span>${pend?"Resultado provisional, sigo comprobando…":V[lv][2]}</span></div></div>`}
+   <div class="card" style="padding:2px 14px">${rows.map(r=>`<div class="srow ${r.st}" data-t="${r.tab}"><span class="si">${r.st===""?'<span class="spin"></span>':I(r.ic,18)}</span><div style="min-width:0"><div class="sl">${r.lab}</div><div class="sv">${esc(r.val)}</div></div><span class="chev">${I("chev",16)}</span></div>`).join("")}</div>
+   <button class="btn block" id="goPlan" style="margin-top:4px">${I("compass",17)} Ver qué tengo que hacer</button>`;
+  box.querySelectorAll(".srow").forEach(r=>r.onclick=()=>showDTab(r.dataset.t));$("#goPlan").onclick=()=>showDTab("plan");
+}
 function renderRec(s){
+  renderSummary(s);
   const box=$("#recBox");if(!box||!curSpotObj||curSpotObj.id!==s.id)return;
   const lc=lastCheck&&lastCheck.s.id===s.id?lastCheck:null;
   const lim=windLim(),g=+drone.g||0,steps=[],warn=[],good=[];
@@ -1467,9 +1510,12 @@ function renderRec(s){
   }else steps.push(['<span class="spin"></span> Comprobando permisos','Zonas de ENAIRE, espacios protegidos y casas cercanas…']);
   // ----- checklist del día
   const chk=["Revisa ENAIRE Drones y los NOTAM el mismo día (pueden aparecer zonas temporales)","Baterías cargadas (y alguna de repuesto)",drone.fpv?"Lleva un observador: con gafas FPV es obligatorio":"Mantén el dron siempre a la vista","Número de operador pegado en el dron"+(g<250&&!drone.cam?" (si lleva cámara)":""),"Máximo 120 m de altura (60 m si estás en espacio aéreo controlado)","No sobrevueles personas ajenas ni grupos de gente"];
+  if($("#planDay"))$("#planDay").textContent=dayLabel;
+  const pap=lc?lc.req.items.filter(x=>!x.gen):[];
   box.innerHTML=`${good.map(x=>`<div class="card small" style="line-height:1.55;border-left:3px solid var(--ok)">${noE(x)}</div>`).join("")}${warn.map(x=>`<div class="card small" style="line-height:1.55;border-left:3px solid var(--warn)">${noE(x)}</div>`).join("")}
-   <details class="sec" open><summary>Qué tienes que hacer</summary><div class="in plan">${steps.map((p,i)=>`<div class="step"><span class="n">${i+1}</span><div><b>${noE(p[0])}</b><div class="small mute" style="margin-top:2px">${p[1]}</div>${p[2]?`<div class="small" style="margin-top:4px"><a href="${esc(p[2].u)}" target="_blank" rel="noopener">${esc(p[2].t)} ↗</a></div>`:""}</div></div>`).join("")}</div></details>
-   <details class="sec"><summary>Checklist antes de despegar</summary><div class="in">${chk.map(c=>`<div class="toggle"><div class="t"><b style="font-weight:600;font-size:13.5px">${esc(c)}</b></div><label class="sw"><input type="checkbox"><span></span></label></div>`).join("")}</div></details>`;
+   <details class="sec" open><summary>${I("file",17)} Pasos</summary><div class="in plan">${steps.map((p,i)=>`<div class="step"><span class="n">${i+1}</span><div><b>${noE(p[0])}</b><div class="small mute" style="margin-top:2px">${p[1]}</div>${p[2]?`<div class="small" style="margin-top:4px"><a href="${esc(p[2].u)}" target="_blank" rel="noopener">${esc(p[2].t)} ↗</a></div>`:""}</div></div>`).join("")}</div></details>
+   ${pap.length?`<details class="sec" ${lc&&lc.missing.length?"open":""}><summary>${I("id",17)} Tus papeles en ${esc(cName(lc.cc))} ${lc.missing.length?`<span class="pill p2">${lc.missing.length} pendiente${lc.missing.length>1?"s":""}</span>`:'<span class="pill p0">En regla</span>'}</summary><div class="in">${reqHTML(pap)}</div></details>`:""}
+   <details class="sec"><summary>${I("check",17)} Checklist antes de despegar</summary><div class="in">${chk.map(c=>`<div class="toggle"><div class="t"><b style="font-weight:600;font-size:13.5px">${esc(c)}</b></div><label class="sw"><input type="checkbox"><span></span></label></div>`).join("")}</div></details>`;
 }
 
 /* ===================== añadir spots ===================== */
