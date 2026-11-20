@@ -64,6 +64,8 @@ input,select{font:inherit}
 #peg.on{background:var(--grad)}
 #pegGhost{position:fixed;z-index:3500;font-size:38px;pointer-events:none;display:none;transform:translate(-50%,-90%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
 #pickHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--ink);color:var(--bg);font-weight:700;padding:10px 16px;border-radius:20px;display:none;box-shadow:var(--shadow);font-size:13.5px;text-align:center;max-width:92vw}
+.distTip{background:var(--brand)!important;color:#fff!important;border:0!important;font-weight:800;border-radius:10px!important;box-shadow:var(--shadow2)}
+.distTip:before{display:none}
 .mkpt{font-size:30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));transform:translateY(-12px)}
 .wxHero{border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center}
 .wxHero .wi{font-size:40px;flex:none}
@@ -118,6 +120,12 @@ h3{font-size:15px;font-weight:700;margin:18px 0 8px}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:currentColor}
 .seg{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px}
 .seg button{flex:1;border:0;background:none;border-radius:10px;padding:8px 4px;font-size:13px;font-weight:700;color:var(--mute)}
+.seg.days{overflow-x:auto;scrollbar-width:none}.seg.days::-webkit-scrollbar{display:none}.seg.days button{flex:none;min-width:62px;padding:8px 8px}
+.week{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.wday{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:9px 12px;box-shadow:var(--shadow2);font-size:13px;cursor:pointer;border:0;color:var(--ink);text-align:left;width:100%}
+.wday b{min-width:70px}.wday span.m{color:var(--mute);flex:1}
+.plan .step{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.plan .step:last-child{border:0}
+.plan .n{flex:none;width:26px;height:26px;border-radius:13px;background:var(--grad);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow2)}
 select,input[type=text],input[type=number]{background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:15px;width:100%;outline:none}
 select:focus,input:focus{border-color:var(--brand)}
@@ -282,7 +290,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 <button id="areaBtn">🔄 Buscar en esta zona</button>
 <button id="peg" aria-label="Muñequito: arrastra al mapa">🧍</button>
 <div id="pegGhost">🧍</div>
-<div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · mantén pulsado el mapa</span></div>
+<div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · también: doble toque o mantener pulsado</span></div>
 
 <section id="sheet">
   <div id="grab"><span></span></div>
@@ -369,6 +377,7 @@ input[type=range]{width:100%;accent-color:var(--brand)}
       <h3>Capas</h3>
       <div class="card" style="padding:4px 14px">
         <div class="toggle"><div class="t"><b>🇪🇸 Zonas oficiales ENAIRE</b><small>Aeropuertos, urbanas, infraestructuras</small></div><label class="sw"><input type="checkbox" id="lyEnaire" checked><span></span></label></div>
+        <div class="toggle"><div class="t"><b>🇪🇸 Parcelas del Catastro</b><small>Se ven al acercarte mucho (zoom 16+)</small></div><label class="sw"><input type="checkbox" id="lyCat" checked><span></span></label></div>
         <div class="toggle"><div class="t"><b>🇩🇪 Zonas oficiales DiPUL</b><small>Alemania, con zoom</small></div><label class="sw"><input type="checkbox" id="lyDipul" checked><span></span></label></div>
         <div class="toggle"><div class="t"><b>✈️ Aeródromos y zonas sensibles</b><small>Todo el mundo, datos OSM</small></div><label class="sw"><input type="checkbox" id="lyOsmR" checked><span></span></label></div>
         <div class="toggle"><div class="t"><b>📍 Spots</b><small>Mostrar en el mapa</small></div><label class="sw"><input type="checkbox" id="lySpots" checked><span></span></label></div>
@@ -631,6 +640,10 @@ let base=BASES[baseKey].addTo(map);
 const ENAIRE_URL="https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer";
 let enaireLayer=null;
 try{enaireLayer=L.esri.dynamicMapLayer({url:ENAIRE_URL,opacity:.45,f:"image",layers:[0,2,3],attribution:"Zonas UAS © ENAIRE"})}catch(e){}
+const catLayer=L.tileLayer.wms("https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",{layers:"Catastro",format:"image/png",transparent:true,version:"1.1.1",opacity:.6,attribution:"Parcelas © Dirección General del Catastro",minZoom:16});
+function inES(){const c=map.getCenter();return c.lat>35.9&&c.lat<43.9&&c.lng>-9.5&&c.lng<4.4||(c.lat>27.5&&c.lat<29.5&&c.lng>-18.3&&c.lng<-13.3)}
+function syncCatastro(){const want=$("#lyCat")&&$("#lyCat").checked&&map.getZoom()>=16&&inES();if(want&&!map.hasLayer(catLayer))catLayer.addTo(map);else if(!want&&map.hasLayer(catLayer))map.removeLayer(catLayer)}
+map.on("zoomend moveend",()=>syncCatastro());
 const dipulLayer=L.tileLayer.wms("https://uas-betrieb.de/geoservices/dipul/wms",{layers:["flughaefen","flugplaetze","kontrollzonen","flugbeschraenkungsgebiete","militaerische_anlagen","justizvollzugsanstalten","naturschutzgebiete","nationalparks","wohngrundstuecke","industrieanlagen","kraftwerke","krankenhaeuser","temporaere_betriebseinschraenkungen"].map(x=>"dipul:"+x).join(","),format:"image/png",transparent:true,version:"1.3.0",opacity:.5,attribution:"Zonas UAS © DFS dipul"});
 const spotLayer=L.layerGroup().addTo(map),osmRLayer=L.layerGroup().addTo(map),refLayer=L.layerGroup().addTo(map);
 function syncEnaire(){if(!enaireLayer)return;const want=$("#lyEnaire")&&$("#lyEnaire").checked&&map.getZoom()>=8;if(want&&!map.hasLayer(enaireLayer))enaireLayer.addTo(map);else if(!want&&map.hasLayer(enaireLayer))map.removeLayer(enaireLayer)}
@@ -826,8 +839,11 @@ async function openSpot(s){
    <h2 style="margin-top:18px">¿Puedo volar aquí?</h2>
    <p class="sub" style="margin-bottom:6px">Con tu ${esc(drone.name)} (${drone.g} g)</p>
    <div id="chk"><div class="verdict v1"><span class="vi"><span class="spin" style="width:28px;height:28px"></span></span><div><b>Comprobando…</b><span>Zonas oficiales, espacios protegidos, casas cercanas y aeródromos</span></div></div></div>
+   <h2 style="margin-top:18px">🧭 Plan y recomendaciones</h2>
+   <p class="sub" style="margin-bottom:6px">Para tu ${esc(drone.name)} (${drone.g} g), según el día que elijas arriba en el tiempo</p>
+   <div id="recBox"><div class="skel" style="height:120px"></div></div>
    ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">🗑️ Borrar este spot</button>`:""}
-   ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">⭐ Guardar como mi spot</button>`:""}
+   ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">🔒 Guardar como mi spot privado</button><p class="small mute" style="text-align:center;margin-top:6px">Tus spots se guardan solo en tu móvil: nadie más los ve.</p>`:""}
   </div>`;
   $("#dClose").onclick=closeDetail;
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
@@ -836,11 +852,11 @@ async function openSpot(s){
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
   loadPhotos(s);if(s.wiki)loadWiki(s);
   $("#hero").onclick=e=>{if(e.target.closest(".xbtn"))return;openViewer(curPhoto)};
-  curSpotId=s.id;mountWx($("#wxBox"),s.lat,s.lon);
+  curSpotId=s.id;curSpotObj=s;lastCheck=null;curWx=null;mountWx($("#wxBox"),s.lat,s.lon);
   try{await checkSpot(s,html=>{const box=$("#chk");if(box){const open=[...box.querySelectorAll("details")].map(d=>d.open);box.innerHTML=html;if(open.length)box.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i]})}})}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
 }
 async function loadWiki(s){try{const d=await jget(`https://${s.wiki.lg}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&exsentences=3&pithumbsize=900&pageids=${s.wiki.pageid}&format=json&origin=*`);const p=d.query.pages[s.wiki.pageid];if(p.extract)$("#wikiBox").innerHTML=`<div class="card small" style="line-height:1.55">${esc(p.extract)}</div>`}catch(e){}}
-function closeDetail(){$("#detail").classList.remove("on");photoSpot=null;curSpotId=null;ptLayer&&ptLayer.clearLayers()}
+function closeDetail(){$("#detail").classList.remove("on");photoSpot=null;curSpotId=null;curSpotObj=null;ptLayer&&ptLayer.clearLayers()}
 /* ===================== fotos del spot ===================== */
 let photos=[],curPhoto=0,photoSpot=null;
 function satHTML(lat,lon,z,w,hgt){
@@ -921,8 +937,8 @@ async function dipulAt(lat,lon){
 /* ===================== tiempo ===================== */
 const wxMem={};
 async function getWx(lat,lon){
-  const k="sf_wx_"+lat.toFixed(2)+"_"+lon.toFixed(2);const m=wxMem[k]||LS.get(k,null);if(m&&Date.now()-m.t<45*60e3)return m.d;
-  const d=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_speed_80m,wind_gusts_10m,wind_direction_10m,visibility&daily=sunrise,sunset&timezone=auto&forecast_days=3&wind_speed_unit=kmh`,{},15000);
+  const k="sf_wx7_"+lat.toFixed(2)+"_"+lon.toFixed(2);const m=wxMem[k]||LS.get(k,null);if(m&&Date.now()-m.t<45*60e3)return m.d;
+  const d=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_speed_80m,wind_gusts_10m,wind_direction_10m,visibility&daily=sunrise,sunset&timezone=auto&forecast_days=7&wind_speed_unit=kmh`,{},15000);
   wxMem[k]={t:Date.now(),d};try{localStorage.setItem(k,JSON.stringify(wxMem[k]))}catch(e){}return d;
 }
 const WXE=c=>c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"🌨️":c<=82?"🌦️":"⛈️";
@@ -961,24 +977,28 @@ function daySummary(hours,day,lim,fromNow){
   if(ok)return{lv:1,title:"Día regular",sub:`Se puede de ${fmt(ok)}, con algo de viento`,hs,best:ok};
   return{lv:2,title:"No compensa ir",sub:reason?`Por ${reason}`:"Malas condiciones todo el día",hs};
 }
+function dayName(x,i){if(i===0)return"Hoy";if(i===1)return"Mañana";const dt=new Date(x+"T12:00");return["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"][dt.getDay()]+" "+dt.getDate()}
+let curWx=null,curWxDay=0;
 function wxHTML(d,dayIdx){
-  const lim=windLim(),hours=wxHours(d),days=[...new Set(hours.map(h=>h.day))].slice(0,3);
+  const lim=windLim(),hours=wxHours(d),days=[...new Set(hours.map(h=>h.day))].slice(0,7);
   const day=days[dayIdx]||days[0],sm=daySummary(hours,day,lim,dayIdx===0);
   const all=hours.filter(h=>h.day===day&&h.hr>=(dayIdx===0?new Date().getHours():6)&&h.hr<=21);all.forEach(h=>h.r=rateHour(h,lim));
   const lh=sm.hs.length?sm.hs:all;
   const avgW=lh.length?Math.round(lh.reduce((a,h)=>a+h.w10,0)/lh.length):0,maxG=lh.length?Math.round(Math.max(...lh.map(h=>h.g))):0,maxP=lh.length?Math.max(...lh.map(h=>h.pp)):0;
   const tmin=lh.length?Math.round(Math.min(...lh.map(h=>h.temp))):0,tmax=lh.length?Math.round(Math.max(...lh.map(h=>h.temp))):0;
   const dir=lh.length?DIRS[Math.round(lh[Math.floor(lh.length/2)].dir/45)%8]:"";
-  const names=["Hoy","Mañana","Pasado"];const ic=["🟢","🟡","🔴","🌙"][sm.lv];
-  return `<div class="seg" data-wxseg>${days.map((x,i)=>`<button data-d="${i}" class="${i===dayIdx?"on":""}">${names[i]}</button>`).join("")}</div>
+  const ic=["🟢","🟡","🔴","🌙"][sm.lv];
+  const week=days.map((x,i)=>({i,x,s:daySummary(hours,x,lim,i===0)}));
+  return `<div class="seg days" data-wxseg>${days.map((x,i)=>`<button data-d="${i}" class="${i===dayIdx?"on":""}">${dayName(x,i)}</button>`).join("")}</div>
    <div class="wxHero v${sm.lv===3?1:sm.lv}" style="margin-top:10px"><span class="wi">${ic}</span><div><b>${sm.title}</b><span>${sm.sub}</span></div></div>
    <div class="hours">${all.map(h=>`<div class="hr ${h.light?"":"night"}" style="--c:${WXC[h.r.lv]}" title="${h.r.why}">${String(h.hr).padStart(2,"0")}h<span class="e">${h.light?WXE(h.code):"🌙"}</span><b>${Math.round(h.w10)}</b><small>↯${Math.round(h.g)}</small><small>${h.pp}%💧</small></div>`).join("")}</div>
    <div class="wxStats"><div><b>${avgW} km/h ${dir}</b>Viento medio</div><div><b>${maxG} km/h</b>Rachas máx.</div><div><b>${maxP}%</b>Prob. de lluvia</div><div><b>${tmin}–${tmax} °C</b>Temperatura</div></div>
+   <h3 style="margin:14px 0 4px">📅 Próximos 7 días</h3><div class="week">${week.map(w=>`<button class="wday" data-d="${w.i}"><span>${["🟢","🟡","🔴","🌙"][w.s.lv]}</span><b>${dayName(w.x,w.i)}</b><span class="m">${w.s.title}${w.s.best?" · "+String(w.s.best.a).padStart(2,"0")+"–"+String(w.s.best.b+1).padStart(2,"0")+"h":""}</span></button>`).join("")}</div>
    <p class="small mute" style="margin:8px 2px 0">Tu dron aguanta unos <b>${lim} km/h</b> (rachas hasta ${Math.round(lim*1.35)}). Ajústalo en 🚁 Mi dron. Luz: ${sm.hs[0]?sm.hs[0].sunrise:""}–${sm.hs[0]?sm.hs[0].sunset:""}. Datos: Open-Meteo.</p>`;
 }
 async function mountWx(el,lat,lon){
   if(!el)return;el.innerHTML='<div class="skel" style="height:110px"></div>';
-  try{const d=await getWx(lat,lon);let di=0;const draw=()=>{el.innerHTML=wxHTML(d,di);el.querySelector("[data-wxseg]").onclick=e=>{const b=e.target.closest("button");if(!b)return;di=+b.dataset.d;draw()}};draw()}
+  try{const d=await getWx(lat,lon);let di=0;curWx=d;curWxDay=0;const draw=()=>{el.innerHTML=wxHTML(d,di);const pick=e=>{const b=e.target.closest("button[data-d]");if(!b)return;di=+b.dataset.d;curWxDay=di;draw();if(curSpotObj)renderRec(curSpotObj)};el.querySelector("[data-wxseg]").onclick=pick;el.querySelector(".week").onclick=pick};draw();if(curSpotObj)renderRec(curSpotObj)}
   catch(e){el.innerHTML='<div class="card small">🌐 No pude cargar el tiempo ahora. Prueba en un momento.</div>'}
 }
 async function refreshWxChip(){
@@ -1001,6 +1021,7 @@ $("#peg").addEventListener("pointerup",e=>{const was=pegDragged;pegStart=null;$(
   const r=$("#map").getBoundingClientRect(),sh=$("#sheet").getBoundingClientRect();if(e.clientY>=sh.top&&e.clientX>=sh.left&&e.clientX<=sh.right)return;
   const ll=map.containerPointToLatLng([e.clientX-r.left,e.clientY-r.top]);setPicking(false);openPoint(ll.lat,ll.lng)});
 map.on("contextmenu",e=>{openPoint(e.latlng.lat,e.latlng.lng)});
+map.doubleClickZoom.disable();map.on("dblclick",e=>{openPoint(e.latlng.lat,e.latlng.lng)});
 const ptLayer=L.layerGroup().addTo(map);
 async function openPoint(lat,lon){
   ptLayer.clearLayers();L.marker([lat,lon],{icon:icon('<div class="mkpt">📍</div>',30),zIndexOffset:2000}).addTo(ptLayer);
@@ -1013,8 +1034,8 @@ async function openPoint(lat,lon){
 let curSpotId=null;
 async function checkSpot(s,paint){
   const{lat,lon}=s;
-  const qA=`[out:json][timeout:20];is_in(${lat},${lon})->.a;(area.a["boundary"~"^(protected_area|national_park)$"];area.a["leisure"="nature_reserve"];area.a["landuse"="military"];area.a["access"~"^(private|no)$"];);out tags;`;
-  const qB=`[out:json][timeout:20];(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon}););out tags 40;way["building"](around:150,${lat},${lon});out count;`;
+  const qA=`[out:json][timeout:20];is_in(${lat},${lon})->.a;(area.a["boundary"~"^(protected_area|national_park)$"];area.a["leisure"="nature_reserve"];area.a["landuse"="military"];area.a["access"~"^(private|no)$"];area.a["landuse"~"^(farmland|meadow|forest|orchard|vineyard|grass|farmyard|quarry|olive_grove|allotments|residential|industrial|commercial|recreation_ground|cemetery)$"];area.a["natural"~"^(wood|scrub|heath|grassland|bare_rock|beach|water|wetland|sand)$"];);out tags;`;
+  const qB=`[out:json][timeout:20];(way["landuse"~"^(residential|commercial|industrial|retail)$"](around:150,${lat},${lon});nwr["leisure"~"^(park|playground|pitch|sports_centre|stadium|water_park|golf_course)$"](around:150,${lat},${lon}););out tags 40;`;
   const cc=(await revCountry(lat,lon)).cc||refCountry;
   const known=ref&&km(lat,lon,ref.lat,ref.lon)<=radiusKm;
   const st={cc,ena:undefined,dip:undefined,A:undefined,B:undefined,N:undefined};
@@ -1023,14 +1044,15 @@ async function checkSpot(s,paint){
   st.N=known?rFeatures.map(f=>({type:"node",lat:f.lat,lon:f.lon,tags:f.tags})):undefined;
   if(cc!=="es")st.ena=false;if(cc!=="de")st.dip=false;
   go();
-  const ps=[track(overpass(qA,20000),"A"),track(overpass(qB,22000),"B")];
+  const ps=[track(overpass(qA,20000),"A"),track(overpass(qB,22000),"B"),track(distAnalysis(lat,lon,cc),"D")];
   if(!known)ps.push(track(overpass(`[out:json][timeout:20];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](around:8000,${lat},${lon});nwr["landuse"="military"](around:2000,${lat},${lon});nwr["amenity"="prison"](around:2000,${lat},${lon});nwr["power"="plant"](around:1000,${lat},${lon}););out center tags;`,25000).then(r=>r.elements),"N"));
   if(cc==="es")ps.push(track(enaireAt(lat,lon),"ena"));
   if(cc==="de")ps.push(track(dipulAt(lat,lon),"dip"));
   await Promise.allSettled(ps);
 }
+let lastCheck=null,curSpotObj=null;
 function buildCheck(s,st){
-  const{lat,lon}=s,cc=st.cc,items=[],pend=[];let lv=0;const bump=x=>{lv=Math.max(lv,x)};
+  const{lat,lon}=s,cc=st.cc,items=[],pend=[];let lv=0,terrain=null;const bump=x=>{lv=Math.max(lv,x)};
   const req=requirements(cc,drone,profile);const sub=req.sub;
   if(cc==="es"){
     if(st.ena===undefined)pend.push("zonas de ENAIRE");
@@ -1049,24 +1071,33 @@ function buildCheck(s,st){
     else items.push(IT("q","No pude consultar DiPUL","Las zonas se ven en el mapa; el detalle, en el mapa oficial.",{link:LK("dipul Map Tool","https://maptool-dipul.dfs.de/")}));
   }else{const c=CDB[cc];bump(1);items.push(IT("q",`Mapa oficial de ${cName(cc)}`,"No tengo conexión directa con él: compruébalo antes de volar.",c&&c.map?{link:c.map}:{}))}
   if(st.A===undefined)pend.push("espacios protegidos");
-  else if(st.A){st.A.elements.forEach(a=>{const t=a.tags||{};
+  else if(st.A){const TER=/^(farmland|meadow|forest|orchard|vineyard|grass|farmyard|quarry|olive_grove|allotments|residential|industrial|commercial|recreation_ground|cemetery)$/;
+    terrain=st.A.elements.filter(a=>{const t=a.tags||{};return(t.landuse&&TER.test(t.landuse)&&t.access!=="private"&&t.access!=="no"&&t.boundary!=="protected_area")||(t.natural&&!t.boundary)}).map(a=>a.tags);
+    st.A={...st.A,elements:st.A.elements.filter(a=>{const t=a.tags||{};return t.landuse==="military"||t.access==="private"||t.access==="no"||t.boundary||t.leisure==="nature_reserve"})};
+    st.A.elements.forEach(a=>{const t=a.tags||{};
       if(t.landuse==="military"){bump(3);items.push(IT("bad","Zona militar"+(t.name?": "+t.name:""),"No vueles aquí."))}
       else if(t.access==="private"||t.access==="no"){bump(3);items.push(IT("bad","Terreno privado"+(t.name?": "+t.name:""),"Necesitas permiso del dueño para entrar y despegar."))}
       else{bump(2);items.push(IT("warn","Espacio protegido: "+(t.name||t.protection_title||""),`${t.protection_title?t.protection_title+". ":""}Puede limitar los drones por la fauna. Pregunta al órgano gestor.`,{time:"Permiso con días o semanas de margen"}))}});
     if(!st.A.elements.length)items.push(IT("ok","Sin espacios protegidos ni terreno privado marcado","Según OpenStreetMap."))}
   else items.push(IT("q","No pude comprobar espacios protegidos","El servidor de mapas va lento. Vuelve a abrir el spot en un rato."));
-  if(st.B===undefined)pend.push("casas cercanas");
-  else if(st.B){const els=st.B.elements,cnt=els.find(e=>e.type==="count");const pop=els.filter(e=>e.type!=="count"&&e.tags&&(e.tags.landuse||e.tags.leisure));
-    const buildings=cnt?(+cnt.tags.ways||+cnt.tags.total||0):0;
-    const popNames=[...new Set(pop.map(p=>({residential:"casas",commercial:"comercios",industrial:"polígono",retail:"comercios",park:"parque",playground:"parque infantil",pitch:"campo deportivo",sports_centre:"polideportivo",stadium:"estadio",water_park:"parque acuático",golf_course:"golf"})[p.tags.landuse||p.tags.leisure]).filter(Boolean))];
+  let popNames=[];
+  if(st.B){const pop=st.B.elements.filter(e=>e.tags&&(e.tags.landuse||e.tags.leisure));popNames=[...new Set(pop.map(p=>({residential:"zona residencial",commercial:"zona comercial",industrial:"polígono",retail:"zona comercial",park:"parque",playground:"parque infantil",pitch:"campo deportivo",sports_centre:"polideportivo",stadium:"estadio",water_park:"parque acuático",golf_course:"golf"})[p.tags.landuse||p.tags.leisure]).filter(Boolean))]}
+  if(st.D===undefined)pend.push(cc==="es"?"distancia a casas (Catastro)":"distancia a casas");
+  else if(st.D){const D=st.D,nb=D.nearest;
+    if(D.parcel)items.push(IT("info",`📄 Parcela del Catastro: suelo ${D.parcel.cls}`,`${D.parcel.addr?D.parcel.addr+". ":""}Ref. catastral ${D.parcel.rc}.${D.parcel.cls==="rústico"?" Es campo: el dueño de la parcela puede no dejarte despegar en ella; pide permiso o despega desde un camino público.":" Es suelo urbano: suele implicar entorno urbano y más normas."}`,{link:LK("Ver la parcela en el Catastro",`https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCListaBienes.aspx?rc1=${D.parcel.rc.slice(0,7)}&rc2=${D.parcel.rc.slice(7,14)}`)}));
+    const near=nb?`${nb.inside?"Estás dentro o encima de un edificio":`El edificio más cercano está a ${Math.round(nb.d)} m`}${nb.use?" ("+nb.use+")":""}`:`No hay edificios en ${D.radius} m a la redonda`;
+    const det=`${D.n150} edificio${D.n150===1?"":"s"} en 150 m${popNames.length?" · "+popNames.join(", "):""}. Fuente: ${D.src}. En el mapa verás el círculo de 150 m y la línea hasta la casa más cercana.`;
+    const far=!nb||nb.d>=150;
     if(sub==="A3"){
-      if(popNames.length||buildings>3){bump(3);items.push(IT("bad","Demasiado cerca de zonas habitadas",`Hay ${popNames.join(", ")||""}${buildings?(popNames.length?" y ":"")+buildings+" edificios":""} a menos de 150 m. Con tu dron (A3) necesitas 150 m de distancia. Despega más lejos o usa uno de menos de 250 g.`))}
-      else items.push(IT("ok","Lejos de casas y parques","Nada habitado a 150 m según OSM. Compruébalo al llegar."));
-    }else if(sub){
-      if(popNames.length||buildings>3){bump(1);items.push(IT("info","Hay gente o casas cerca",`${popNames.join(", ")||buildings+" edificios"} a menos de 150 m. Con tu dron (${sub}) puedes volar, sin pasar sobre personas ni aglomeraciones.`))}
-      else items.push(IT("ok","Zona despejada","Nada habitado a 150 m según OSM."));
+      if(!far||popNames.length){bump(3);items.push(IT("bad","Demasiado cerca de zonas habitadas",`${near}. Con tu dron (A3) necesitas al menos 150 m a casas, parques y polígonos. ${det}`))}
+      else items.push(IT("ok",`A más de 150 m de cualquier casa`,`${near}. Cumples la distancia de A3. ${det}`));
+    }else{
+      if(!far){bump(1);items.push(IT("info",`🏠 ${near}`,`Con tu dron (${sub||"A1"}) puedes volar cerca de casas, pero sin sobrevolar personas ni aglomeraciones. Respeta la privacidad (no grabes a gente en sus casas). ${det}`))}
+      else items.push(IT("ok",`🏠 ${near}`,`Fuera de zona habitada (más de 150 m). ${det}`));
     }}
-  else items.push(IT("q","No pude comprobar casas cercanas","El servidor de mapas va lento."));
+  else items.push(IT("q","No pude medir la distancia a casas","El servicio no respondió. Vuelve a abrir el punto en un momento."));
+  if(cc==="es"&&st.ena&&!st.ena.some(a=>a.lid===3))items.push(IT("ok","Fuera de entorno urbano (según ENAIRE)","Aquí no hace falta avisar al Ministerio del Interior."));
+
   if(st.N===undefined)pend.push("aeródromos");
   else if(st.N){st.N.forEach(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return;const d=km(lat,lon,la,lo);
       if(t.aeroway){if(d>8)return;const k=t.aeroway==="heliport"?"heli":t.aeroway==="airstrip"?"strip":"aero";const lim=k==="aero"?(cc==="es"?8:5):k==="heli"?1.5:2;const l=d<lim?2:1;bump(l);items.push(IT(l===2?"warn":"info",`${RINFO[k].ic} ${t.name||RINFO[k].t} a ${fmtD(d)}`,l===2?"Seguramente estás en su zona de seguridad: hay que coordinar.":"Fuera de su radio inmediato, pero puede haber tráfico bajo."))}
@@ -1084,6 +1115,7 @@ function buildCheck(s,st){
   if(missing.length)bump(2);
   const V=[["✅","¡Pinta bien!","Revisa el mapa oficial y los NOTAM el día del vuelo."],["🔎","Se puede, con ojo","Hay cosas que revisar antes de despegar."],["⚠️","Solo con condiciones","Necesitas permiso, coordinación o más distancia."],["⛔","Mejor no","Restringido con tu dron o tus títulos actuales."]];
   const sorted=items.sort((a,b)=>"bad warn need q info ok".indexOf(a.st)-"bad warn need q info ok".indexOf(b.st));
+  lastCheck={s,cc,lv,items:sorted,pend,req,missing,terrain,sub};setTimeout(()=>{if(curSpotObj&&curSpotObj.id===s.id)renderRec(s)},0);
   const pendHTML=pend.length?`<div class="req"><div class="st info"><span class="spin"></span></div><div class="tx"><b>Comprobando ${pend.join(", ")}…</b><div class="d">Lo demás ya está listo abajo.</div></div></div>`:"";
   return `<div class="verdict v${lv}"><span class="vi">${V[lv][0]}</span><div><b>${V[lv][1]}${pend.length?" <span class='spin' style='width:14px;height:14px'></span>":""}</b><span>${pend.length?"Resultado provisional, sigo comprobando…":V[lv][2]}</span></div></div>
    <details class="sec" open><summary>📍 Qué hay en este punto</summary><div class="in">${pendHTML}${reqHTML(sorted)}</div></details>
@@ -1093,6 +1125,130 @@ function buildCheck(s,st){
 }
 const STI={ok:"✅",need:"📝",warn:"⚠️",bad:"⛔",info:"ℹ️",q:"🔎"};
 function reqHTML(items){return items.map(x=>`<div class="req"><div class="st ${x.st}">${STI[x.st]||"•"}</div><div class="tx"><b>${esc(x.t)}</b>${x.d?`<div class="d">${esc(x.d)}</div>`:""}${x.time?`<div class="tm">⏱️ ${esc(x.time)}</div>`:""}${x.link?`<div class="lk"><a href="${esc(x.link.u)}" target="_blank" rel="noopener">${esc(x.link.t)} ↗</a></div>`:""}</div></div>`).join("")}
+
+
+
+/* ===================== distancias reales (Catastro / OSM) ===================== */
+function toXY(lat0,lon0){const kx=111320*Math.cos(lat0*Math.PI/180),ky=110540;return(lat,lon)=>[(lon-lon0)*kx,(lat-lat0)*ky]}
+function polyDist(P,poly){ // P=[x,y], poly=[[x,y]...] → {d,inside,cp}
+  let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if(((yi>P[1])!==(yj>P[1]))&&(P[0]<(xj-xi)*(P[1]-yi)/(yj-yi)+xi))inside=!inside}
+  let best=1e9,cp=null;for(let i=0;i<poly.length-1;i++){const[a,b]=[poly[i],poly[i+1]];const dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy||1e-9;let t=((P[0]-a[0])*dx+(P[1]-a[1])*dy)/L2;t=Math.max(0,Math.min(1,t));const x=a[0]+t*dx,y=a[1]+t*dy,d=Math.hypot(P[0]-x,P[1]-y);if(d<best){best=d;cp=[x,y]}}
+  return{d:inside?0:best,inside,cp};
+}
+const CAT_USE={"1_residential":"vivienda","2_agriculture":"agrícola","3_industrial":"industrial","4_1_office":"oficinas","4_2_retail":"comercio","4_3_publicServices":"servicios públicos"};
+async function catastroBuildings(lat,lon,r){
+  const dLat=r/110540,dLon=r/(111320*Math.cos(lat*Math.PI/180));
+  const u=`https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=BU:Building&srsName=urn:ogc:def:crs:EPSG::4326&bbox=${(lat-dLat).toFixed(6)},${(lon-dLon).toFixed(6)},${(lat+dLat).toFixed(6)},${(lon+dLon).toFixed(6)},urn:ogc:def:crs:EPSG::4326`;
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),20000);
+  try{const txt=await fetch(u,{signal:c.signal}).then(r=>r.text());const doc=new DOMParser().parseFromString(txt,"text/xml");
+    const out=[];const feats=doc.getElementsByTagNameNS("*","Building");
+    for(const f of feats){const pl=f.getElementsByTagNameNS("*","posList")[0];if(!pl)continue;const n=pl.textContent.trim().split(/\s+/).map(Number);const ring=[];for(let i=0;i+1<n.length;i+=2)ring.push([n[i],n[i+1]]);
+      const cu=f.getElementsByTagNameNS("*","currentUse")[0];out.push({ring,use:cu?(CAT_USE[cu.textContent.trim()]||cu.textContent.trim()):""})}
+    return out;
+  }finally{clearTimeout(t)}
+}
+async function catastroParcel(lat,lon){
+  const txt=await fetch(`https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4326&Coordenada_X=${lon}&Coordenada_Y=${lat}`).then(r=>r.text());
+  const g=tag=>{const m=txt.match(new RegExp("<"+tag+">([^<]*)</"+tag+">"));return m?m[1].trim():""};
+  const pc1=g("pc1"),pc2=g("pc2");if(!pc1)return null;
+  return{rc:pc1+pc2,addr:g("ldt"),cls:/^\d+$/.test(pc2)||/^\d{5}A/.test(pc1)?"rústico":"urbano"};
+}
+async function osmBuildings(lat,lon,r){
+  const d=await overpass(`[out:json][timeout:20];way["building"](around:${r},${lat},${lon});out geom 400;`,22000);
+  return d.elements.filter(e=>e.geometry).map(e=>({ring:e.geometry.map(p=>[p.lat,p.lon]),use:e.tags&&e.tags.building&&e.tags.building!=="yes"?e.tags.building:""}));
+}
+async function distAnalysis(lat,lon,cc){
+  const R=300;let blds=null,src="OpenStreetMap",parcel=null;
+  if(cc==="es"){const[b,p]=await Promise.allSettled([catastroBuildings(lat,lon,R),catastroParcel(lat,lon)]);if(b.status==="fulfilled"){blds=b.value;src="Catastro"}if(p.status==="fulfilled")parcel=p.value}
+  if(!blds)blds=await osmBuildings(lat,lon,R);
+  const xy=toXY(lat,lon),P=[0,0];let nearest=null,n150=0;
+  blds.forEach(b=>{const poly=b.ring.map(([a,o])=>xy(a,o));if(poly.length<3)return;const r=polyDist(P,poly);if(r.d<=150)n150++;if(!nearest||r.d<nearest.d)nearest={d:r.d,inside:r.inside,use:b.use,ring:b.ring,cp:r.cp}});
+  if(nearest&&nearest.cp){const kx=111320*Math.cos(lat*Math.PI/180);nearest.cll=[lat+nearest.cp[1]/110540,lon+nearest.cp[0]/kx]}
+  const D={src,nearest,n150,radius:R,parcel};
+  if(curSpotId&&curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawDistance(lat,lon,D);
+  return D;
+}
+function drawDistance(lat,lon,D){
+  const nb=D.nearest,far=!nb||nb.d>=150,col=far?"#22c55e":"#f59e0b";
+  L.circle([lat,lon],{radius:150,color:col,weight:2,fillOpacity:.08,dashArray:"6 6"}).addTo(ptLayer).bindTooltip(far?"150 m libres de casas ✅":"Hay casas a menos de 150 m",{direction:"top"});
+  if(nb){L.polygon(nb.ring,{color:"#6d5dfc",weight:2,fillOpacity:.35}).addTo(ptLayer);
+    if(nb.cll&&!nb.inside)L.polyline([[lat,lon],nb.cll],{color:"#6d5dfc",weight:3,dashArray:"4 6"}).addTo(ptLayer).bindTooltip(`🏠 ${Math.round(nb.d)} m`,{permanent:true,direction:"center",className:"distTip"})}
+}
+
+/* ===================== plan y recomendaciones ===================== */
+function fmtDate(d){return d.toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"})}
+const TERRAIN_TIPS={
+ farmland:["🌾 Campo de cultivo","Es terreno privado aunque no tenga valla: pide permiso al agricultor para despegar y aterrizar. No pises los cultivos y evita sobrevolar maquinaria trabajando."],
+ meadow:["🌿 Prado","Suele ser de un propietario o con ganado. Pide permiso, no asustes a los animales (vacas y caballos se espantan con el zumbido) y cierra las cancelas."],
+ grass:["🌿 Zona de hierba","Buen sitio para despegar y aterrizar. Mira si es un parque público: con gente cerca, extrema el cuidado."],
+ farmyard:["🐄 Granja","Propiedad privada con animales. Solo con permiso del dueño y lejos del ganado."],
+ orchard:["🍑 Huerto de frutales","Privado. Los árboles bajos son trampas para un whoop: vuela por encima de las copas."],
+ olive_grove:["🫒 Olivar","Privado. Pide permiso; los olivos atrapan drones pequeños con facilidad."],
+ vineyard:["🍇 Viñedo","Privado. Ojo con los alambres de las espalderas al volar bajo."],
+ forest:["🌲 Bosque","Si cae entre árboles es difícil recuperarlo: lleva un buscador (buzzer) y vuela en zonas abiertas. En verano, ojo al riesgo de incendio con las LiPo."],
+ wood:["🌲 Bosque","Difícil recuperar el dron si cae. Busca un claro para despegar. En verano, cuidado con el riesgo de incendio."],
+ scrub:["🌵 Matorral","Bien para volar, pero si cae puede ser difícil encontrarlo. Activa el buzzer."],
+ heath:["🌾 Monte bajo","Abierto y bueno para FPV. Cuidado con fauna nidificando en primavera."],
+ grassland:["🌾 Pradera natural","Abierto, ideal para volar. Respeta la fauna."],
+ bare_rock:["🪨 Roca","Aterriza en una zona lisa para no romper hélices."],
+ beach:["🏖️ Playa","La arena y la sal dañan los motores. Vuela fuera de horas con bañistas."],
+ water:["💧 Agua","Si cae, se pierde. Vuela con batería de sobra y sin pasar bajo."],
+ wetland:["🦆 Humedal","Suelen ser zonas de aves protegidas: evita volar en época de cría."],
+ sand:["🏜️ Arena","Protege los motores al despegar (usa una alfombrilla)."],
+ quarry:["⛏️ Cantera","Privada y con riesgo si está activa. Solo con permiso."],
+ allotments:["🥬 Huertos urbanos","Con gente trabajando: mejor no."],
+ residential:["🏘️ Zona residencial","Entorno urbano: aplican las normas de vuelo urbano y respeta la privacidad."],
+ industrial:["🏭 Polígono","Zona industrial: con dron sin etiqueta de más de 250 g necesitas 150 m de distancia."],
+ commercial:["🏬 Zona comercial","Mucha gente: no recomendable."],
+ recreation_ground:["⚽ Zona recreativa","Si hay gente, no la sobrevueles."],
+ cemetery:["🕊️ Cementerio","Por respeto, no vueles aquí."]
+};
+function renderRec(s){
+  const box=$("#recBox");if(!box||!curSpotObj||curSpotObj.id!==s.id)return;
+  const lc=lastCheck&&lastCheck.s.id===s.id?lastCheck:null;
+  const lim=windLim(),g=+drone.g||0,steps=[],warn=[],good=[];
+  let dayLabel="hoy",flyDate=new Date();
+  // ----- tiempo
+  if(curWx){
+    const hours=wxHours(curWx),days=[...new Set(hours.map(h=>h.day))].slice(0,7);
+    const di=Math.min(curWxDay,days.length-1),day=days[di];flyDate=new Date(day+"T12:00");dayLabel=di===0?"hoy":di===1?"mañana":fmtDate(flyDate);
+    const sm=daySummary(hours,day,lim,di===0);const hs=sm.hs||[];
+    const maxG=hs.length?Math.round(Math.max(...hs.map(h=>h.g))):0,avgW=hs.length?Math.round(hs.reduce((a,h)=>a+h.w10,0)/hs.length):0,tmin=hs.length?Math.round(Math.min(...hs.map(h=>h.temp))):0,maxP=hs.length?Math.max(...hs.map(h=>h.pp)):0;
+    const fmt=w=>`${String(w.a).padStart(2,"0")}:00 y las ${String(w.b+1).padStart(2,"0")}:00`;
+    if(sm.lv===0)good.push(`<b>Sí, recomendable volar ${dayLabel}.</b> Con tu ${esc(drone.name.split("(")[0].trim())} de ${g} g (aguanta unos ${lim} km/h) el mejor momento es entre las ${fmt(sm.best)}. Viento medio ${avgW} km/h, rachas de hasta ${maxG}.`);
+    else if(sm.lv===1)warn.push(`<b>${dayLabel[0].toUpperCase()+dayLabel.slice(1)} se puede, pero justo.</b> ${sm.sub}. Con ${g} g, rachas de ${maxG} km/h te van a mover: vuela bajo, cerca de ti y con batería de sobra.`);
+    else if(sm.lv===2)warn.push(`<b>No te recomiendo volar ${dayLabel}.</b> ${sm.sub} y tu dron de ${g} g aguanta unos ${lim} km/h. Podrías perderlo con el viento.`);
+    else warn.push(`<b>${dayLabel[0].toUpperCase()+dayLabel.slice(1)} ya no quedan horas de luz.</b>`);
+    const better=days.map((x,i)=>({i,x,s:daySummary(hours,x,lim,i===0)})).filter(w=>w.s.lv===0&&w.i!==di);
+    if(sm.lv>=1&&better.length)good.push(`📅 Mejores días esta semana: ${better.slice(0,3).map(w=>`<b>${dayName(w.x,w.i)}</b> (${String(w.s.best.a).padStart(2,"0")}–${String(w.s.best.b+1).padStart(2,"0")}h)`).join(", ")}.`);
+    if(g<120&&maxG>=lim*.8)warn.push("🪶 Los drones muy ligeros como el tuyo notan mucho las rachas: si ves que deriva, aterriza.");
+    if(tmin<8)warn.push(`🔋 Hará ${tmin} °C: las LiPo pierden potencia con frío. Llévalas en el bolsillo y caliéntalas antes de despegar.`);
+    if(maxP>=30&&maxP<60)warn.push(`🌦️ Probabilidad de lluvia de hasta ${maxP}%: lleva algo para proteger el equipo.`);
+    if(hs[0])good.push(`🌅 Luz: de ${hs[0].sunrise} a ${hs[0].sunset}. En la UE se puede volar de noche, pero el dron necesita una luz verde intermitente.`);
+  }else warn.push('<span class="spin"></span> Cargando el tiempo…');
+  // ----- permisos según ENAIRE/OSM
+  if(lc){
+    const urban=lc.items.find(x=>/Zona urbana/.test(x.t)),aero=lc.items.find(x=>/^Zona aeronáutica|Seguramente estás en su zona/.test(x.t+" "+(x.d||""))),ctr=lc.items.find(x=>/Espacio aéreo controlado/.test(x.t)),prot=lc.items.find(x=>/Espacio protegido/.test(x.t)),priv=lc.items.find(x=>/Terreno privado/.test(x.t)),a3=lc.items.find(x=>/Demasiado cerca de zonas habitadas/.test(x.t)),mil=lc.items.find(x=>/militar|Prisión/.test(x.t)&&x.st==="bad");
+    if(mil)steps.push(["⛔ No vueles aquí",mil.t+". Busca otro punto."]);
+    if(urban){const lim5=new Date(flyDate);lim5.setDate(lim5.getDate()-5);const late=lim5<new Date(new Date().toDateString());steps.push(["📨 Avisa al Ministerio del Interior",`Es entorno urbano. Para volar ${dayLabel} tendrías que haberlo comunicado como tarde el ${fmtDate(lim5)}${late?" — ya no llegas para ese día: elige una fecha al menos 5 días después de hoy.":"."}`,LK("Formulario de comunicación","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/")])}
+    if(aero)steps.push(["🛫 Coordina con ENAIRE o el aeródromo","Estás dentro de una zona de aeródromo. Pide la coordinación en ENAIRE Planea con días o semanas de antelación y espera la respuesta antes de volar.",LK("ENAIRE Planea","https://planea.enaire.es/")]);
+    else if(ctr)steps.push(["📏 Máximo 60 m de altura","Estás en espacio aéreo controlado: puedes volar sin pedir nada si no pasas de 60 m y lo tienes siempre a la vista. Para subir más, coordina en ENAIRE Planea."]);
+    if(prot)steps.push(["🌳 Pregunta al espacio protegido",prot.t.replace("Espacio protegido: ","")+": consulta al órgano gestor (en Madrid, la Comunidad de Madrid) si se puede volar. En primavera suele estar prohibido por la cría de aves."]);
+    if(priv)steps.push(["🔑 Pide permiso al propietario","El terreno está marcado como privado."]);
+    if(a3)steps.push(["↔️ Aléjate de las casas","Con tu dron (A3) necesitas 150 m a casas, parques y polígonos. Busca un punto de despegue más alejado."]);
+    const dist=lc.items.find(x=>/A más de 150 m|🏠|Demasiado cerca/.test(x.t));if(dist&&!a3)steps.push([dist.st==="ok"?"🏡 Lejos de casas":"🏠 Casas cerca",dist.t+". "+(dist.st==="ok"?"Buen punto para despegar.":"Despega en el lado más alejado de las casas y no grabes viviendas.")]);
+    const parc=lc.items.find(x=>/Parcela del Catastro/.test(x.t));if(parc&&/rústico/.test(parc.t))steps.push(["🌾 Campo privado (Catastro)","La parcela es rústica: tiene dueño aunque no haya valla. Pide permiso para despegar en ella o hazlo desde un camino público y vuela por encima."]);
+    (lc.terrain||[]).slice(0,2).forEach(t=>{const k=t.landuse||t.natural;const tip=TERRAIN_TIPS[k];if(tip)steps.push([tip[0]+(t.name?" · "+esc(t.name):""),tip[1]])});
+    if(lc.missing&&lc.missing.length)steps.push(["🪪 Ponte al día con los papeles",lc.missing.map(m=>m.t).join(" · ")+". Lo tienes detallado arriba."]);
+    if(!steps.length&&!lc.pend.length)steps.push(["✅ Sin permisos especiales","No he encontrado zonas que obliguen a pedir permiso aquí. Cumple las normas generales de tu subcategoría ("+(lc.sub||"categoría abierta")+")."]);
+    if(lc.pend.length)steps.push(['<span class="spin"></span> Sigo comprobando',lc.pend.join(", ")+"…"]);
+  }else steps.push(['<span class="spin"></span> Comprobando permisos','Zonas de ENAIRE, espacios protegidos y casas cercanas…']);
+  // ----- checklist del día
+  const chk=["Revisa ENAIRE Drones y los NOTAM el mismo día (pueden aparecer zonas temporales)","Baterías cargadas (y alguna de repuesto)",drone.fpv?"Lleva un observador: con gafas FPV es obligatorio":"Mantén el dron siempre a la vista","Número de operador pegado en el dron"+(g<250&&!drone.cam?" (si lleva cámara)":""),"Máximo 120 m de altura (60 m si estás en espacio aéreo controlado)","No sobrevueles personas ajenas ni grupos de gente"];
+  box.innerHTML=`${good.map(x=>`<div class="card small" style="line-height:1.5">${x}</div>`).join("")}${warn.map(x=>`<div class="card small" style="line-height:1.5;border-left:4px solid var(--warn)">${x}</div>`).join("")}
+   <details class="sec" open><summary>📋 Qué tienes que hacer</summary><div class="in plan">${steps.map((p,i)=>`<div class="step"><span class="n">${i+1}</span><div><b>${p[0]}</b><div class="small mute" style="margin-top:2px">${p[1]}</div>${p[2]?`<div class="small" style="margin-top:4px"><a href="${esc(p[2].u)}" target="_blank" rel="noopener">${esc(p[2].t)} ↗</a></div>`:""}</div></div>`).join("")}</div></details>
+   <details class="sec"><summary>🎒 Checklist antes de despegar</summary><div class="in">${chk.map(c=>`<div class="toggle"><div class="t"><b style="font-weight:600;font-size:13.5px">${esc(c)}</b></div><label class="sw"><input type="checkbox"><span></span></label></div>`).join("")}</div></details>`;
+}
 
 /* ===================== añadir spots ===================== */
 let adding=false;
@@ -1186,7 +1342,7 @@ function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b
 $("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base2",baseKey);base=BASES[baseKey].addTo(map);if(base.bringToBack)base.bringToBack();syncSeg()});
 $("#radiusSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;radiusKm=+b.dataset.r;LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}});
 $("#lyEnaire").onchange=syncEnaire;
-$("#lyDipul").onchange=syncOfficialByZoom;$("#lyOsmR").onchange=drawR;$("#lySpots").onchange=renderSpots;
+$("#lyDipul").onchange=syncOfficialByZoom;$("#lyCat").onchange=syncCatastro;$("#lyOsmR").onchange=drawR;$("#lySpots").onchange=renderSpots;
 $("#officialMaps").innerHTML=Object.entries(CDB).filter(([,c])=>c.map).map(([cc,c])=>`<div class="req"><div class="st info">${c.flag}</div><div class="tx"><b>${esc(c.name)}</b><div class="lk"><a href="${esc(c.map.u)}" target="_blank" rel="noopener">${esc(c.map.t)} ↗</a></div></div></div>`).join("");
 $("#obAgain").onclick=()=>startOb();
 
