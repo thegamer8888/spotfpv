@@ -701,7 +701,7 @@ function requirements(cc,d,p){
     }else out.items.push(IT(has("eu_a1a3")?"ok":"info","Certificado A1/A3",has("eu_a1a3")?"Lo tienes. Para menos de 250 g la norma UE no lo exige, pero conviene llevarlo.":"Para menos de 250 g la norma UE no lo exige (basta con leer el manual del dron), pero es gratis y muy recomendable."));
     if(d.cls==="C2"&&!has("eu_a2"))out.items.push(IT("warn","Certificado A2","Sin él, tu C2 solo vuela en A3. Se saca con examen presencial o en remoto tras el A1/A3.",{time:"Días o semanas"}));
     if(has("eu_sts"))out.items.push(IT("info","Tu STS","Te sirve para la categoría específica (escenario estándar con declaración ante la autoridad y operador habilitado). Para vuelos recreativos normales usas la categoría abierta."));
-    if(c.insurance)out.items.push(c.insurance(s.sub,g)); else out.items.push(IT("info","Seguro","Muy recomendable; comprueba si el país lo exige."));
+    if(c.insurance){const ins=c.insurance(s.sub,g);out.items.push({st:ins.st,t:ins.st==="need"?"Seguro de responsabilidad civil (obligatorio)":"Seguro de responsabilidad civil",d:ins.t})} else out.items.push(IT("info","Seguro","Muy recomendable; comprueba si el país lo exige."));
     if(has("insur")&&out.items[out.items.length-1].st==="need")out.items[out.items.length-1].st="ok";
     if(d.fpv)out.items.push(IT("warn","Vuelo con gafas FPV","Hace falta un observador a tu lado que vea el dron directamente (VLOS) y te avise. Sin observador no puedes volar con gafas."));
     if(g>=250&&["C1","C2","C3"].includes(d.cls))out.items.push(IT("info","Identificación remota","Los drones C1, C2 y C3 deben emitir la identificación remota directa (viene de fábrica). Activa tu número de operador en la app."));
