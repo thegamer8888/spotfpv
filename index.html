@@ -718,10 +718,10 @@ async function loadAll(){
   if(cached){mergeSpots();drawR();renderSpots(false);status(`✅ ${spots.length} spots`,2000);loading=false;return}
   status('<span class="spin"></span> Buscando spots en directo…');
   const fast=[],slow=[];Object.entries(CATS).forEach(([k,c])=>{if(!c.q)return;[].concat(c.q).forEach(s=>{if(s.startsWith("nwr")){fast.push(s.replace(/^nwr/,"node")+`(${b});`);slow.push(s.replace(/^nwr/,"wr")+`(${b});`)}else fast.push(`${s}(${b});`)})});
-  const qFast=`[out:json][timeout:25];(${fast.join("")});out tags 300;`,qSlow=`[out:json][timeout:40];(${slow.join("")});out center tags 200;`;
+  const qFast=`[out:json][timeout:25];(${fast.join("")});out tags 300;`,qSlow=`[out:json][timeout:90];(${slow.join("")});out center tags 250;`;
   const qR=`[out:json][timeout:40];(nwr["aeroway"~"^(aerodrome|heliport|airstrip)$"](${b2});nwr["landuse"="military"](${b});nwr["amenity"="prison"](${b});nwr["power"="plant"](${b}););out center tags 300;`;
   let gotAny=false;const addOsm=r=>{if(id!==loadId)return;gotAny=true;const ids=new Set(osmSpots.map(x=>x.id));r.elements.map(fromOsm).filter(Boolean).forEach(x=>{if(!ids.has(x.id))osmSpots.push(x)});mergeSpots();renderSpots(true)};
-  const pS=Promise.allSettled([overpass(qFast,40000).then(addOsm),overpass(qSlow,60000).then(addOsm)]).then(rs=>{if(id!==loadId)return;mergeSpots();renderSpots(false);status(gotAny?`✅ ${spots.length} spots encontrados`:"🐢 El servidor de mapas va lento. Toca 🔄 en un momento.",gotAny?2500:6000)});
+  const pS=Promise.allSettled([overpass(qFast,40000).then(addOsm),overpass(qSlow,95000).then(addOsm)]).then(rs=>{if(id!==loadId)return;mergeSpots();renderSpots(false);status(gotAny?`✅ ${spots.length} spots encontrados`:"🐢 El servidor de mapas va lento. Toca 🔄 en un momento.",gotAny?2500:6000)});
   const pR=overpass(qR).then(r=>{if(id!==loadId)return;rFeatures=r.elements.map(fromOsmR).filter(Boolean);mergeSpots();drawR();renderSpots(false)}).catch(()=>{});
   await Promise.allSettled([pS,pR]);
   if(id===loadId){if(osmSpots.length)cacheSet(key,{s:osmSpots,r:rFeatures});loading=false;renderSpots(false)}
