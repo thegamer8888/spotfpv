@@ -765,7 +765,7 @@ const EnaireLayer=L.Layer.extend({
   onRemove(m){m.off("moveend",this._u);if(this._img)m.removeLayer(this._img);this._img=null},
   _update(){const m=this._m;if(!m)return;const b=m.getBounds(),sz=m.getSize(),p=L.CRS.EPSG3857,sw=p.project(b.getSouthWest()),ne=p.project(b.getNorthEast());
     const url=`${ENAIRE_URL}/export?bbox=${sw.x},${sw.y},${ne.x},${ne.y}&bboxSR=3857&imageSR=3857&size=${sz.x},${sz.y}&format=png32&transparent=true&layers=show:0,2&f=image`;
-    const img=L.imageOverlay(url,b,{opacity:.42,interactive:false,attribution:"Zonas UAS © ENAIRE"}),old=this._img;this._img=img;img.addTo(m);
+    const img=L.imageOverlay(url,b,{opacity:.26,interactive:false,attribution:"Zonas UAS © ENAIRE"}),old=this._img;this._img=img;img.addTo(m);
     const drop=()=>{if(old&&m.hasLayer(old))m.removeLayer(old)};img.on("load",drop);setTimeout(drop,5000)}
 });
 let enaireLayer=new EnaireLayer();
