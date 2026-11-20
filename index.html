@@ -514,7 +514,7 @@ const PRESETS=[
  {id:"mavic",ic:"📷",name:"DJI Mavic 3 (C2)",g:950,cls:"C2",cam:true,fpv:false}
 ];
 const DEF_DRONE={...PRESETS[1]};
-const DEF_PROFILE={nat:"co",res:"es",purpose:"recreativo",certs:{eu_a1a3:true,eu_a2:true,eu_sts:true}};
+const DEF_PROFILE={nat:"es",res:"es",purpose:"recreativo",certs:{}};
 let drone=LS.get("sf_drone",DEF_DRONE), profile=LS.get("sf_profile",DEF_PROFILE);
 profile.certs=profile.certs||{};
 
@@ -779,7 +779,7 @@ const LV=[{t:"Pinta bien",e:"🟢"},{t:"Revisar",e:"🔵"},{t:"Con condiciones",
 function visibleSpots(){return spots.filter(s=>(onlyFav?favs[s.id]:activeCats.includes(s.cat))&&(!onlyGood||s.pre.lv<=1))}
 function renderSpots(pending){
   spotLayer.clearLayers();
-  if(!ref){$("#spotList").innerHTML='<div class="empty"><b>🗺️</b>Busca un sitio arriba o toca 📍 para ver spots cerca de ti.</div>';return}
+  if(!ref){$("#spotList").innerHTML='<div class="empty"><b>🗺️</b>Escribe arriba dónde quieres volar o toca 📍 para usar tu ubicación.<br><span class="small">También puedes arrastrar el muñequito 🧍 a cualquier punto del mapa.</span></div>';return}
   const list=visibleSpots();
   $("#spotsTitle").textContent=list.length?`${list.length} spot${list.length>1?"s":""} cerca`:"Explora spots";
   if(!list.length&&(pending||loading)){$("#spotList").innerHTML='<div class="skel"></div><div class="skel"></div><div class="small mute" style="text-align:center">Buscando spots… puede tardar unos segundos</div>';return}
@@ -1201,7 +1201,7 @@ function renderOb(){
     <div class="feat"><i>✈️</i><div><b>Listo para viajar</b><span>Qué títulos te valen en cada país y qué te falta.</span></div></div>`,
    ()=>`<h1>¿Qué dron vuelas?</h1><p class="sub">Puedes cambiarlo cuando quieras.</p><div class="grid2" id="obDrones">${PRESETS.map(p=>`<div class="dcard ${drone.id===p.id?"on":""}" data-id="${p.id}"><span class="e">${p.ic}</span><b>${esc(p.name)}</b><small>${p.g} g</small></div>`).join("")}</div>`,
    ()=>`<h1>¿Qué títulos tienes?</h1><p class="sub">Así sé qué te vale en cada país.</p><div class="card" style="padding:4px 14px">${["eu_a1a3","eu_a2","eu_sts","eu_reg","insur"].map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div><label class="f">Dónde vives</label><select id="obRes"></select>`,
-   ()=>`<div class="obHero"><div class="e">📍</div><h1>¡Todo listo!</h1><div>Busca un sitio o usa tu ubicación para ver los spots cercanos.</div></div><div class="notice"><span>⚠️</span><span>SpotFPV te orienta con datos en vivo, pero el responsable del vuelo eres tú: mira siempre el mapa oficial antes de despegar.</span></div>`
+   ()=>`<div class="obHero"><div class="e">📍</div><h1>¡Todo listo!</h1><div>Escribe arriba el sitio donde quieres volar, toca 📍 para usar tu ubicación o arrastra el muñequito 🧍 a cualquier punto del mapa.</div></div><div class="notice"><span>⚠️</span><span>SpotFPV te orienta con datos en vivo, pero el responsable del vuelo eres tú: mira siempre el mapa oficial antes de despegar.</span></div>`
   ];
   $("#obBody").innerHTML=steps[obStep]();
   $("#obDots").innerHTML=steps.map((_,i)=>`<span class="${i===obStep?"on":""}"></span>`).join("");
@@ -1209,7 +1209,7 @@ function renderOb(){
   if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id),uid:drone.uid};LS.set("sf_drone",drone);const k=myDrones.findIndex(x=>x.uid===drone.uid);if(k>=0){myDrones[k]={...drone};LS.set("sf_drones",myDrones)}$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
   if(obStep===2){fillCountrySelect("#obRes",profile.res);$("#obRes").onchange=()=>{profile.res=$("#obRes").value;LS.set("sf_profile",profile)};$("#obBody").onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){profile.certs[k]=e.target.checked;LS.set("sf_profile",profile)}}}
 }
-$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}else setTimeout(positionAreaBtn,300)}};
+$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(!ref)setTimeout(()=>$("#q").focus(),350)}};
 
 /* ===================== arranque ===================== */
 function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
@@ -1218,9 +1218,9 @@ renderAll();syncOfficialByZoom();
 window.addEventListener("resize",positionAreaBtn);
 if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 syncEnaire();
-if(!LS.get("sf_ob",0)){startOb();if(!ref){$("#q").value="Colmenar del Arroyo";doSearch()}}
+if(!LS.get("sf_ob",0)){startOb()}
 else if(ref){$("#q").value=ref.label.split(",")[0];map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}
-else{$("#q").value="Colmenar del Arroyo";doSearch()}
+else{map.setView([40.2,-3.7],5)}
 
 </script>
 </body>
