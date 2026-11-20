@@ -66,6 +66,23 @@ input,select{font:inherit}
 #pickHint{position:fixed;top:calc(122px + var(--safe-t));left:50%;transform:translateX(-50%);z-index:1500;background:var(--ink);color:var(--bg);font-weight:700;padding:10px 16px;border-radius:20px;display:none;box-shadow:var(--shadow);font-size:13.5px;text-align:center;max-width:92vw}
 .distTip{background:var(--brand)!important;color:#fff!important;border:0!important;font-weight:800;border-radius:10px!important;box-shadow:var(--shadow2)}
 .distTip:before{display:none}
+#aim{position:fixed;left:50%;top:50%;z-index:1100;pointer-events:none;display:none;transform:translate(-50%,-100%)}
+#aim .pinA{font-size:44px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.45));transition:transform .15s}
+#aim.moving .pinA{transform:translateY(-10px)}
+#aimDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#111;border:2px solid #fff;z-index:1100;display:none;pointer-events:none}
+#aimTop{position:fixed;top:calc(10px + var(--safe-t));left:12px;right:12px;z-index:1200;display:none;background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:10px 14px;font-size:13px}
+#aimTop b{display:block;font-size:14.5px}
+#aimBar{position:fixed;left:0;right:0;bottom:0;z-index:1200;display:none;background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(15,23,42,.2);padding:14px 16px calc(14px + var(--safe-b))}
+#aimBar .coords{font-size:12.5px;color:var(--mute);margin:2px 0 10px;font-variant-numeric:tabular-nums}
+#aimBar .row3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body.aiming #sheet,body.aiming #nav,body.aiming #top,body.aiming #areaBtn,body.aiming #peg{display:none!important}
+body.aiming #aim,body.aiming #aimDot,body.aiming #aimTop,body.aiming #aimBar{display:block}
+#sv{position:fixed;inset:0;z-index:4500;background:#000;display:none;flex-direction:column}
+#sv.on{display:flex}
+#sv .svHead{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 12px 10px;background:var(--bg);color:var(--ink)}
+#sv .svHead b{flex:1;font-size:14px}
+#sv iframe{flex:1;border:0;width:100%}
+#sv .svFoot{padding:10px 12px calc(10px + var(--safe-b));background:var(--bg);display:flex;gap:8px}
 .mkpt{font-size:30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));transform:translateY(-12px)}
 .wxHero{border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center}
 .wxHero .wi{font-size:40px;flex:none}
@@ -290,6 +307,12 @@ input[type=range]{width:100%;accent-color:var(--brand)}
 <button id="areaBtn">🔄 Buscar en esta zona</button>
 <button id="peg" aria-label="Muñequito: arrastra al mapa">🧍</button>
 <div id="pegGhost">🧍</div>
+<div id="aim"><div class="pinA">📍</div></div><div id="aimDot"></div>
+<div id="aimTop"><b>🎯 Mueve el mapa hasta el punto exacto</b><span class="mute">Arrastra con el dedo y haz zoom. Las líneas azules son calles con Street View.</span></div>
+<div id="aimBar"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="aimName" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Punto elegido</b><button class="btn ghost" id="aimSat" style="padding:7px 11px;font-size:12.5px;flex:none">🛰️ Satélite</button></div><div class="coords" id="aimCoords"></div>
+<div class="row3"><button class="btn ghost" id="aimSV">👀 Ver calle aquí</button><button class="btn" id="aimOk">✔ Usar este punto</button></div>
+<button class="btn ghost block" id="aimCancel" style="margin-top:8px;padding:9px">Cancelar</button></div>
+<div id="sv"><div class="svHead"><button class="xbtn" id="svClose" style="position:static;background:var(--card2);color:var(--ink)">✕</button><b>👀 Vista de calle<br><span class="small mute" style="font-weight:500">Muévete con las flechas · es la calle más cercana al punto</span></b></div><iframe id="svFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="svFoot"><a class="btn ghost" id="svExt" target="_blank" rel="noopener" style="flex:1">Abrir en Google Maps ↗</a><button class="btn" id="svBack" style="flex:1">🎯 Elegir punto</button></div></div>
 <div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · también: doble toque o mantener pulsado</span></div>
 
 <section id="sheet">
@@ -824,11 +847,12 @@ async function openSpot(s){
   const c=CATS[s.cat];
   $("#dBox").innerHTML=`<div class="hero" id="hero" style="--hg:${HERO[s.cat]||HERO.wiki}"><button class="xbtn" id="dClose">✕</button><div class="big">${c.ic}</div><div><span class="tag">${c.n}</span><h1>${esc(s.name)}</h1></div></div>
   <div class="dIn">
+   ${s.cat==="point"?`<button class="btn ghost block" id="adjBtn" style="margin-top:12px">🎯 Ajustar el punto con precisión</button>`:""}
    <div class="facts">${s.dist!=null?`<span class="fact">📏 ${fmtD(s.dist)}</span>`:""}${s.ele?`<span class="fact">⛰️ ${esc(s.ele)} m</span>`:""}<span class="fact">🔗 <a href="${esc(s.url||"#")}" target="_blank" rel="noopener">${esc(s.src)}</a></span></div>
    <div class="acts">
     <a class="act" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}" target="_blank" rel="noopener"><i>🧭</i>Cómo llegar</a>
     <button class="act" id="favBtn"><i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}</button>
-    <a class="act" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lon}" target="_blank" rel="noopener" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}><i>🧍</i>Street View</a>
+    <button class="act" id="svBtn" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}><i>🧍</i>Street View</button>
     <button class="act" id="shareBtn"><i>📤</i>Compartir</button>
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
@@ -846,6 +870,8 @@ async function openSpot(s){
    ${s.cat==="point"?`<button class="btn block" id="savePt" style="margin-top:12px">🔒 Guardar como mi spot privado</button><p class="small mute" style="text-align:center;margin-top:6px">Tus spots se guardan solo en tu móvil: nadie más los ve.</p>`:""}
   </div>`;
   $("#dClose").onclick=closeDetail;
+  $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
+  if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`<i>${favs[s.id]?"❤️":"🤍"}</i>${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
@@ -1013,15 +1039,38 @@ $("#ctxWx").onclick=()=>{if(!ref){status("Primero busca un lugar",2000);return}
 /* ===================== muñequito y punto libre ===================== */
 let picking=false;
 function setPicking(on){picking=on;$("#peg").classList.toggle("on",on);$("#pickHint").style.display=on?"block":"none";if(on&&$("#sheet").className!=="min"){$("#sheet").className="min";setTimeout(positionAreaBtn,320)}}
-$("#peg").addEventListener("click",()=>{if(pegDragged)return;setPicking(!picking)});
+$("#peg").addEventListener("click",()=>{if(pegDragged)return;startAim()});
 let pegDragged=false,pegStart=null;
 $("#peg").addEventListener("pointerdown",e=>{pegStart={x:e.clientX,y:e.clientY};pegDragged=false;$("#peg").setPointerCapture(e.pointerId)});
 $("#peg").addEventListener("pointermove",e=>{if(!pegStart)return;if(!pegDragged&&Math.hypot(e.clientX-pegStart.x,e.clientY-pegStart.y)>8){pegDragged=true;$("#pegGhost").style.display="block"}if(pegDragged){const g=$("#pegGhost");g.style.left=e.clientX+"px";g.style.top=e.clientY+"px"}});
 $("#peg").addEventListener("pointerup",e=>{const was=pegDragged;pegStart=null;$("#pegGhost").style.display="none";if(!was)return;setTimeout(()=>pegDragged=false,50);
   const r=$("#map").getBoundingClientRect(),sh=$("#sheet").getBoundingClientRect();if(e.clientY>=sh.top&&e.clientX>=sh.left&&e.clientX<=sh.right)return;
-  const ll=map.containerPointToLatLng([e.clientX-r.left,e.clientY-r.top]);setPicking(false);openPoint(ll.lat,ll.lng)});
-map.on("contextmenu",e=>{openPoint(e.latlng.lat,e.latlng.lng)});
-map.doubleClickZoom.disable();map.on("dblclick",e=>{openPoint(e.latlng.lat,e.latlng.lng)});
+  const ll=map.containerPointToLatLng([e.clientX-r.left,e.clientY-r.top]);startAim(ll.lat,ll.lng)});
+
+/* ===================== modo precisión (mira) y Street View ===================== */
+const svCover=L.tileLayer("https://mts{s}.googleapis.com/vt?hl=es&lyrs=svv|cb_client:apiv3&style=40,18&x={x}&y={y}&z={z}",{subdomains:"0123",maxZoom:21,opacity:.75});
+let aiming=false,aimPrevBase=null,aimT=null;
+function startAim(lat,lon){
+  closeDetail();aiming=true;document.body.classList.add("aiming");
+  const z=Math.max(map.getZoom(),17);if(lat!=null)map.setView([lat,lon],z,{animate:false});else map.setZoom(z);
+  svCover.addTo(map);updAim();
+}
+function endAim(){aiming=false;document.body.classList.remove("aiming");map.removeLayer(svCover);if(aimPrevBase){map.removeLayer(base);base=BASES[aimPrevBase].addTo(map);if(base.bringToBack)base.bringToBack();baseKey=aimPrevBase;aimPrevBase=null}setTimeout(positionAreaBtn,50)}
+function updAim(){const c=map.getCenter();$("#aimCoords").textContent=`${c.lat.toFixed(6)}, ${c.lng.toFixed(6)} · precisión ~${Math.max(1,Math.round(40075016*Math.cos(c.lat*Math.PI/180)/2**(map.getZoom()+8)*8))} m`;
+  clearTimeout(aimT);aimT=setTimeout(async()=>{try{const r=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=es&lat=${c.lat}&lon=${c.lng}`,{},6000);const a=r.address||{};$("#aimName").textContent="📍 "+(r.name||a.road||a.hamlet||a.village||a.town||a.city||"Punto elegido")}catch(e){}},700)}
+map.on("movestart",()=>{if(aiming)$("#aim").classList.add("moving")});
+map.on("move",()=>{if(aiming)updAim()});
+map.on("moveend",()=>{if(aiming){$("#aim").classList.remove("moving");updAim()}});
+$("#aimOk").onclick=()=>{const c=map.getCenter();endAim();openPoint(c.lat,c.lng)};
+$("#aimCancel").onclick=endAim;
+$("#aimSat").onclick=()=>{if(!aimPrevBase){aimPrevBase=baseKey;map.removeLayer(base);base=BASES.sat.addTo(map);base.bringToBack();$("#aimSat").textContent="🗺️ Mapa"}else{map.removeLayer(base);base=BASES[aimPrevBase].addTo(map);base.bringToBack();baseKey=aimPrevBase;aimPrevBase=null;$("#aimSat").textContent="🛰️ Satélite"}};
+$("#aimSV").onclick=()=>{const c=map.getCenter();openSV(c.lat,c.lng,true)};
+let svFromAim=false,svPt=null;
+function openSV(lat,lon,fromAim){svFromAim=!!fromAim;svPt=[lat,lon];$("#svFrame").src=`https://maps.google.com/maps?layer=c&cbll=${lat},${lon}&cbp=11,0,0,0,0&output=svembed&hl=es`;$("#svExt").href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;$("#svBack").textContent=fromAim?"🎯 Seguir eligiendo":"🎯 Ajustar el punto";$("#sv").classList.add("on")}
+$("#svClose").onclick=()=>{$("#sv").classList.remove("on");$("#svFrame").src="about:blank"};
+$("#svBack").onclick=()=>{$("#sv").classList.remove("on");$("#svFrame").src="about:blank";if(!svFromAim&&svPt)startAim(svPt[0],svPt[1])};
+map.on("contextmenu",e=>{if(aiming)return;openPoint(e.latlng.lat,e.latlng.lng)});
+map.doubleClickZoom.disable();map.on("dblclick",e=>{if(aiming){map.setView(e.latlng,map.getZoom()+1);return}openPoint(e.latlng.lat,e.latlng.lng)});
 const ptLayer=L.layerGroup().addTo(map);
 async function openPoint(lat,lon){
   ptLayer.clearLayers();L.marker([lat,lon],{icon:icon('<div class="mkpt">📍</div>',30),zIndexOffset:2000}).addTo(ptLayer);
