@@ -1188,7 +1188,11 @@ function polyDist(P,poly){ // P=[x,y], poly=[[x,y]...] → {d,inside,cp}
   return{d:inside?0:best,inside,cp};
 }
 const CAT_USE={"1_residential":"vivienda","2_agriculture":"agrícola","3_industrial":"industrial","4_1_office":"oficinas","4_2_retail":"comercio","4_3_publicServices":"servicios públicos"};
-async function catastroBuildings(lat,lon,r){const dLat=r/110540,dLon=r/(111320*Math.cos(lat*Math.PI/180));return catastroBox(lat-dLat,lon-dLon,lat+dLat,lon+dLon,20000)}
+async function catastroBuildings(lat,lon,r,tile=100,minOk=.75){
+  const kx=111320*Math.cos(lat*Math.PI/180),n=Math.max(1,Math.ceil(2*r/tile)),dLat=r/110540,dLon=r/kx,s=lat-dLat,w=lon-dLon,st=2*dLat/n,sl=2*dLon/n,jobs=[];
+  for(let a=0;a<n;a++)for(let b=0;b<n;b++)jobs.push(catastroBox(s+a*st,w+b*sl,s+(a+1)*st,w+(b+1)*sl,25000));
+  const rs=await Promise.allSettled(jobs);const ok=rs.filter(x=>x.status==="fulfilled");if(ok.length<jobs.length*minOk)throw new Error("catastro");
+  const seen=new Set(),out=[];ok.forEach(r=>r.value.forEach(x=>{const k=x.ring[0].join(",")+x.ring.length;if(!seen.has(k)){seen.add(k);out.push(x)}}));return out}
 async function catastroBox(s,w,n,e,ms){
   const u=`https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=BU:Building&srsName=urn:ogc:def:crs:EPSG::4326&bbox=${s.toFixed(6)},${w.toFixed(6)},${n.toFixed(6)},${e.toFixed(6)},urn:ogc:def:crs:EPSG::4326`;
   const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);
@@ -1225,9 +1229,7 @@ async function distAnalysis(lat,lon,cc,onUpd){
   const D={src,nearest:A.nearest,n150:A.n150,n100:A.n100,radius:R1,parcel,exit:null,exitPending:false};
   if(D.nearest&&D.nearest.d<150){D.exitPending=true;
     (async()=>{let big=null;
-      try{if(src==="Catastro"){const dLat=R2/110540,dLon=R2/kx,s=lat-dLat,w=lon-dLon,stepLat=2*dLat/3,stepLon=2*dLon/3,jobs=[];
-          for(let a=0;a<3;a++)for(let b=0;b<3;b++)jobs.push(catastroBox(s+a*stepLat,w+b*stepLon,s+(a+1)*stepLat,w+(b+1)*stepLon,25000));
-          const rs=await Promise.allSettled(jobs);const seen=new Set();big=[];rs.forEach(r=>{if(r.status==="fulfilled")r.value.forEach(x=>{const k=x.ring[0].join(",");if(!seen.has(k)){seen.add(k);big.push(x)}})});if(rs.filter(r=>r.status==="fulfilled").length<6)big=null}
+      try{if(src==="Catastro"){try{big=await catastroBuildings(lat,lon,R2,150,.7)}catch(e){big=null}}
         if(!big)big=await osmBuildings(lat,lon,R2)}catch(e){big=null}
       if(big){const B=analyse(big,R2);D.exit=findExit(B.polys,R2,lat,lon,kx);D.radius=R2}
       D.exitPending=false;if(onUpd)onUpd(D);if(curSpotObj&&Math.abs(curSpotObj.lat-lat)<1e-9)drawExit(lat,lon,D)})();
