@@ -80,7 +80,12 @@ body.aiming #aim,body.aiming #aimDot,body.aiming #aimTop,body.aiming #aimBar{dis
 #sv.on{display:flex}
 #sv .svHead{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 12px 10px;background:var(--bg);color:var(--ink)}
 #sv .svHead b{flex:1;font-size:14px}
-#sv iframe{flex:1;border:0;width:100%}
+#sv iframe{flex:1.25;border:0;width:100%;min-height:0}
+#svMapWrap{position:relative;flex:1;min-height:0;border-top:3px solid var(--brand)}
+#svMap{position:absolute;inset:0}
+#svPin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);z-index:500;color:var(--brand);pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.4))}
+#svHint{position:absolute;left:10px;right:10px;top:10px;z-index:500;background:var(--card);border-radius:10px;padding:7px 10px;font-size:12px;box-shadow:var(--shadow);color:var(--ink2);pointer-events:none}
+#svCoords{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums;padding:0 12px 4px;background:var(--bg)}
 #sv .svFoot{padding:10px 12px calc(10px + var(--safe-b));background:var(--bg);display:flex;gap:8px}
 .mkpt{font-size:30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));transform:translateY(-12px)}
 .wxHero{border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center}
@@ -408,7 +413,11 @@ details.sec summary .i{color:var(--mute)}
 <div id="aimBar"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="aimName" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Punto elegido</b><button class="btn ghost" id="aimSat" style="padding:7px 11px;font-size:12.5px;flex:none">Satélite</button></div><div class="coords" id="aimCoords"></div>
 <div class="row3"><button class="btn ghost" id="aimSV"><svg class="i " width="17" height="17"><use href="#i-person"/></svg> Ver calle aquí</button><button class="btn" id="aimOk"><svg class="i " width="17" height="17"><use href="#i-check"/></svg> Usar este punto</button></div>
 <button class="btn ghost block" id="aimCancel" style="margin-top:8px;padding:9px">Cancelar</button></div>
-<div id="sv"><div class="svHead"><button class="xbtn" id="svClose" style="position:static;background:var(--card2);color:var(--ink)">✕</button><b>Vista de calle<br><span class="small mute" style="font-weight:500">Muévete con las flechas · es la calle más cercana al punto</span></b></div><iframe id="svFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="svFoot"><a class="btn ghost" id="svExt" target="_blank" rel="noopener" style="flex:1">Abrir en Google Maps ↗</a><button class="btn" id="svBack" style="flex:1">🎯 Elegir punto</button></div></div>
+<div id="sv"><div class="svHead"><button class="xbtn" id="svClose" style="position:static;background:var(--card2);color:var(--ink)"><svg class="i" width="18" height="18"><use href="#i-x"/></svg></button><b>Vista de calle<br><span class="small mute" style="font-weight:500">Mueve el mapa de abajo: la vista de calle te sigue</span></b></div>
+<iframe id="svFrame" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+<div id="svMapWrap"><div id="svMap"></div><div id="svPin"><svg class="i" width="40" height="40"><use href="#i-pin"/></svg></div><div id="svHint">Arrastra el mapa para colocar el pin justo donde quieres despegar. Las líneas azules tienen vista de calle.</div></div>
+<div id="svCoords"></div>
+<div class="svFoot"><a class="btn ghost" id="svExt" target="_blank" rel="noopener" style="flex:0 0 auto;padding:12px 14px" aria-label="Abrir en Google Maps"><svg class="i" width="18" height="18"><use href="#i-share"/></svg></a><button class="btn ghost" id="svBack" style="flex:1">Seguir buscando</button><button class="btn" id="svPick" style="flex:1.3"><svg class="i" width="17" height="17"><use href="#i-check"/></svg> Elegir este punto</button></div></div>
 <div id="pickHint">🧍 Toca el punto del mapa que quieres ver<br><span style="font-weight:500;opacity:.8">o arrastra el muñequito · también: doble toque o mantener pulsado</span></div>
 
 <section id="sheet">
@@ -979,7 +988,7 @@ async function openSpot(s){
   $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
   if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
-  $("#shareBtn").onclick=async()=>{const url=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;const txt=`📍 ${s.name} — spot para volar el dron`;try{if(navigator.share)await navigator.share({title:s.name,text:txt,url});else{await navigator.clipboard.writeText(txt+" "+url);status("📋 Enlace copiado",2000)}}catch(e){}};
+  $("#shareBtn").onclick=async()=>{const nm=(curSpotObj&&curSpotObj.name)||s.name;const url=`${location.origin}${location.pathname}?p=${s.lat.toFixed(6)},${s.lon.toFixed(6)}&n=${encodeURIComponent(nm)}&c=${s.cat==="mine"?"point":s.cat}`;const txt=`${nm} — mira este sitio para volar el dron en SpotFPV (normas, tiempo y permisos según tu dron)`;try{if(navigator.share)await navigator.share({title:nm,text:txt,url});else{await navigator.clipboard.writeText(txt+"\n"+url);status("Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
   loadPhotos(s);if(s.wiki)loadWiki(s);
@@ -1171,18 +1180,25 @@ $("#aimOk").onclick=()=>{const c=map.getCenter();endAim();openPoint(c.lat,c.lng)
 $("#aimCancel").onclick=endAim;
 $("#aimSat").onclick=()=>{if(!aimPrevBase){aimPrevBase=baseKey;map.removeLayer(base);base=BASES.sat.addTo(map);base.bringToBack();$("#aimSat").textContent="🗺️ Mapa"}else{map.removeLayer(base);base=BASES[aimPrevBase].addTo(map);base.bringToBack();baseKey=aimPrevBase;aimPrevBase=null;$("#aimSat").textContent="🛰️ Satélite"}};
 $("#aimSV").onclick=()=>{const c=map.getCenter();openSV(c.lat,c.lng,true)};
-let svFromAim=false,svPt=null;
-function openSV(lat,lon,fromAim){svFromAim=!!fromAim;svPt=[lat,lon];$("#svFrame").src=`https://maps.google.com/maps?layer=c&cbll=${lat},${lon}&cbp=11,0,0,0,0&output=svembed&hl=es`;$("#svExt").href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;$("#svBack").textContent=fromAim?"🎯 Seguir eligiendo":"🎯 Ajustar el punto";$("#sv").classList.add("on")}
-$("#svClose").onclick=()=>{$("#sv").classList.remove("on");$("#svFrame").src="about:blank"};
-$("#svBack").onclick=()=>{$("#sv").classList.remove("on");$("#svFrame").src="about:blank";if(!svFromAim&&svPt)startAim(svPt[0],svPt[1])};
+let svFromAim=false,svPt=null,svMini=null,svT=null;
+function svLoad(lat,lon){$("#svFrame").src=`https://maps.google.com/maps?layer=c&cbll=${lat},${lon}&cbp=11,0,0,0,0&output=svembed&hl=es`;$("#svExt").href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;$("#svCoords").textContent=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;svPt=[lat,lon]}
+function openSV(lat,lon,fromAim){svFromAim=!!fromAim;$("#sv").classList.add("on");
+  if(!svMini){svMini=L.map("svMap",{zoomControl:false,attributionControl:false,doubleClickZoom:true});L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(svMini);L.tileLayer(svCover._url,{maxZoom:21,opacity:.85}).addTo(svMini);
+    svMini.on("move",()=>{const c=svMini.getCenter();$("#svCoords").textContent=`${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`});
+    svMini.on("moveend",()=>{clearTimeout(svT);svT=setTimeout(()=>{const c=svMini.getCenter();if(!svPt||km(c.lat,c.lng,svPt[0],svPt[1])>.004)svLoad(c.lat,c.lng)},450)})}
+  setTimeout(()=>{svMini.invalidateSize();svMini.setView([lat,lon],18,{animate:false});svLoad(lat,lon)},30)}
+function closeSV(){$("#sv").classList.remove("on");$("#svFrame").src="about:blank"}
+$("#svClose").onclick=closeSV;
+$("#svPick").onclick=()=>{const c=svMini.getCenter();closeSV();if(aiming)endAim();openPoint(c.lat,c.lng)};
+$("#svBack").onclick=()=>{const c=svMini.getCenter();closeSV();if(aiming){map.setView([c.lat,c.lng],Math.max(map.getZoom(),17))}else startAim(c.lat,c.lng)};
 map.on("contextmenu",e=>{if(aiming)return;openPoint(e.latlng.lat,e.latlng.lng)});
 map.doubleClickZoom.disable();map.on("dblclick",e=>{if(aiming){map.setView(e.latlng,map.getZoom()+1);return}openPoint(e.latlng.lat,e.latlng.lng)});
 const ptLayer=L.layerGroup().addTo(map);
-async function openPoint(lat,lon){
+async function openPoint(lat,lon,presetName){
   ptLayer.clearLayers();L.marker([lat,lon],{icon:icon('<div class="mkpt">📍</div>',30),zIndexOffset:2000}).addTo(ptLayer);
-  const s={id:`pt/${lat.toFixed(5)},${lon.toFixed(5)}`,lat,lon,cat:"point",name:"Punto elegido",src:"Tu selección",dist:ref?km(ref.lat,ref.lon,lat,lon):null,url:`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`};
+  const s={id:`pt/${lat.toFixed(5)},${lon.toFixed(5)}`,lat,lon,cat:"point",name:presetName||"Punto elegido",src:"Tu selección",dist:ref?km(ref.lat,ref.lon,lat,lon):null,url:`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`};
   openSpot(s);
-  try{const r=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=es&lat=${lat}&lon=${lon}`,{},8000);const a=r.address||{};const nm=r.name||a.road||a.hamlet||a.village||a.town||a.city||"";if(nm&&$("#hero h1")&&curSpotId===s.id){$("#hero h1").textContent=nm;s.name=nm}}catch(e){}
+  try{const r=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=es&lat=${lat}&lon=${lon}`,{},8000);const a=r.address||{};const nm=r.name||a.road||a.hamlet||a.village||a.town||a.city||"";if(nm&&!presetName&&$("#hero h1")&&curSpotId===s.id){$("#hero h1").textContent=nm;s.name=nm}}catch(e){}
 }
 
 /* ===================== comprobación progresiva ===================== */
@@ -1557,7 +1573,7 @@ let obStep=0;
 function startOb(){obStep=0;$("#ob").classList.add("on");renderOb()}
 function renderOb(){
   const steps=[
-   ()=>`<div class="obHero"><div class="logo">${I("drone",30)}</div><h1>SpotFPV</h1><div style="opacity:.8;margin-top:4px">Dónde volar tu dron, con normas, tiempo y permisos claros.</div></div>
+   ()=>`${pendingShare?`<div class="notice" style="margin-top:0"><span>${I("pin",18)}</span><span>Te han compartido <b>${esc(pendingShare.name)}</b>. Configura tu dron y lo verás calculado para ti.</span></div>`:""}<div class="obHero"><div class="logo">${I("drone",30)}</div><h1>SpotFPV</h1><div style="opacity:.8;margin-top:4px">Dónde volar tu dron, con normas, tiempo y permisos claros.</div></div>
     <div class="feat"><i>${I("map",22)}</i><div><b>Spots y cualquier punto</b><span>Miradores, cumbres, ruinas, embalses… o el punto exacto que elijas.</span></div></div>
     <div class="feat"><i>${I("shield",22)}</i><div><b>¿Puedo volar aquí?</b><span>Zonas oficiales, Catastro, distancia a casas y permisos.</span></div></div>
     <div class="feat"><i>${I("wind",22)}</i><div><b>¿Compensa ir?</b><span>Viento y tiempo por horas según lo que aguanta tu dron.</span></div></div>
@@ -1572,7 +1588,7 @@ function renderOb(){
   if(obStep===1)$("#obDrones").onclick=e=>{const c=e.target.closest(".dcard");if(!c)return;drone={...PRESETS.find(x=>x.id===c.dataset.id),uid:drone.uid};LS.set("sf_drone",drone);const k=myDrones.findIndex(x=>x.uid===drone.uid);if(k>=0){myDrones[k]={...drone};LS.set("sf_drones",myDrones)}$$("#obDrones .dcard").forEach(x=>x.classList.toggle("on",x===c))};
   if(obStep===2){fillCountrySelect("#obRes",profile.res);$("#obRes").onchange=()=>{profile.res=$("#obRes").value;LS.set("sf_profile",profile)};$("#obBody").onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){profile.certs[k]=e.target.checked;LS.set("sf_profile",profile)}}}
 }
-$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(!ref)setTimeout(()=>$("#q").focus(),350)}};
+$("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(pendingShare)openShared();else if(!ref)setTimeout(()=>$("#q").focus(),350)}};
 
 /* ===================== arranque ===================== */
 function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
@@ -1581,7 +1597,13 @@ renderAll();syncOfficialByZoom();
 window.addEventListener("resize",positionAreaBtn);
 if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 syncEnaire();
+let pendingShare=null;
+try{const sp=new URLSearchParams(location.search),p=(sp.get("p")||"").split(",").map(Number);if(p.length===2&&isFinite(p[0])&&isFinite(p[1]))pendingShare={lat:p[0],lon:p[1],name:(sp.get("n")||"Spot compartido").slice(0,80),cat:sp.get("c")||"point"}}catch(e){}
+function openShared(){if(!pendingShare)return;const x=pendingShare;pendingShare=null;history.replaceState(null,"",location.pathname);
+  ref={lat:x.lat,lon:x.lon,label:x.name};LS.set("sf_ref",ref);$("#q").value=x.name;map.setView([x.lat,x.lon],15);loadAll();
+  setTimeout(()=>{if(x.cat==="point"||!CATS[x.cat]||CATS[x.cat].hidden||x.cat==="mine"||x.cat==="fav")openPoint(x.lat,x.lon,x.name);else openSpot({id:`share/${x.lat},${x.lon}`,lat:x.lat,lon:x.lon,cat:x.cat,name:x.name,src:"Compartido contigo",dist:0,url:`https://www.openstreetmap.org/?mlat=${x.lat}&mlon=${x.lon}#map=17/${x.lat}/${x.lon}`})},400)}
 if(!LS.get("sf_ob",0)){startOb()}
+else if(pendingShare){openShared()}
 else if(ref){$("#q").value=ref.label.split(",")[0];map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}
 else{map.setView([40.2,-3.7],5)}
 
