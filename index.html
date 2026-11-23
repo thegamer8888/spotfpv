@@ -654,7 +654,7 @@ const CERTS=[
  ["co_reg","Colombia: dron registrado en la Aerocivil","Obligatorio desde 200 g."],
  ["co_idon","Colombia: certificado de idoneidad piloto UAS","Necesario para categoría específica (trabajos)."]
 ];
-const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
+const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
 
 /* ===================== presets de drones ===================== */
 const PRESETS=[
@@ -754,6 +754,9 @@ function requirements(cc,d,p){
     out.items.push(IT("info","Sanciones","Volar sin cumplir el RAC 100 puede acarrear multas de cientos de UVT (millones de pesos)."));
   }else{
     const n=cName(cc),gq=q=>"https://www.google.com/search?q="+encodeURIComponent(q);
+    if(STEPS[cc]){out.head="Normas de "+n+" para turistas";STEPS[cc](d,g,pro).filter(Boolean).forEach(x=>out.items.push(x));
+      out.items.push(IT("q","Confirma con la autoridad antes de ir","Las normas cambian a menudo. Revisa la web oficial de su aviación civil unos días antes del viaje.",{link:LK(`Buscar normativa oficial de drones en ${n}`,gq(`normativa drones ${n} aviación civil oficial`))}));
+      out.items.forEach(x=>{if(x.link===undefined)delete x.link});return out}
     out.head="Sin ficha detallada para "+n+": normas generales";
     out.items.push(IT("q","Confirma las normas con su aviación civil",`Aún no tengo la ficha completa de ${n} en la app. Busca la web oficial de su autoridad de aviación civil: es la única fuente fiable.`,{when:"antes",link:LK(`Buscar normativa oficial de drones en ${n}`,gq(`normativa drones ${n} aviación civil oficial`))}));
     out.items.push(IT("need","Registro del dron o del piloto",`Muchos países piden registrar el dron (a menudo desde 250 g, a veces desde menos) o pedir un permiso para extranjeros. Compruébalo para ${n} con días de margen.`,{time:"De minutos a semanas según el país",when:"antes"}));
@@ -776,6 +779,67 @@ function certValidity(cc){
   });
 }
 
+
+/* ===================== tus títulos de España en otros países ===================== */
+// rec: "eu" = valen tal cual · "equiv" = sirven para convalidar · "no" = no valen, toca trámite local · "free" = no hace falta título para lo recreativo
+const GQ=q=>"https://www.google.com/search?q="+encodeURIComponent(q);
+const HOMO={
+ gb:{rec:"no",t:"No te los reconocen: haz el test gratuito de la CAA",d:"Desde 2026 el Reino Unido no reconoce el A1/A3, el A2 ni el número de operador de la UE. Necesitas la Flyer ID (test teórico gratis online) para cualquier dron desde 100 g y la Operator ID si lleva cámara. Lo que estudiaste para el A1/A3 te sirve para aprobar el test. Para volar en A2 allí hace falta el UK A2 CofC británico.",time:"Test online, unos 30–60 min",link:LK("Drone Code de la CAA (para preparar el test)","https://www.caa.co.uk/media/csmfqbs1/the-drone-code-march-2026.pdf")},
+ us:{rec:"no",t:"No te los reconocen: TRUST para recreativo, Part 107 para trabajar",d:"La FAA no convalida títulos EASA. Para volar por ocio basta el TRUST (test gratuito online). Para cualquier vuelo no recreativo hace falta el Part 107, que se aprueba con un examen en un centro de exámenes de la FAA en EE. UU. Tus conocimientos del A2/STS te ayudan, pero hay que estudiar el espacio aéreo de EE. UU."},
+ co:{rec:"equiv",t:"Por ocio no necesitas título; para trabajar se convalida",d:"En categoría abierta (ocio) no te piden certificado, solo registrar el dron desde 200 g. Para la categoría específica (trabajos) la Aerocivil acepta como equivalente al curso el certificado de otra autoridad de aviación de un Estado OACI, como AESA. Lo subes en la Plataforma UAS al pedir el certificado de idoneidad. Aun así tienes que aprobar el examen teórico en la Aerocivil y pasar el reconocimiento médico.",time:"Trámite de semanas: empiézalo antes de viajar",link:LK("Preguntas frecuentes de drones (Aerocivil)","https://www.aerocivil.gov.co/preguntas-frecuentes/18/drones-y-movilidad-urbana-aerea/")},
+ th:{rec:"no",t:"No te los reconocen: test de la CAAT obligatorio",d:"Tailandia no convalida títulos extranjeros. Todos, turistas incluidos, hacen el test online de 40 preguntas de la CAAT. Con lo que sabes del A1/A3 y el A2 lo apruebas sin problema.",time:"Test online; el certificado dura 2 años"},
+ mx:{rec:"no",t:"No te los reconocen",d:"La AFAC no convalida títulos EASA. Para ocio con dron de 250 g o menos no hace falta título ni registro. Por encima de 250 g hay que registrarlo, y varias fuentes dicen que el registro pide identificación mexicana. La autorización de piloto para trabajos exige ser mexicano por nacimiento."},
+ ar:{rec:"free",t:"No te hace falta ningún título para volar por ocio",d:"Desde la Resolución ANAC 550/2025, la categoría abierta no exige licencia de piloto. Los drones de hasta 250 g ni siquiera necesitan registro. Tus títulos europeos no se convalidan, pero tampoco los necesitas en categoría abierta."},
+ pe:{rec:"no",t:"No te los reconocen",d:"Perú no pertenece a EASA. En 2026 entró en vigor un reglamento nuevo de drones (DS 012-2026-MTC) con registro de drones ante la DGAC. Para cualquier uso que no sea recreativo hace falta una licencia emitida por la DGAC. Tus títulos no se convalidan."},
+ cl:{rec:"no",t:"No te los reconocen y no se pueden convalidar",d:"Chile no tiene vía para convalidar certificados extranjeros. Para volar sobre zonas pobladas hace falta la credencial de la DGAC (examen en Chile con mínimo del 75 %), registrar el dron (solo pueden residentes) y pedir autorización. Como turista, lo realista es volar en zonas no pobladas, y solo hay una excepción para drones recreativos de hasta 750 g en un lugar privado."},
+ br:{rec:"free",t:"Por ocio no necesitas título; sí registro y permiso por vuelo",d:"Brasil no te pide licencia para volar por ocio, así que no hay nada que convalidar. Lo que sí necesitas: registro en el SISANT (con pasaporte), homologación de la ANATEL y autorización del DECEA (SARPAS) para cada vuelo."},
+ ec:{rec:"free",t:"Por ocio no necesitas título",d:"Con la RDAC 101, la categoría abierta (ocio, menos de 4 kg) no pide licencia de piloto. Para trabajos hace falta autorización de piloto de la DGAC, permiso de operación y seguro. Tus títulos europeos no se convalidan."}
+};
+// Pasos concretos para países sin ficha completa
+const STEPS={
+ th:(d,g,pro)=>[
+  IT("need","Registro en la NBTC (radio)","Obligatorio para todos los drones, también los de menos de 250 g. Cuesta unos 200 baht. Para extranjeros va ligado al sello de entrada y caduca al salir de Tailandia.",{when:"antes",time:"En persona unos 15 min, o online",link:LK("Registro NBTC para extranjeros","https://anyregis.nbtc.go.th/sign_up/foreigner/")}),
+  IT("need","Registro en la CAAT + test de piloto","Obligatorio para cualquier dron con cámara, pese lo que pese. Gratis para ocio. Pide pasaporte, número de móvil tailandés (el código llega por SMS), dirección en Tailandia y seguro. Incluye el test de 40 preguntas.",{when:"antes",time:"No se puede completar desde España: hazlo al llegar"}),
+  IT("need","Seguro de responsabilidad civil","Mínimo 1.000.000 baht de cobertura. Hace falta para el registro en la CAAT.",{when:"antes"}),
+  IT("need","Permiso antes de cada vuelo","Desde junio de 2026 hay que pedir permiso en el portal UAS de la CAAT antes de cada vuelo. Enviar la solicitud no es tenerlo: espera la aprobación.",{time:"Pídelo con unos 3 días de margen"}),
+  IT("info","Edad mínima","18 años (20 si el dron pesa más de 2 kg).")],
+ mx:(d,g,pro)=>[
+  g>250?IT("bad","Registro en la AFAC","Obligatorio para drones de más de 250 g y varias fuentes indican que pide identificación mexicana: como turista puede que no puedas hacerlo. Con un dron de 250 g o menos te lo ahorras.",{when:"antes",link:LK("Buscar requisitos de registro AFAC para extranjeros",GQ("AFAC registro dron extranjero NOM-107"))}):IT("ok","Sin registro","Tu dron pesa 250 g o menos: no necesita registro en la AFAC."),
+  IT("warn","Reglas básicas","A la vista, de día, por debajo de 122 m y lejos de aeródromos. Cuidado con las zonas arqueológicas."),
+  pro?IT("bad","Trabajos con dron","La autorización de piloto exige ser mexicano por nacimiento.",{when:"antes"}):null],
+ ar:(d,g,pro)=>[
+  g>250?IT("need","Registro del dron en la ANAC","Por encima de 250 g hay que registrar el equipo aunque vueles en categoría abierta.",{when:"antes",link:LK("Buscar registro de drones ANAC",GQ("ANAC registro drone Resolución 550/2025"))}):IT("ok","Sin registro ni licencia","Hasta 250 g no hace falta registro, licencia, formación ni seguro."),
+  IT("info","Categoría abierta","Vuelos de bajo riesgo sin autorización previa, a la vista. Si sales de sus límites pasas a categoría específica y necesitas autorización.")],
+ pe:(d,g,pro)=>[
+  IT("need","Registro del dron en la DGAC","El reglamento de 2026 pide inscribir los drones de categoría abierta y específica en el Registro de Aeronaves Pilotadas a Distancia. Hay fuentes que dicen que los recreativos pequeños están exentos: confírmalo con la DGAC antes de ir.",{when:"antes",time:"La tarjeta de registro tarda hasta 5 días hábiles",link:LK("Buscar registro RPAS en la DGAC del MTC",GQ("registro RPAS DGAC MTC Perú"))}),
+  pro?IT("need","Licencia para trabajos","Cualquier uso no recreativo exige licencia de piloto de la DGAC.",{when:"antes"}):null,
+  IT("warn","Zonas sensibles","Machu Picchu y muchos sitios arqueológicos o protegidos prohíben drones o piden permiso del Ministerio de Cultura o del parque.")],
+ cl:(d,g,pro)=>[
+  IT("bad","Zonas pobladas: casi imposible como turista","Exigen dron registrado (solo residentes), credencial de la DGAC, seguro y autorización previa (unos 7 días hábiles).",{link:LK("Cómo operar un dron en Chile (DGAC)","https://www.dgac.gob.cl/como-operar-un-dron-en-chile/")}),
+  g<=750?IT("info","Excepción recreativa","Drones recreativos de hasta 750 g en un lugar privado tienen una exención limitada de la DAN 91."):IT("warn","Tu dron pasa de 750 g","No entra en la exención recreativa para lugares privados."),
+  IT("warn","Límites","120 m de altura, 500 m de distancia y a la vista, 30 m de personas ajenas, 2 km del eje de pista de los aeródromos.")],
+ br:(d,g,pro)=>[
+  IT(g>=250?"need":"warn","Registro en el SISANT (ANAC)",g>=250?"Obligatorio desde 250 g, también para ocio. Los extranjeros pueden registrarse con el pasaporte. Vale 24 meses.":"Opcional por debajo de 250 g, pero hazlo: el sistema de permisos de vuelo (SARPAS) solo ve drones registrados en el SISANT.",{when:"antes",time:"Hazlo unos 15 días antes",link:LK("Orientaciones SISANT (ANAC)","https://www.gov.br/anac/pt-br/assuntos/drones/orientacoes-aos-usuarios-do-sisant")}),
+  IT("need","Homologación de la ANATEL","La emisora y el dron no se pueden usar en Brasil sin certificación de la ANATEL. Los drones comprados fuera suelen no tenerla: pregúntale a la ANATEL antes de viajar.",{when:"antes",time:"Puede tardar semanas"}),
+  IT("need","Autorización SARPAS para cada vuelo","Desde el 1 de julio de 2026 cada vuelo necesita autorización del DECEA en SARPAS NG, también con drones de menos de 250 g."),
+  IT("warn","Parques y lugares famosos","Parques nacionales (ICMBio), el Cristo Redentor o Fernando de Noronha tienen normas propias.")],
+ ec:(d,g,pro)=>[
+  IT(g>=250?"need":"warn","Registro en la DGAC",g>=250?"Obligatorio y gratis desde 250 g, también para ocio, en la web de la DGAC (Aeronaves no tripuladas → Registro UAS). El número o QR va visible en el dron.":"Por debajo de 250 g las fuentes no coinciden: algunas dicen que también hay que registrarlo. Es gratis y online, mejor hazlo.",{when:"antes",link:LK("Web de la DGAC de Ecuador","https://www.aviacioncivil.gob.ec/")}),
+  IT("bad","Galápagos: prohibido","Los drones recreativos están prohibidos en las Galápagos."),
+  IT("info","Aduana","Un dron de uso personal entra sin impuestos si vale menos de 1.000 $. Por encima pueden cobrarte hasta un 35 %."),
+  IT("warn","Reglas básicas","Máximo 120 m, siempre a la vista, ni de noche ni sobre personas.")]
+};
+function homolog(cc){
+  const sys=(CDB[cc]&&CDB[cc].sys)||(EASA.has(cc)?"eu":"other");
+  const mine=["eu_a1a3","eu_a2","eu_sts"].filter(has).map(k=>({eu_a1a3:"A1/A3",eu_a2:"A2",eu_sts:"STS"})[k]);
+  const lst=mine.length?mine.join(", "):"ninguno todavía";
+  if(sys==="eu")return{st:"ok",t:mine.length?`Tus títulos (${lst}) valen tal cual`:"Aquí vale lo que saques en España",d:"Es un país EASA: el A1/A3, el A2, el STS y tu número de operador de AESA valen igual que en España. No hay que homologar nada."};
+  const h=HOMO[cc];
+  if(!h)return{st:"q",t:`Tus títulos (${lst}) seguramente no valen`,d:`No tengo verificado si ${cName(cc)} reconoce títulos europeos. Casi ningún país fuera de EASA lo hace, pero algunos aceptan tu formación para convalidar el curso local. Pregúntalo a su autoridad de aviación civil.`,link:LK(`Buscar si ${cName(cc)} convalida títulos de drones europeos`,GQ(`${cName(cc)} drone pilot foreign certificate EASA recognition`))};
+  const st=h.rec==="equiv"?"warn":h.rec==="free"?"ok":"bad";
+  const yours=mine.length?` Tienes: ${lst}.`:"";
+  return{st,t:h.t,d:h.d+yours,time:h.time,link:h.link};
+}
 
 /* ===================== UI: utilidades ===================== */
 const I=(n,s=18,c="")=>`<svg class="i ${c}" width="${s}" height="${s}"><use href="#i-${n}"/></svg>`;
@@ -1607,7 +1671,7 @@ function renderTravel(){
   const antes=r.items.filter(x=>x.when==="antes"&&(x.st==="need"||x.st==="bad")),sitio=r.items.filter(x=>!antes.includes(x)&&x.st!=="ok"),ok=r.items.filter(x=>x.st==="ok");
   const tp=travelPlace&&travelPlace.cc===cc?travelPlace:null;
   $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||(cc.length===2?String.fromCodePoint(...[...cc.toUpperCase()].map(x=>127397+x.charCodeAt(0))):"🌍")} ${tp?esc(tp.city)+", ":""}${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
-  ${v.length?`<details class="sec"><summary>Tus títulos allí</summary><div class="in">${reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d})))}</div></details>`:""}
+  <details class="sec" open><summary>Tus títulos de España allí</summary><div class="in">${reqHTML([homolog(cc)])}${v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).length?reqHTML(v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).map(x=>({st:x.st,t:x.n,d:x.d}))):""}${Object.keys(profile.certs).some(k=>profile.certs[k])?"":'<p class="small mute" style="margin-top:6px">Marca tus títulos en la pestaña Perfil para que te lo diga a tu medida.</p>'}</div></details>
   ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
   ${tp?`<details class="sec" open><summary>Zonas a evitar en ${esc(tp.city)}</summary><div class="in"><div id="cityZones"><div class="small mute"><span class="spin"></span> Buscando aeropuertos, helipuertos, bases militares, cárceles y espacios protegidos…</div></div><button class="btn ghost block" id="cityMap" style="margin-top:10px">${I("compass",17)} Ver ${esc(tp.city)} en el mapa</button></div></details>`:""}
   <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
