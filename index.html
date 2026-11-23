@@ -484,6 +484,14 @@ details.sec summary .i{color:var(--mute)}
         <div class="row" style="justify-content:space-between"><span class="wbig"><span id="wVal">0</span> g</span><span id="wBadge" class="pill p0"></span></div>
         <input type="range" id="dWeightR" min="10" max="3000" step="5">
         <input type="number" id="dWeight" min="1" max="30000" style="margin-top:8px">
+        <label class="f">¿Cómo es?</label>
+        <div class="clsChips" id="dBuild"><button data-v="propio">🔧 Montado por mí</button><button data-v="kit">📦 Kit / BNF</button><button data-v="marca">🏷️ De marca, listo para volar</button></div>
+        <label class="f">Marca</label>
+        <div class="clsChips" id="dBrand"><button data-v="DJI">DJI</button><button data-v="BETAFPV">BETAFPV</button><button data-v="iFlight">iFlight</button><button data-v="GEPRC">GEPRC</button><button data-v="Autel">Autel</button><button data-v="otra">Otra / sin marca</button></div>
+        <label class="f">Para qué lo usas</label>
+        <div class="clsChips" id="dUse"><button data-v="whoop">🐝 Whoop / interior</button><button data-v="freestyle">⚡ Freestyle</button><button data-v="racing">🏁 Carreras</button><button data-v="cine">🎥 Cinematográfico</button><button data-v="lr">🛰️ Long range</button><button data-v="foto">📷 Foto y vídeo</button></div>
+        <label class="f">Baterías</label>
+        <div class="row" style="gap:8px;flex-wrap:nowrap"><div style="flex:1"><small class="mute">Celdas (S)</small><input type="number" id="dS" min="1" max="12"></div><div style="flex:1.3"><small class="mute">mAh</small><input type="number" id="dMah" min="50" step="50"></div><div style="flex:1"><small class="mute">Cuántas</small><input type="number" id="dNbat" min="1" max="40"></div></div>
         <label class="f">Viento máximo que aguanta</label>
         <div class="row" style="justify-content:space-between"><span class="wbig"><span id="windVal">0</span> km/h</span><button class="btn ghost" id="windAuto" style="padding:7px 12px;font-size:12.5px">Automático</button></div>
         <input type="range" id="dWind" min="8" max="70" step="1">
@@ -518,6 +526,7 @@ details.sec summary .i{color:var(--mute)}
     <div class="pane" id="p-viaje">
       <h1>¿Te vas de viaje?</h1>
       <p class="sub">Elige el país y te digo qué te vale, qué te falta y cuánto tarda.</p>
+      <div class="small mute" id="fromLine" style="margin:-4px 0 8px"></div>
       <div class="flags" id="flagGrid"></div>
       <select id="vDest" style="margin-top:10px"></select>
       <div class="card" style="margin-top:12px">
@@ -667,8 +676,24 @@ const CERTS=[
  ["us_reg","USA registro FAA","Registro en FAA DroneZone (5 $ / 3 años)."],
  ["us_107","USA Part 107","Certificado para vuelo no recreativo en EE. UU."],
  ["co_reg","Colombia: dron registrado en la Aerocivil","Obligatorio desde 200 g."],
- ["co_idon","Colombia: certificado de idoneidad piloto UAS","Necesario para categoría específica (trabajos)."]
+ ["co_idon","Colombia: certificado de idoneidad piloto UAS","Necesario para categoría específica (trabajos)."],
+ ["es_rtf","Radiofonista UAS (AESA)","Teórico online y gratis en AESA + práctico con examinador autorizado. Hace falta cuando el control aéreo te pide hablar por la banda aérea."],
+ ["mx_reg","México: dron registrado en la AFAC","Folio de registro; obligatorio por encima de 250 g."],
+ ["mx_aut","México: autorización o licencia de piloto RPAS","Para trabajos o drones grandes."],
+ ["ar_lic","Argentina: licencia de piloto a distancia (ANAC)","Solo hace falta fuera de la categoría abierta."],
+ ["pe_lic","Perú: licencia de piloto RPAS (DGAC)","Para usos no recreativos."],
+ ["cl_cred","Chile: credencial de operador RPAS (DGAC)","Para volar sobre zonas pobladas. Vale 36 meses."],
+ ["ec_reg","Ecuador: dron registrado en la DGAC","Obligatorio desde 250 g."],
+ ["br_sisant","Brasil: dron registrado en el SISANT (ANAC)","Obligatorio desde 250 g."],
+ ["br_lic","Brasil: licencia de piloto remoto (ANAC)","Para operaciones que la exigen."],
+ ["th_caat","Tailandia: piloto registrado en la CAAT","Test de 40 preguntas; vale 2 años."],
+ ["jp_dips","Japón: dron registrado en DIPS 2.0","Obligatorio desde 100 g."],
+ ["jp_lic","Japón: licencia nacional de piloto de drones","Para vuelos de nivel avanzado."],
+ ["cn_uom","China: dron registrado en la UOM (CAAC)","Registro con nombre real, obligatorio para todos."]
 ];
+// País en el que vale cada título ("eu" = todos los países EASA)
+const CZONE={eu:"eu",es:"es",uk:"gb",us:"us",co:"co",mx:"mx",ar:"ar",pe:"pe",cl:"cl",ec:"ec",br:"br",th:"th",jp:"jp",cn:"cn"};
+const certZone=k=>k==="insur"?"any":CZONE[k.split("_")[0]]||"any";
 const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","jp","cn","in","my","id","vn","ma","eg","cu","tr","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
 
 /* ===================== presets de drones ===================== */
@@ -686,6 +711,8 @@ const PRESETS=[
  {id:"air",ic:"📷",name:"DJI Air (C1)",g:720,cls:"C1",cam:true,fpv:false},
  {id:"mavic",ic:"📷",name:"DJI Mavic 3 (C2)",g:950,cls:"C2",cam:true,fpv:false}
 ];
+const PDEF={tiny:{use:"whoop",s:1,mah:300},whoop16:{use:"whoop",s:1,mah:450,brand:"BETAFPV",build:"kit"},tooth:{use:"freestyle",s:2,mah:550},cine3:{use:"cine",s:4,mah:850},sub250:{use:"freestyle",s:4,mah:650},fpv5:{use:"freestyle",s:6,mah:1100},lr7:{use:"lr",s:6,mah:3000},x10:{use:"cine",s:6,mah:5000},mini:{use:"foto",brand:"DJI",build:"marca",s:2,mah:2453},avata:{use:"cine",brand:"DJI",build:"marca",s:4,mah:2150},air:{use:"foto",brand:"DJI",build:"marca",s:4,mah:3500},mavic:{use:"foto",brand:"DJI",build:"marca",s:4,mah:5000}};
+PRESETS.forEach(p=>Object.assign(p,{build:"propio",brand:"otra",nbat:3},PDEF[p.id]||{}));
 const DEF_DRONE={...PRESETS[1]};
 const DEF_PROFILE={nat:"es",res:"es",purpose:"recreativo",certs:{}};
 let drone=LS.get("sf_drone",DEF_DRONE), profile=LS.get("sf_profile",DEF_PROFILE);
@@ -720,6 +747,7 @@ function requirements(cc,d,p){
       else out.items.push(IT("need","Certificado A1/A3","Curso y examen online gratuitos o baratos. "+(resEU?`Se saca en ${cName(p.res)}.`:`Si vives fuera de la UE, sácalo en el país EASA donde vayas a volar.`),{time:"1–3 horas online, certificado al momento",when:"antes",link:(resEU&&CDB[p.res]&&CDB[p.res].train)||c.train}));
     }else out.items.push(IT(has("eu_a1a3")?"ok":"info","Certificado A1/A3",has("eu_a1a3")?"Lo tienes. Para menos de 250 g la norma UE no lo exige, pero conviene llevarlo.":"Para menos de 250 g la norma UE no lo exige (basta con leer el manual del dron), pero es gratis y muy recomendable."));
     if(d.cls==="C2"&&!has("eu_a2"))out.items.push(IT("warn","Certificado A2","Sin él, tu C2 solo vuela en A3. Se saca con examen presencial o en remoto tras el A1/A3.",{time:"Días o semanas"}));
+    if(cc==="es")out.items.push(has("es_rtf")?IT("ok","Radiofonista UAS","Lo tienes: puedes hacer operaciones en espacio controlado en las que el control aéreo te pida comunicarte por la banda aérea."):IT("info","Radiofonista UAS (solo para ciertos vuelos)","Solo hace falta cuando la operación te obliga a usar la banda aérea, normalmente en espacio controlado coordinado con el control. A la vista, hasta 60 m y fuera del entorno de los aeródromos no hace falta. Son dos certificados: el teórico de AESA (online y gratis) y el práctico con un examinador autorizado.",{link:LK("Formación en radiofonista UAS (AESA)","https://www.seguridadaerea.gob.es/es/ambitos/drones/formacion-de-pilotos-a-distancia-de-uas-drones/formacion-en-radiofonista-uas")}));
     if(has("eu_sts"))out.items.push(IT("info","Tu STS","Te sirve para la categoría específica (escenario estándar con declaración ante la autoridad y operador habilitado). Para vuelos recreativos normales usas la categoría abierta."));
     if(c.insurance){const ins=c.insurance(s.sub,g);out.items.push({st:ins.st,t:ins.st==="need"?"Seguro de responsabilidad civil (obligatorio)":"Seguro de responsabilidad civil",d:ins.t})} else out.items.push(IT("info","Seguro","Muy recomendable; comprueba si el país lo exige."));
     if(has("insur")&&out.items[out.items.length-1].st==="need")out.items[out.items.length-1].st="ok";
@@ -730,7 +758,7 @@ function requirements(cc,d,p){
     out.items.push(IT("info","Siempre","Máximo 120 m de altura, siempre a la vista (o con observador), nunca sobre aglomeraciones, nada de soltar objetos. Mira el mapa oficial antes de cada vuelo.",{link:c.map,gen:true}));
   }else if(sys==="uk"){
     out.head="Reino Unido · normas CAA (desde 1 ene 2026)";
-    out.items.push(IT("warn","Tus títulos de la UE no valen aquí","El Reino Unido no reconoce el certificado ni el registro de la UE."));
+    if(["eu_a1a3","eu_a2","eu_sts"].some(has))out.items.push(IT("warn","Tus títulos de la UE no valen aquí","El Reino Unido no reconoce el certificado ni el registro de la UE."));
     if(g>=100)out.items.push(IT(has("uk_flyer")?"ok":"need","Flyer ID","Obligatorio para pilotar drones de 100 g o más. Test teórico online y gratuito de la CAA, válido 5 años.",{time:"≈30–60 min online",when:"antes",link:c.reg}));
     else out.items.push(IT("info","Flyer ID","Menos de 100 g: no obligatorio, la CAA lo recomienda."));
     if(g>=250||(g>=100&&d.cam))out.items.push(IT(has("uk_op")?"ok":"need","Operator ID","Obligatorio para drones de 250 g o más, o de 100 g o más con cámara. Unas 12 £ al año; hay que tener 18 años.",{time:"Online, en el día",when:"antes",link:c.reg}));
@@ -740,7 +768,7 @@ function requirements(cc,d,p){
     out.items.push(IT("info","Siempre","Máximo 120 m, VLOS, respetar las zonas de restricción (FRZ) de aeropuertos. Consulta el Drone Code de la CAA.",{link:c.map}));
   }else if(sys==="us"){
     out.head=pro?"Estados Unidos · Part 107 (no recreativo)":"Estados Unidos · vuelo recreativo (49 USC 44809)";
-    out.items.push(IT("warn","Tus títulos de la UE no valen aquí","La FAA tiene su propio sistema."));
+    if(["eu_a1a3","eu_a2","eu_sts"].some(has))out.items.push(IT("warn","Tus títulos de la UE no valen aquí","La FAA tiene su propio sistema."));
     if(!pro){
       out.items.push(IT(has("us_trust")?"ok":"need","TRUST","Test recreativo gratuito de la FAA. Lleva el certificado encima al volar.",{time:"≈30 min online",when:"antes",link:LK("FAA recreational flyers","https://www.faa.gov/uas/recreational_flyers")}));
     }else{
@@ -755,7 +783,7 @@ function requirements(cc,d,p){
     out.items.push(IT("info","Siempre","Máximo 400 ft (≈120 m), VLOS, ceder el paso a aeronaves tripuladas. Prohibido en parques nacionales (NPS)."));
   }else if(sys==="co"){
     out.head=pro?"Colombia · RAC 100, categoría específica":"Colombia · RAC 100, categoría abierta";
-    out.items.push(IT("warn","Tus títulos de la UE no valen aquí","Colombia aplica su propio reglamento (RAC 100) y no reconoce los certificados de AESA/EASA."));
+    if(["eu_a1a3","eu_a2","eu_sts"].some(has))out.items.push(IT("warn","Tus títulos de la UE no valen aquí","Colombia aplica su propio reglamento (RAC 100) y no reconoce los certificados de AESA/EASA."));
     if(g>=200||pro)out.items.push(IT(has("co_reg")?"ok":"need","Registro del dron en la Aerocivil",(pro?"En trabajos el registro es obligatorio sea cual sea el peso.":"Obligatorio desde 200 g (no 250 g como en Europa).")+" Se hace en la Plataforma UAS; guarda el certificado, te lo pueden pedir.",{time:"Trámite online; puede tardar días: hazlo antes de viajar",when:"antes",link:c.reg}));
     else out.items.push(IT("ok","Registro","Menos de 200 g y recreativo: no hace falta registrar el dron."));
     if(!pro)out.items.push(IT("ok","Licencia de piloto","En categoría abierta (recreativo, hasta 25 kg) no se exige certificado de piloto ni permiso previo de vuelo."));
@@ -787,9 +815,10 @@ function requirements(cc,d,p){
 function certValidity(cc){
   const sys=(CDB[cc]&&CDB[cc].sys)||(EASA.has(cc)?"eu":"other");
   return CERTS.filter(([k])=>has(k)).map(([k,n])=>{
-    const zone=k.startsWith("eu_")?"eu":k.startsWith("uk_")?"uk":k.startsWith("us_")?"us":k.startsWith("co_")?"co":"any";
-    let ok=zone==="any"?null:zone===sys;
+    const zone=certZone(k);
+    let ok=zone==="any"?null:zone==="eu"?sys==="eu":zone===cc;
     if(k==="insur")return{n,st:"q",d:"Comprueba en la póliza si cubre "+cName(cc)};
+    if(k==="es_rtf")return{n,st:cc==="es"?"ok":"bad",d:cc==="es"?"Válido en España":"Es una calificación española: fuera de España no vale"};
     return{n,st:ok?"ok":"bad",d:ok?"Válido aquí":"No vale aquí"};
   });
 }
@@ -874,11 +903,24 @@ const STEPS={
   IT("info","Aduana","Un dron de uso personal entra sin impuestos si vale menos de 1.000 $. Por encima pueden cobrarte hasta un 35 %."),
   IT("warn","Reglas básicas","Máximo 120 m, siempre a la vista, ni de noche ni sobre personas.")]
 };
+const CSHORT={eu_a1a3:"A1/A3",eu_a2:"A2",eu_sts:"STS",es_rtf:"radiofonista"};
+const certShort=k=>CSHORT[k]||(CERTS.find(x=>x[0]===k)||[,k])[1].replace(/^[^:]+:\s*/,"");
 function homolog(cc){
   const sys=(CDB[cc]&&CDB[cc].sys)||(EASA.has(cc)?"eu":"other");
-  const mine=["eu_a1a3","eu_a2","eu_sts"].filter(has).map(k=>({eu_a1a3:"A1/A3",eu_a2:"A2",eu_sts:"STS"})[k]);
+  const held=CERTS.map(x=>x[0]).filter(k=>has(k)&&k!=="insur");
+  const native=held.filter(k=>{const z=certZone(k);return z===cc||(z==="eu"&&sys==="eu")});
+  const foreign=held.filter(k=>!native.includes(k));
+  const origins=[...new Set(foreign.map(k=>{const z=certZone(k);return z==="eu"?"la UE":cName(z)}))].join(", ");
+  const resEU=EASA.has(profile.res),resN=cName(profile.res);
+  const mine=["eu_a1a3","eu_a2","eu_sts"].filter(has).map(k=>CSHORT[k]);
   const lst=mine.length?mine.join(", "):"ninguno todavía";
-  if(sys==="eu")return{st:"ok",t:mine.length?`Tus títulos (${lst}) valen tal cual`:"Aquí vale lo que saques en España",d:"Es un país EASA: el A1/A3, el A2, el STS y tu número de operador de AESA valen igual que en España. No hay que homologar nada."};
+  if(sys==="eu"){
+    if(mine.length)return{st:"ok",t:`Tus títulos (${lst}) valen tal cual`,d:`Es un país EASA: el A1/A3, el A2, el STS y tu número de operador valen igual en toda la UE. No hay que homologar nada.`+(cc==="es"&&has("es_rtf")?" Tu radiofonista también vale aquí.":cc!=="es"&&has("es_rtf")?" Ojo: el radiofonista es español y aquí no cuenta.":"")};
+    if(foreign.length)return{st:"bad",t:`Tus títulos de ${origins} no valen en la UE`,d:`La UE no convalida títulos de fuera de EASA (${foreign.map(certShort).join(", ")}). `+(resEU?`Como vives en ${resN}, regístrate como operador allí y saca el A1/A3 online en su autoridad.`:`Como vives fuera de la UE, regístrate como operador en el primer país EASA donde vayas a volar${cc==="es"?" (en España, en AESA)":""} y saca allí el A1/A3 online. Luego te vale en toda la UE.`)+" Lo que ya sabes te sirve para aprobar el examen sin problema.",time:"Registro en el día; A1/A3 en 1–3 horas online",link:cc==="es"?LK("Registro y formación en AESA","https://www.seguridadaerea.gob.es/es/ambitos/drones"):undefined};
+    return{st:"need",t:"Aquí te pedirán el A1/A3 y el registro de operador",d:resEU?`Regístrate y saca el A1/A3 en ${resN}: luego vale en toda la UE.`:`Como vives fuera de la UE, regístrate como operador en el primer país EASA donde vayas a volar y saca allí el A1/A3 online.`};
+  }
+  if(native.length)return{st:"ok",t:`Tienes títulos de ${cName(cc)}: valen allí`,d:`${native.map(certShort).join(", ")}. `+(HOMO[cc]&&HOMO[cc].rec!=="free"?"Revisa abajo si te falta algún trámite más.":"")};
+  if(!mine.length&&foreign.length){const h=HOMO[cc];return{st:"bad",t:`Tus títulos de ${origins} no se convalidan en ${cName(cc)}`,d:(h?h.d.replace(/[^.]*(A1\/A3|el A2)[^.]*\./g,"").trim():`Casi ningún país convalida títulos de drones extranjeros. Pregúntalo a la autoridad de aviación civil de ${cName(cc)}.`),time:h&&h.time,link:h?h.link:LK(`Buscar si ${cName(cc)} convalida títulos extranjeros`,GQ(`${cName(cc)} drone pilot foreign certificate recognition`))}}
   const h=HOMO[cc];
   if(!h)return{st:"q",t:`Tus títulos (${lst}) seguramente no valen`,d:`No tengo verificado si ${cName(cc)} reconoce títulos europeos. Casi ningún país fuera de EASA lo hace, pero algunos aceptan tu formación para convalidar el curso local. Pregúntalo a su autoridad de aviación civil.`,link:LK(`Buscar si ${cName(cc)} convalida títulos de drones europeos`,GQ(`${cName(cc)} drone pilot foreign certificate EASA recognition`))};
   const st=h.rec==="equiv"?"warn":h.rec==="free"?"ok":"bad";
@@ -1664,9 +1706,13 @@ function windLim(){return +drone.wind||defWind(+drone.g||0)}
 let myDrones=LS.get("sf_drones",null);
 if(!myDrones){myDrones=[{...drone,uid:"d"+Date.now()}];LS.set("sf_drones",myDrones)}
 if(!drone.uid){drone.uid=myDrones[0].uid}
+const fillD=d=>{const pd=PDEF[d.id]||{};[["build","propio"],["brand","otra"],["use","freestyle"],["s",1],["mah",450],["nbat",3]].forEach(([k,v])=>{if(d[k]==null)d[k]=pd[k]??v});return d};
+myDrones.forEach(fillD);fillD(drone);LS.set("sf_drones",myDrones);
 function renderDrone(){
   $("#myDrones").innerHTML=myDrones.map(d=>`<button data-u="${d.uid}" class="${d.uid===drone.uid?"on":""}">${I("drone",16)} ${esc(d.name.split("(")[0].trim())} <small>${d.g} g${["propio","legado"].includes(d.cls)?"":" · "+d.cls}</small></button>`).join("")+`<button data-u="new">＋ Nuevo</button>`;
   $("#dronePresets").innerHTML=PRESETS.map(p=>`<div class="dcard" data-id="${p.id}"><span class="e">${I("drone",24)}</span><b>${esc(p.name)}</b><small>${p.g} g${p.cls!=="propio"?" · "+p.cls:""} · ${defWind(p.g)} km/h</small></div>`).join("");
+  [["#dBuild","build","propio"],["#dBrand","brand","otra"],["#dUse","use","freestyle"]].forEach(([id,k,d])=>$$(id+" button").forEach(b=>b.classList.toggle("on",b.dataset.v===(drone[k]||d))));
+  $("#dS").value=drone.s||1;$("#dMah").value=drone.mah||450;$("#dNbat").value=drone.nbat||3;
   $("#dName").value=drone.name;$("#dWeight").value=drone.g;$("#dWeightR").value=Math.min(3000,drone.g);$("#wVal").textContent=drone.g;
   const wb=weightBadge(drone.g);$("#wBadge").className="pill "+wb[1];$("#wBadge").textContent=wb[0];
   $("#dClass").value=drone.cls;$$("#dClassChips button").forEach(b=>b.classList.toggle("on",b.dataset.c===drone.cls));
@@ -1685,6 +1731,8 @@ $("#dWeightR").addEventListener("change",()=>{drone.g=+$("#dWeightR").value;save
 $("#dWind").addEventListener("input",()=>{$("#windVal").textContent=$("#dWind").value});
 $("#dWind").addEventListener("change",()=>{drone.wind=+$("#dWind").value;saveDrone()});
 $("#windAuto").onclick=()=>{drone.wind=0;saveDrone();status("🌬️ Viento máximo según el peso",1800)};
+[["#dBuild","build"],["#dBrand","brand"],["#dUse","use"]].forEach(([id,k])=>$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;drone={...drone,[k]:b.dataset.v};saveDrone()}));
+["#dS","#dMah","#dNbat"].forEach(id=>$(id).addEventListener("change",()=>{drone={...drone,s:Math.max(1,+$("#dS").value||1),mah:Math.max(50,+$("#dMah").value||450),nbat:Math.max(1,+$("#dNbat").value||1)};saveDrone()}));
 ["#dName","#dWeight","#dCam","#dFpv","#dToy"].forEach(id=>$(id).addEventListener("change",()=>{drone={...drone,name:$("#dName").value||"Mi dron",g:+$("#dWeight").value||0,cam:$("#dCam").checked,fpv:$("#dFpv").checked,toy:$("#dToy").checked};saveDrone()}));
 $("#saveDroneBtn").onclick=()=>{const i=myDrones.findIndex(x=>x.uid===drone.uid);if(i>=0)myDrones[i]={...drone};else myDrones.push({...drone});LS.set("sf_drones",myDrones);renderDrone();status("💾 Dron guardado",1800)};
 $("#delDroneBtn").onclick=()=>{if(myDrones.length<=1){status("Necesitas al menos un dron",2000);return}myDrones=myDrones.filter(x=>x.uid!==drone.uid);LS.set("sf_drones",myDrones);drone={...myDrones[0]};saveDrone(true)};
@@ -1693,13 +1741,15 @@ function saveDrone(switched){
   LS.set("sf_drone",drone);renderDrone();renderCtx();renderTravel();if(spots.length){spots.forEach(s=>s.pre=prelim(s));renderSpots()}refreshWxChip();if(switched)status(`🚁 Volando con ${drone.name}`,1800)}
 
 /* ===================== perfil ===================== */
-const CERT_GROUPS=[["🇪🇺 Europa (EASA)",["eu_a1a3","eu_a2","eu_sts","eu_reg"]],["🛡️ Seguro",["insur"]],["🇬🇧 Reino Unido",["uk_flyer","uk_op","uk_a2"]],["🇺🇸 Estados Unidos",["us_trust","us_reg","us_107"]],["🇨🇴 Colombia",["co_reg","co_idon"]]];
+const CERT_GROUPS=[["eu","🇪🇺 Europa (EASA)",["eu_a1a3","eu_a2","eu_sts","eu_reg"]],["es","🇪🇸 Solo España",["es_rtf"]],["any","🛡️ Seguro",["insur"]],["gb","🇬🇧 Reino Unido",["uk_flyer","uk_op","uk_a2"]],["us","🇺🇸 Estados Unidos",["us_trust","us_reg","us_107"]],["co","🇨🇴 Colombia",["co_reg","co_idon"]],["mx","🇲🇽 México",["mx_reg","mx_aut"]],["ar","🇦🇷 Argentina",["ar_lic"]],["pe","🇵🇪 Perú",["pe_lic"]],["cl","🇨🇱 Chile",["cl_cred"]],["ec","🇪🇨 Ecuador",["ec_reg"]],["br","🇧🇷 Brasil",["br_sisant","br_lic"]],["th","🇹🇭 Tailandia",["th_caat"]],["jp","🇯🇵 Japón",["jp_dips","jp_lic"]],["cn","🇨🇳 China",["cn_uom"]]];
 function fillCountrySelect(sel,val){$(sel).innerHTML=COUNTRY_OPTS.map(cc=>`<option value="${cc}">${cc==="other"?"🌍 Otro país":esc(((CDB[cc]&&CDB[cc].flag)||"")+" "+cName(cc))}</option>`).join("");$(sel).value=val}
 function renderProfile(){
   fillCountrySelect("#pNat",profile.nat);fillCountrySelect("#pRes",profile.res);
   $$("#pPurpose button").forEach(b=>b.classList.toggle("on",b.dataset.v===(profile.purpose||"recreativo")));
-  $("#certList").innerHTML=CERT_GROUPS.map(([g,keys])=>`<details class="sec" ${g.includes("Europa")?"open":""}><summary>${g} <span class="pill p1" style="margin-left:6px">${keys.filter(k=>has(k)).length}/${keys.length}</span></summary><div class="in">${keys.map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div></details>`).join("");
-  $("#validity").innerHTML=["es","de","gb","us","co"].map(cc=>{const v=certValidity(cc);const ok=v.filter(x=>x.st==="ok").length;return `<div class="card row" style="justify-content:space-between"><span style="font-weight:700">${CDB[cc].flag} ${esc(cName(cc))}</span><span class="pill ${ok?"p0":"p3"}">${ok?ok+" válido"+(ok>1?"s":""):"Ninguno vale"}</span></div>`}).join("")+(!EASA.has(profile.res)&&profile.res!=="other"?`<div class="notice"><span>💡</span><span>Vives fuera de la UE: regístrate y saca el A1/A3 en el primer país europeo donde vayas a volar. Luego vale en toda la UE.</span></div>`:"");
+  const resEU=EASA.has(profile.res),isMine=z=>z===profile.res||(z==="eu"&&resEU)||(z==="es"&&profile.res==="es");
+  const groups=[...CERT_GROUPS].sort((a,b)=>(isMine(b[0])||b[2].some(has))-(isMine(a[0])||a[2].some(has)));
+  $("#certList").innerHTML=groups.map(([z,g,keys])=>`<details class="sec" ${isMine(z)||keys.some(has)?"open":""}><summary>${g} <span class="pill p1" style="margin-left:6px">${keys.filter(k=>has(k)).length}/${keys.length}</span></summary><div class="in">${keys.map(k=>{const c=CERTS.find(x=>x[0]===k);return `<div class="toggle"><div class="t"><b>${esc(c[1])}</b><small>${esc(c[2])}</small></div><label class="sw"><input type="checkbox" data-k="${k}" ${has(k)?"checked":""}><span></span></label></div>`}).join("")}</div></details>`).join("");
+  $("#validity").innerHTML=[...new Set([profile.res,"es","fr","gb","us","co","mx","th","jp"].filter(x=>x&&x!=="other"))].map(cc=>{const v=certValidity(cc);const ok=v.filter(x=>x.st==="ok").length;return `<div class="card row" style="justify-content:space-between"><span style="font-weight:700">${flagOf(cc)} ${esc(cName(cc))}</span><span class="pill ${ok?"p0":"p3"}">${ok?ok+" válido"+(ok>1?"s":""):"Ninguno vale"}</span></div>`}).join("")+(!EASA.has(profile.res)&&profile.res!=="other"?`<div class="notice"><span>💡</span><span>Vives fuera de la UE: regístrate y saca el A1/A3 en el primer país europeo donde vayas a volar. Luego vale en toda la UE.</span></div>`:"");
 }
 $("#certList").addEventListener("change",e=>{const k=e.target.dataset.k;if(!k)return;profile.certs[k]=e.target.checked;saveProfile()});
 ["#pNat","#pRes"].forEach(id=>$(id).addEventListener("change",()=>{profile.nat=$("#pNat").value;profile.res=$("#pRes").value;saveProfile()}));
@@ -1711,15 +1761,17 @@ const FLAGS=["es","co","de","fr","it","pt","ch","gb","us","th","jp","cn","my","i
 function renderFlags(){const v=$("#vDest").value;$("#flagGrid").innerHTML=FLAGS.map(cc=>`<button class="flag ${v===cc?"on":""}" data-cc="${cc}"><i>${flagOf(cc)}</i>${esc(cName(cc))}</button>`).join("")}
 $("#flagGrid").addEventListener("click",e=>{const b=e.target.closest(".flag");if(!b)return;$("#vDest").value=b.dataset.cc;renderFlags();renderTravel()});
 function renderTravel(){
+  const fl=$("#fromLine");if(fl)fl.innerHTML=`Vives en ${flagOf(profile.res)} <b>${esc(cName(profile.res))}</b>${profile.nat&&profile.nat!==profile.res?` · nacionalidad ${flagOf(profile.nat)} ${esc(cName(profile.nat))}`:""} · <a href="#" id="goProfile">cambiar en Perfil</a>`;const gp=$("#goProfile");if(gp)gp.onclick=e=>{e.preventDefault();showPane("piloto")};
   const cc=$("#vDest").value||"co";if(cc==="other"){$("#travelOut").innerHTML='<div class="empty"><b>🌍</b>Elige un país, o busca un sitio de ese país en el mapa y toca su bandera en Explorar.</div>';return}
   const r=requirements(cc,drone,profile),c=CDB[cc]||{},v=certValidity(cc);
   const need=r.items.filter(x=>x.st==="need"||x.st==="bad"),total=r.items.filter(x=>x.st!=="info").length||1,okN=r.items.filter(x=>x.st==="ok").length;
   const antes=r.items.filter(x=>x.when==="antes"&&(x.st==="need"||x.st==="bad")),sitio=r.items.filter(x=>!antes.includes(x)&&x.st!=="ok"),ok=r.items.filter(x=>x.st==="ok");
   const tp=travelPlace&&travelPlace.cc===cc?travelPlace:null;
   $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||(cc.length===2?String.fromCodePoint(...[...cc.toUpperCase()].map(x=>127397+x.charCodeAt(0))):"🌍")} ${tp?esc(tp.city)+", ":""}${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
-  <details class="sec" open><summary>Tus títulos de España allí</summary><div class="in">${reqHTML([homolog(cc)])}${v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).length?reqHTML(v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).map(x=>({st:x.st,t:x.n,d:x.d}))):""}${Object.keys(profile.certs).some(k=>profile.certs[k])?"":'<p class="small mute" style="margin-top:6px">Marca tus títulos en la pestaña Perfil para que te lo diga a tu medida.</p>'}</div></details>
+  <details class="sec" open><summary>Tus títulos allí</summary><div class="in">${reqHTML([homolog(cc)])}${v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).length?reqHTML(v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).map(x=>({st:x.st,t:x.n,d:x.d}))):""}${Object.keys(profile.certs).some(k=>profile.certs[k])?"":'<p class="small mute" style="margin-top:6px">Marca tus títulos y dónde vives en la pestaña Perfil para que te lo diga a tu medida.</p>'}</div></details>
   ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
   ${tp?`<details class="sec" open><summary>Zonas a evitar en ${esc(tp.city)}</summary><div class="in"><div id="cityZones"><div class="small mute"><span class="spin"></span> Buscando aeropuertos, helipuertos, bases militares, cárceles y espacios protegidos…</div></div><button class="btn ghost block" id="cityMap" style="margin-top:10px">${I("compass",17)} Ver ${esc(tp.city)} en el mapa</button></div></details>`:""}
+  ${tripHTML(cc)}
   ${carryHTML(cc)}
   <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
   ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
@@ -1825,6 +1877,44 @@ function carryHTML(cc){
 $("#travelOut").addEventListener("click",e=>{const b=e.target.closest("#carrySeg button");if(!b)return;carry.mode=b.dataset.m;LS.set("sf_carry",carry);renderTravel();const d=$("#carrySeg");if(d)d.closest("details").open=true});
 $("#travelOut").addEventListener("change",e=>{if(e.target.id==="cS"||e.target.id==="cMah"){carry.s=Math.max(1,+$("#cS").value||1);carry.mah=Math.max(50,+$("#cMah").value||450);LS.set("sf_carry",carry);renderTravel();const d=$("#carrySeg");if(d){d.closest("details").open=true}}});
 
+/* ===================== drones que llevas al viaje ===================== */
+let tripU=LS.get("sf_trip",null);
+const USE_N={whoop:"Whoop",freestyle:"Freestyle",racing:"Carreras",cine:"Cine",lr:"Long range",foto:"Foto y vídeo"};
+const dWh=d=>Math.round((d.s||1)*3.7*(d.mah||450)/100)/10;
+function droneTripNotes(d,cc){
+  const sys=(CDB[cc]&&CDB[cc].sys)||(EASA.has(cc)?"eu":"other"),g=+d.g||0,n=[];
+  const wh=dWh(d),nb=d.nbat||1,whs=String(wh).replace(".",",");
+  n.push(wh<=100?IT("ok",`Baterías: ${nb} × ${whs} Wh`,"Van en cabina sin pedir permiso."):wh<=160?IT(nb>2?"bad":"warn",`Baterías: ${nb} × ${whs} Wh`,`Entre 100 y 160 Wh: permiso de la aerolínea y como mucho 2 de repuesto${nb>2?". Llevas demasiadas":""}.`):IT("bad",`Baterías: ${nb} × ${whs} Wh`,"Más de 160 Wh no pueden ir en un avión de pasajeros."));
+  if(sys==="eu"){
+    if(["propio","legado"].includes(d.cls)&&g>=250)n.push(IT("warn","Sin etiqueta de clase y 250 g o más","Solo puedes volar en A3: lejos de personas y a 150 m de casas, comercios, industrias y parques."+(d.use==="cine"?" Para cine cerca de gente, mejor un dron de menos de 250 g o con etiqueta C1.":"")));
+    if(d.fpv&&["freestyle","racing","lr"].includes(d.use))n.push(IT("info","Vídeo de 5,8 GHz","En la UE el vídeo analógico de 5,8 GHz sin licencia de radioaficionado está limitado a 25 mW. Ajusta la potencia del VTX."));
+  }
+  if(d.use==="racing")n.push(IT("info","Carreras","Lo más fácil es volar en una pista o club de aeromodelismo: muchos tienen su propio permiso o zona."));
+  if(d.use==="lr")n.push(IT("warn","Long range","En categoría abierta hay que volar siempre a la vista (o con observador si llevas gafas): nada de vuelos más allá de la vista."));
+  if(d.brand==="DJI"){
+    n.push(IT("info","DJI: zonas bloqueadas (GEO)","Los DJI no despegan en algunas zonas restringidas. Si tienes permiso, pide el desbloqueo en DJI FlySafe antes de ir."));
+    if(cc==="us")n.push(IT("warn","DJI en EE. UU.","Hay restricciones de la FCC a los modelos nuevos de drones extranjeros: comprueba que el tuyo esté autorizado."));
+  }
+  if(cc==="jp"&&g>=100&&d.build!=="marca")n.push(IT("warn","Remote ID en Japón","Si no lo trae de serie, necesitas un módulo de Remote ID para registrarlo."));
+  if(cc==="jp"&&d.fpv)n.push(IT("warn","Emisoras FPV en Japón","Tu transmisor de vídeo puede no tener certificación japonesa y necesitar licencia de radioaficionado."));
+  if(cc==="br"&&d.build!=="marca")n.push(IT("warn","Homologación ANATEL","Un dron montado por ti o con piezas sueltas casi seguro no tiene homologación de la ANATEL."));
+  return n;
+}
+function tripHTML(cc){
+  if(!tripU||!tripU.length)tripU=[drone.uid];tripU=tripU.filter(u=>myDrones.some(d=>d.uid===u));if(!tripU.length)tripU=[myDrones[0].uid];
+  const sel=myDrones.filter(d=>tripU.includes(d.uid));
+  const cards=sel.map(d=>{const r=requirements(cc,d,profile),need=r.items.filter(x=>x.st==="need"||x.st==="bad");const notes=droneTripNotes(d,cc);
+    return `<details class="sec"><summary>🚁 ${esc(d.name.split("(")[0].trim())} <span class="small mute" style="font-weight:600">· ${d.g} g · ${esc(USE_N[d.use]||"")}${d.brand&&d.brand!=="otra"?" · "+esc(d.brand):d.build==="propio"?" · montado":""}</span> ${need.length?`<span class="pill p2">${need.length}</span>`:'<span class="pill p0">✓</span>'}</summary><div class="in"><p class="small mute">${esc(r.head)}</p>${reqHTML(need.concat(notes))}</div></details>`}).join("");
+  const tot=sel.reduce((a,d)=>a+(dWh(d)<=100?(d.nbat||1):0),0);
+  return `<details class="sec" open><summary>Drones que llevas <span class="pill p1">${sel.length}</span></summary><div class="in">
+   <div class="clsChips" id="tripPick">${myDrones.map(d=>`<button data-u="${d.uid}" class="${tripU.includes(d.uid)?"on":""}">${esc(d.name.split("(")[0].trim())}</button>`).join("")}</div>
+   <p class="small mute" style="margin:8px 0">Marca los que te llevas. Para añadir otro, créalo en Mi dron.</p>
+   ${cards}
+   ${tot>20?reqHTML([IT("warn",`Llevas ${tot} baterías de repuesto`,"La norma general es un máximo de 20 baterías de menos de 100 Wh por persona en cabina. Repártelas con quien viaje contigo o lleva menos.")]):""}
+  </div></details>`;
+}
+$("#travelOut").addEventListener("click",e=>{const b=e.target.closest("#tripPick button");if(!b)return;const u=b.dataset.u;tripU=tripU.includes(u)?tripU.filter(x=>x!==u):[...tripU,u];if(!tripU.length)tripU=[u];LS.set("sf_trip",tripU);renderTravel()});
+
 /* ===================== asistente de permisos ===================== */
 // days: antelación mínima; reply: si la autoridad contesta (si no, es solo una comunicación)
 const PROCS={
@@ -1833,7 +1923,7 @@ const PROCS={
    how:"Se hace en la sede electrónica del Ministerio del Interior con tu Cl@ve o certificado digital: rellenas el formulario de comunicación de la operación y lo envías. Mínimo 5 días naturales antes. Una comunicación cubre los vuelos de los 5 días siguientes al inicio, indicando fecha y franja horaria de cada uno. No es una autorización: no esperes respuesta, basta con enviarla.",
    link:LK("Abrir la página del Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"),kw:/interior|urban|poblad|concentraci/i},
   {id:"enaire",n:"Coordinación con ENAIRE (espacio aéreo controlado)",w:"Cerca de aeropuertos o dentro de un CTR",days:7,est:1,reply:true,
-   how:"Mira en ENAIRE Drones qué zona te toca y pide la coordinación en ENAIRE Planea con tu número de operador. Si la zona es de un aeropuerto o helipuerto concreto, puede que haya que coordinar también con su gestor. Pídelo con días o semanas de margen.",
+   how:"Mira en ENAIRE Drones qué zona te toca y pide la coordinación en ENAIRE Planea con tu número de operador. Si el control te pide comunicarte por radio, necesitarás el certificado de radiofonista UAS. Si la zona es de un aeropuerto o helipuerto concreto, puede que haya que coordinar también con su gestor. Pídelo con días o semanas de margen.",
    link:LK("Abrir ENAIRE Planea","https://planea.enaire.es/"),link2:LK("Ver la zona en ENAIRE Drones","https://drones.enaire.es/"),kw:/enaire|ctr|aeropuerto|aeródromo|helipuerto|controlado/i},
   {id:"natural",n:"Permiso del espacio natural protegido",w:"Parques naturales, reservas, ZEPA",days:15,est:1,reply:true,
    how:"Escribe al órgano gestor del espacio (en la Comunidad de Madrid, la Comunidad de Madrid) pidiendo autorización. Indica fecha, zona exacta, dron y que vuelas en categoría abierta. Suelen tardar de días a semanas.",
