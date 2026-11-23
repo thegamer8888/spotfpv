@@ -175,6 +175,19 @@ label.f{display:block;font-size:12.5px;font-weight:700;color:var(--mute);margin:
 #permit{position:fixed;inset:0;z-index:2100;background:rgba(10,12,20,.45);display:none;align-items:flex-end;justify-content:center}
 #permit.on{display:flex}
 #nav button{position:relative}
+#flyBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));z-index:1500;border:0;border-radius:22px;padding:10px 16px;background:var(--bad);color:#fff;font-weight:800;box-shadow:var(--shadow)}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.ck:last-child{border-bottom:0}
+.ck .bx{flex:none;width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.ck.on .bx{background:var(--ok);border-color:var(--ok)}
+.ck.on b{text-decoration:line-through;opacity:.6}
+.ck b{display:block;font-size:14px}.ck small{color:var(--mute);font-size:12.5px}
+.ck.alert .bx{border-color:var(--bad)}
+.lg{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lg:last-child{border-bottom:0}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.stats3 div{background:var(--card);border-radius:14px;padding:10px;text-align:center;box-shadow:var(--shadow2)}
+.stats3 b{display:block;font-size:20px}.stats3 small{color:var(--mute);font-size:11.5px}
 .nb{position:absolute;top:2px;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font:700 10.5px/17px system-ui;text-align:center;padding:0 4px;font-style:normal;display:none}
 .news{padding:12px 14px;border-radius:14px;background:var(--card);margin:8px 0;box-shadow:var(--shadow2)}
 .news.new{border-left:4px solid var(--brand)}
@@ -438,6 +451,7 @@ details.sec summary .i{color:var(--mute)}
   <div id="catBar"></div>
 </div>
 <div id="toast"></div>
+<button id="flyBar" style="display:none"></button>
 <div id="addHint">Toca el mapa donde está tu spot</div>
 <button id="areaBtn"><svg class="i " width="16" height="16"><use href="#i-refresh"/></svg> Buscar en esta zona</button>
 <button id="peg" aria-label="Muñequito: arrastra al mapa"><svg class="i " width="26" height="26"><use href="#i-person"/></svg></button>
@@ -471,6 +485,7 @@ details.sec summary .i{color:var(--mute)}
         <button class="ctxc" id="ctxReload"><svg class="i " width="16" height="16"><use href="#i-refresh"/></svg> <span>Actualizar</span></button>
         <button class="ctxc" id="ctxGood"><svg class="i " width="16" height="16"><use href="#i-filter"/></svg> <span>Todos</span></button>
       </div>
+      <div id="weekendBox"></div>
       <div id="spotList"></div>
     </div>
 
@@ -513,6 +528,8 @@ details.sec summary .i{color:var(--mute)}
       <h3>Empezar desde una plantilla</h3>
       <div class="grid2" id="dronePresets"></div>
       <div id="droneSummary"></div>
+      <h3>Cuaderno de vuelos</h3>
+      <div id="logBox"></div>
     </div>
 
     <div class="pane" id="p-piloto">
@@ -575,6 +592,11 @@ details.sec summary .i{color:var(--mute)}
       </div>
       <h3>Mapas oficiales</h3>
       <div id="officialMaps" class="card"></div>
+      <h3>Copia de seguridad</h3>
+      <div class="card small" style="line-height:1.5">Guarda en un archivo tus drones, perfil, spots, favoritos, permisos, cuaderno de vuelos y ajustes. Así no los pierdes si cambias de móvil o borras el navegador.</div>
+      <div class="row" style="gap:8px"><button class="btn" id="bkExport" style="flex:1">💾 Guardar copia</button><button class="btn ghost" id="bkImport" style="flex:1">📂 Restaurar copia</button></div>
+      <input type="file" id="bkFile" accept="application/json,.json" style="display:none">
+      <p class="small mute" id="bkLast" style="margin-top:6px"></p>
       <h3>Mis spots</h3>
       <div class="row"><button class="btn ghost" id="exportBtn">Exportar</button><button class="btn ghost" id="obAgain">Ver bienvenida</button></div>
       <div class="notice"><span>ℹ️</span><span>Datos en vivo de OpenStreetMap, Wikipedia, ENAIRE y DiPUL. Es una ayuda: revisa siempre el mapa oficial y los NOTAM el día del vuelo. No es asesoría legal.</span></div>
@@ -1157,6 +1179,7 @@ async function openSpot(s){
     <button class="act" id="favBtn">${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}</button>
     <button class="act" id="svBtn" ${s.cat==="point"?'style="outline:2px solid var(--brand)"':""}>${I("person",20)}Street View</button>
     <button class="act" id="shareBtn">${I("share",20)}Compartir</button>
+    <button class="act" id="ckBtn">${I("check",20)}Checklist</button>
    </div>
    ${s.note?`<div class="card small">📝 ${esc(s.note)}</div>`:""}
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
@@ -1172,9 +1195,10 @@ async function openSpot(s){
   $("#dTabs").onclick=e=>{const b=e.target.closest("button");if(b)showDTab(b.dataset.t)};
   $("#dBox").onclick=e=>{const r=e.target.closest(".req");if(r&&!e.target.closest("a"))r.classList.toggle("open")};
   $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
+  $("#ckBtn").onclick=()=>openChecklist(s);
   $("#pmSpot").onclick=async()=>{const cc=(lastCheck&&lastCheck.s&&lastCheck.s.id===s.id&&lastCheck.cc)||(await revCountry(s.lat,s.lon)).cc||refCountry;openPermit({cc,lat:s.lat,lon:s.lon,place:(curSpotObj&&curSpotObj.name)||s.name,fromSpot:true})};
   if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
-  $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
+  $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]={lat:s.lat,lon:s.lon,n:(curSpotObj&&curSpotObj.name)||s.name};LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const nm=(curSpotObj&&curSpotObj.name)||s.name;const url=`${location.origin}${location.pathname}?p=${s.lat.toFixed(6)},${s.lon.toFixed(6)}&n=${encodeURIComponent(nm)}&c=${s.cat==="mine"?"point":s.cat}`;const txt=`${nm} — mira este sitio para volar el dron en SpotFPV (normas, tiempo y permisos según tu dron)`;try{if(navigator.share)await navigator.share({title:nm,text:txt,url});else{await navigator.clipboard.writeText(txt+"\n"+url);status("Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
@@ -1789,6 +1813,7 @@ function renderTravel(){
   ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
   <details class="sec"><summary>Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
   <div class="notice"><span>⏱️</span><span>Plazos orientativos. Las normas cambian: confírmalas antes de viajar.</span></div>`;
+  $("#travelOut").insertAdjacentHTML("beforeend",`<button class="btn ghost block" id="tripShare" style="margin-top:4px">📤 Compartir esta ficha con un amigo</button>`);$("#tripShare").onclick=()=>shareTrip(cc);
   if(PROCS[cc]){$("#travelOut").insertAdjacentHTML("beforeend",`<button class="btn block" id="pmTravel" style="margin-top:4px">${I("file",17)} Preparar permiso para ${esc(cName(cc))}</button>`);$("#pmTravel").onclick=()=>openPermit({cc,lat:tp?tp.lat:null,lon:tp?tp.lon:null,place:tp?tp.label:""})}
   if(tp){$("#cityMap").onclick=()=>{pickPlace(tp.lat,tp.lon,tp.label);showPane("spots")};cityZones(tp)}
 }
@@ -1962,6 +1987,130 @@ async function spotNews(s){
   visits[id]=dayStr(new Date());LS.set("sf_visits",visits);
 }
 
+/* ===================== copia de seguridad ===================== */
+const BK_SKIP=/^sf_(wx7_|cz_|rc_|news$|rev|enaire|osm|cache)/;
+function bkKeys(){const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("sf_")&&!BK_SKIP.test(k))ks.push(k)}return ks}
+$("#bkExport").onclick=async()=>{
+  const data={app:"SpotFPV",v:1,date:new Date().toISOString(),keys:{}};bkKeys().forEach(k=>data.keys[k]=localStorage.getItem(k));
+  const name=`spotfpv-copia-${dayStr(new Date())}.json`,blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  try{const f=new File([blob],name,{type:"application/json"});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Copia de SpotFPV"})}else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+   LS.set("sf_bk_last",dayStr(new Date()));renderBk();status("💾 Copia lista: guárdala en Archivos o iCloud",3500)}catch(e){if(e&&e.name!=="AbortError")status("No pude crear la copia",3000)}
+};
+$("#bkImport").onclick=()=>$("#bkFile").click();
+$("#bkFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=="SpotFPV"||!d.keys)throw 0;
+  if(!confirm(`¿Restaurar la copia del ${new Date(d.date).toLocaleDateString("es-ES")}? Se reemplazan tus datos actuales.`))return;
+  Object.entries(d.keys).forEach(([k,v])=>{if(k.startsWith("sf_"))localStorage.setItem(k,v)});status("✅ Copia restaurada",1500);setTimeout(()=>location.reload(),900)}catch(err){status("😕 Ese archivo no es una copia de SpotFPV",3500)}e.target.value=""};
+function renderBk(){const l=LS.get("sf_bk_last",null);$("#bkLast").textContent=l?`Última copia: ${fmtNewsDate(l)}.`:"Todavía no has hecho ninguna copia."}
+
+/* ===================== checklist antes de volar + cronómetro ===================== */
+let ckState={},flying=LS.get("sf_flying",null),logs=LS.get("sf_logs",[]);
+async function openChecklist(s){
+  ckState={};const cc=(lastCheck&&lastCheck.s&&lastCheck.s.id===s.id&&lastCheck.cc)||(await revCountry(s.lat,s.lon)).cc||refCountry;
+  const near=permits.filter(p=>p.lat!=null&&km(p.lat,p.lon,s.lat,s.lon)<2&&daysTo(p.date)>=0);
+  const pend=lastCheck&&lastCheck.s&&lastCheck.s.id===s.id?lastCheck.items.filter(x=>x.st==="need"||x.st==="bad"):[];
+  let wx=null;try{const d=await getWx(s.lat,s.lon);const now=new Date();const key=now.toISOString().slice(0,13);const H=wxHours(d);wx=H.find(h=>h.t.slice(0,13)===key)||H[0]}catch(e){}
+  const lim=windLim();
+  const G=[["🔋 Equipo",[
+     ["bat","Baterías cargadas y sin hinchar","Si una LiPo está hinchada o golpeada, no la uses."],
+     ["props","Hélices sin daños y bien apretadas","Una hélice mellada vibra y puede soltarse."],
+     ["frame","Tornillos, cámara y antenas bien sujetos",""],
+     ["radio","Emisora"+(drone.fpv?" y gafas":"")+" cargadas, failsafe probado","Comprueba que el dron se desarma si pierde la señal."],
+     ...(drone.cam?[["sd","Tarjeta de memoria con espacio",""]]:[])]],
+   ["📋 Papeles",[
+     ...(cc&&EASA.has(cc)?[["op","Número de operador pegado en el dron",has("eu_reg")?"":"Aún no lo tienes marcado en Perfil."]]:[]),
+     ...(drone.fpv?[["obs","Observador a tu lado","Con gafas FPV no ves el dron directamente: alguien tiene que mirarlo."]]:[]),
+     ...near.map(p=>["pm_"+p.id,`Permiso: ${p.proc}`,(PST[p.status]||PST.enviado)[1]+(p.status==="enviado"?": aún no te han contestado":""),p.status==="denegado"||p.status==="enviado"]),
+     ...pend.slice(0,4).map((x,i)=>["pend"+i,x.t,"Pendiente según las normas de este sitio",true])]],
+   ["📍 Sitio",[
+     ["wind",wx?`Viento ${Math.round(wx.w10)} km/h, rachas ${Math.round(wx.g)} (tu límite: ${lim})`:`Viento por debajo de ${lim} km/h`,wx&&wx.g>lim?"Las rachas pasan de tu límite: mejor no volar ahora.":"",wx&&wx.g>lim],
+     ["people","Nadie debajo de la zona de vuelo","Ni personas ajenas, ni coches, ni animales."],
+     ["home","Punto de despegue y aterrizaje despejado",""],
+     ["light","Luz suficiente y buena visibilidad",wx&&!wx.light?"Ahora es de noche: el vuelo nocturno tiene normas propias.":"",wx&&!wx.light]]]];
+  const all=G.flatMap(g=>g[1]);
+  const draw=()=>{const done=all.filter(x=>ckState[x[0]]).length;
+   $("#pmBox").innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h1 style="margin:0;font-size:21px">Antes de volar</h1><button class="xbtn" id="ckClose" style="position:static">✕</button></div>
+   <p class="sub" style="margin:4px 0 8px">${esc(s.name)} · ${esc(drone.name.split("(")[0].trim())} · ${done}/${all.length} listo</p>
+   <div class="progress"><div style="width:${Math.round(done/all.length*100)}%"></div></div>
+   ${G.map(([h,items])=>items.length?`<h3>${h}</h3><div class="card" style="padding:2px 14px">${items.map(([k,t,d,al])=>`<div class="ck ${ckState[k]?"on":""} ${al?"alert":""}" data-k="${k}"><span class="bx">${ckState[k]?"✓":""}</span><div><b>${esc(t)}</b>${d?`<small>${esc(d)}</small>`:""}</div></div>`).join("")}</div>`:"").join("")}
+   <button class="btn block" id="ckGo" style="margin-top:14px">🛫 ${done===all.length?"Todo listo: empezar vuelo":"Empezar vuelo igualmente"}</button>
+   <p class="small mute" style="text-align:center;margin-top:6px">Al empezar arranca un cronómetro y, al terminar, el vuelo se guarda en tu cuaderno.</p>`;
+   $("#ckClose").onclick=()=>$("#permit").classList.remove("on");
+   $("#pmBox").querySelectorAll(".ck").forEach(el=>el.onclick=()=>{ckState[el.dataset.k]=!ckState[el.dataset.k];draw()});
+   $("#ckGo").onclick=()=>{flying={start:Date.now(),place:s.name,lat:s.lat,lon:s.lon,cc,drone:drone.name,uid:drone.uid};LS.set("sf_flying",flying);$("#permit").classList.remove("on");closeDetail();renderFly();status("🛫 ¡Buen vuelo! Toca la barra roja al terminar",3000)}};
+  $("#permit").classList.add("on");draw();
+}
+const mmss=ms=>{const t=Math.floor(ms/1000);return `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`};
+function renderFly(){const b=$("#flyBar");if(!flying){b.style.display="none";clearInterval(renderFly.t);return}b.style.display="block";const up=()=>{b.textContent=`🔴 En vuelo ${mmss(Date.now()-flying.start)} · Terminar`};up();clearInterval(renderFly.t);renderFly.t=setInterval(up,1000)}
+$("#flyBar").onclick=()=>{if(!flying)return;const min=Math.max(1,Math.round((Date.now()-flying.start)/60000));openLogForm({date:dayStr(new Date(flying.start)),place:flying.place,lat:flying.lat,lon:flying.lon,cc:flying.cc,uid:flying.uid,drone:flying.drone,min,bat:1,notes:""},true)};
+
+/* ===================== cuaderno de vuelos ===================== */
+function openLogForm(e,fromFly){
+  $("#pmBox").innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h1 style="margin:0;font-size:21px">${fromFly?"Guardar el vuelo":"Añadir un vuelo"}</h1><button class="xbtn" id="lfClose" style="position:static">✕</button></div>
+  <label class="f">Sitio</label><input type="text" id="lfPlace" value="${esc(e.place||"")}" placeholder="Dónde volaste">
+  <label class="f">Dron</label><select id="lfDrone">${myDrones.map(d=>`<option value="${d.uid}" ${d.uid===(e.uid||drone.uid)?"selected":""}>${esc(d.name)}</option>`).join("")}</select>
+  <div class="row" style="gap:8px;flex-wrap:nowrap"><div style="flex:1.4"><label class="f">Día</label><input type="date" id="lfDate" value="${e.date||dayStr(new Date())}" style="background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:11px;width:100%"></div><div style="flex:1"><label class="f">Minutos</label><input type="number" id="lfMin" min="1" value="${e.min||5}"></div><div style="flex:1"><label class="f">Baterías</label><input type="number" id="lfBat" min="0" value="${e.bat??1}"></div></div>
+  <label class="f">Notas</label><input type="text" id="lfNotes" value="${esc(e.notes||"")}" placeholder="Qué practicaste, incidencias, ajustes…">
+  <button class="btn block" id="lfSave" style="margin-top:14px">💾 Guardar en el cuaderno</button>
+  ${fromFly?'<button class="btn ghost block" id="lfDiscard" style="margin-top:8px">Descartar este vuelo</button>':""}`;
+  $("#permit").classList.add("on");
+  $("#lfClose").onclick=()=>$("#permit").classList.remove("on");
+  $("#lfSave").onclick=()=>{const d=myDrones.find(x=>x.uid===$("#lfDrone").value)||drone;logs.unshift({id:Date.now().toString(36),date:$("#lfDate").value||dayStr(new Date()),place:$("#lfPlace").value.trim()||"Sin nombre",lat:e.lat??null,lon:e.lon??null,cc:e.cc||null,uid:d.uid,drone:d.name,min:Math.max(1,+$("#lfMin").value||1),bat:Math.max(0,+$("#lfBat").value||0),notes:$("#lfNotes").value.trim()});logs.sort((a,b)=>b.date.localeCompare(a.date));LS.set("sf_logs",logs);if(fromFly){flying=null;LS.set("sf_flying",null);renderFly()}$("#permit").classList.remove("on");renderLogs();status("📒 Vuelo guardado en el cuaderno",2500)};
+  if($("#lfDiscard"))$("#lfDiscard").onclick=()=>{flying=null;LS.set("sf_flying",null);renderFly();$("#permit").classList.remove("on")};
+}
+const hm=m=>m>=60?`${Math.floor(m/60)} h ${m%60?m%60+" min":""}`:`${m} min`;
+let logAll=false;
+function renderLogs(){
+  const box=$("#logBox");if(!box)return;
+  if(!logs.length){box.innerHTML='<div class="card small mute">Aquí se guardan tus vuelos: dónde, cuándo, con qué dron y cuánto tiempo. Se añaden solos al terminar un vuelo desde la checklist de un spot, o a mano.</div><button class="btn ghost block" id="lgAdd">＋ Añadir un vuelo a mano</button>';$("#lgAdd").onclick=()=>openLogForm({});return}
+  const tot=logs.reduce((a,x)=>a+x.min,0),m=dayStr(new Date()).slice(0,7),mon=logs.filter(x=>x.date.startsWith(m));
+  const per={};logs.forEach(x=>{per[x.drone]=(per[x.drone]||0)+x.min});
+  const list=logAll?logs:logs.slice(0,8);
+  box.innerHTML=`<div class="stats3"><div><b>${logs.length}</b><small>vuelos</small></div><div><b>${hm(tot)}</b><small>en total</small></div><div><b>${mon.length}</b><small>este mes</small></div></div>
+   <div class="card small">${Object.entries(per).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`🚁 ${esc(n.split("(")[0].trim())}: <b>${hm(v)}</b>`).join(" · ")}</div>
+   <div class="card" style="padding:2px 14px">${list.map(x=>`<div class="lg" data-id="${x.id}"><div><b style="font-size:14px">${x.cc?flagOf(x.cc)+" ":""}${esc(x.place)}</b><div class="small mute">${new Date(x.date+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short",year:"numeric"})} · ${esc(x.drone.split("(")[0].trim())} · ${x.min} min · ${x.bat} bat.${x.notes?"<br>📝 "+esc(x.notes):""}</div></div><button class="btn ghost" data-a="del" style="padding:6px 9px;align-self:center">🗑️</button></div>`).join("")}</div>
+   <div class="row" style="gap:8px">${logs.length>8?`<button class="btn ghost" id="lgMore" style="flex:1">${logAll?"Ver menos":"Ver los "+logs.length}</button>`:""}<button class="btn ghost" id="lgAdd" style="flex:1">＋ Añadir</button><button class="btn ghost" id="lgCsv" style="flex:1">📄 Exportar</button></div>`;
+  $("#lgAdd").onclick=()=>openLogForm({});
+  if($("#lgMore"))$("#lgMore").onclick=()=>{logAll=!logAll;renderLogs()};
+  $("#lgCsv").onclick=()=>{const rows=[["fecha","sitio","pais","dron","minutos","baterias","notas","lat","lon"]].concat(logs.map(x=>[x.date,x.place,x.cc||"",x.drone,x.min,x.bat,x.notes,x.lat??"",x.lon??""]));const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"}));a.download="cuaderno-vuelos.csv";a.click()};
+}
+$("#logBox").addEventListener("click",e=>{const b=e.target.closest("button[data-a=del]");if(!b)return;const id=b.closest(".lg").dataset.id;if(!confirm("¿Borrar este vuelo del cuaderno?"))return;logs=logs.filter(x=>x.id!==id);LS.set("sf_logs",logs);renderLogs()});
+
+/* ===================== este finde en tus spots ===================== */
+function savedSpots(){const out=mySpots.map(m=>({id:m.id,n:m.name,lat:m.lat,lon:m.lon}));Object.entries(favs).forEach(([id,v])=>{if(v&&typeof v==="object"&&v.lat!=null&&!out.some(o=>o.id===id))out.push({id,n:v.n||"Spot",lat:v.lat,lon:v.lon})});return out.slice(0,8)}
+function nextWeekend(){const d=new Date(),wd=d.getDay(),toSat=(6-wd+7)%7;const sat=new Date(d.getTime()+toSat*864e5);const sun=new Date(sat.getTime()+864e5);return wd===0?[dayStr(d)]:[dayStr(sat),dayStr(sun)]}
+let wkLoaded=false;
+function renderWeekend(){
+  const list=savedSpots(),box=$("#weekendBox");if(!box)return;
+  if(!list.length){box.innerHTML="";return}
+  box.innerHTML=`<details class="sec" id="wkDet" style="margin:6px 0"><summary>🌤️ Este finde en tus spots <span class="small mute" style="font-weight:600">· ${list.length}</span></summary><div class="in" id="wkIn"><div class="small mute"><span class="spin"></span> Mirando el viento…</div></div></details>`;
+  $("#wkDet").addEventListener("toggle",()=>{if($("#wkDet").open)loadWeekend(list)});
+}
+async function loadWeekend(list){
+  const days=nextWeekend(),lim=windLim(),rows=[];
+  await Promise.all(list.map(async sp=>{try{const H=wxHours(await getWx(sp.lat,sp.lon)).filter(h=>days.includes(h.day)&&h.light);
+    const best=days.map(dd=>{const hs=H.filter(h=>h.day===dd);if(!hs.length)return null;const ok=hs.filter(h=>h.g<=lim&&h.pp<40);const top=hs.reduce((a,h)=>h.g<a.g?h:a,hs[0]);return{dd,ok:ok.length,top}}).filter(Boolean);
+    rows.push({sp,best})}catch(e){rows.push({sp,best:null})}}));
+  const el=$("#wkIn");if(!el)return;
+  const dn=dd=>new Date(dd+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long"});
+  el.innerHTML=`<p class="small mute" style="margin:0 0 6px">Horas de luz con rachas por debajo de tu límite (${lim} km/h) y poca lluvia, con tu ${esc(drone.name.split("(")[0].trim())}.</p>`+rows.map(({sp,best})=>{if(!best)return `<div class="lg"><b style="font-size:14px">${esc(sp.n)}</b><span class="small mute">sin datos</span></div>`;
+    const g=best.find(b=>b.ok>0);return `<div class="lg" data-lat="${sp.lat}" data-lon="${sp.lon}" data-n="${esc(sp.n)}" style="cursor:pointer"><div><b style="font-size:14px">${esc(sp.n)}</b><div class="small mute">${best.map(b=>`${dn(b.dd)}: ${b.ok?`<b style="color:var(--ok)">${b.ok} h buenas</b>`:`rachas mín. ${Math.round(b.top.g)} km/h`}`).join(" · ")}</div></div><span class="pill ${g?"p0":"p3"}" style="align-self:center">${g?"Se puede":"Mucho viento"}</span></div>`}).join("");
+  el.querySelectorAll(".lg[data-lat]").forEach(r=>r.onclick=()=>pickPlace(+r.dataset.lat,+r.dataset.lon,r.dataset.n));
+}
+
+/* ===================== compartir la ficha de un viaje ===================== */
+const DKEYS=["name","g","cls","cam","fpv","toy","use","brand","build","s","mah","nbat"];
+function shareTripURL(cc){const tp=travelPlace&&travelPlace.cc===cc?travelPlace:null;const ds=myDrones.filter(d=>(tripU||[]).includes(d.uid)).map(d=>Object.fromEntries(DKEYS.map(k=>[k,d[k]])));
+  const q=new URLSearchParams({viaje:cc});if(tp)q.set("ciudad",`${tp.city}|${tp.lat.toFixed(4)}|${tp.lon.toFixed(4)}`);if(ds.length)q.set("drones",btoa(unescape(encodeURIComponent(JSON.stringify(ds)))));return `${location.origin}${location.pathname}?${q}`}
+async function shareTrip(cc){const url=shareTripURL(cc),txt=`Lo que necesitas para volar en ${cName(cc)} con estos drones (SpotFPV). Pon tus títulos en Perfil y te dice lo que te falta a ti.`;try{if(navigator.share)await navigator.share({title:"Volar en "+cName(cc),text:txt,url});else{await navigator.clipboard.writeText(txt+"\n"+url);status("Enlace copiado",2000)}}catch(e){}}
+let sharedTrip=null;
+try{const sp=new URLSearchParams(location.search),v=sp.get("viaje");if(v&&/^[a-z]{2}$/.test(v)){sharedTrip={cc:v,ds:[]};const c=(sp.get("ciudad")||"").split("|");if(c.length===3&&isFinite(+c[1]))sharedTrip.tp={cc:v,city:c[0].slice(0,60),label:c[0].slice(0,60)+", "+cName(v),lat:+c[1],lon:+c[2]};
+  if(sp.get("drones"))sharedTrip.ds=JSON.parse(decodeURIComponent(escape(atob(sp.get("drones"))))).slice(0,6).map(d=>Object.fromEntries(DKEYS.map(k=>[k,d[k]])))}}catch(e){sharedTrip=null}
+function openSharedTrip(){if(!sharedTrip)return;const t=sharedTrip;sharedTrip=null;history.replaceState(null,"",location.pathname);
+  const added=[];t.ds.forEach(d=>{if(!d||!d.name||!isFinite(+d.g))return;let ex=myDrones.find(x=>x.name===d.name&&+x.g===+d.g);if(!ex){ex=fillD({...d,name:String(d.name).slice(0,60),g:+d.g,uid:"d"+Date.now()+Math.random().toString(36).slice(2,5),wind:0});myDrones.push(ex)}added.push(ex.uid)});
+  if(added.length){LS.set("sf_drones",myDrones);tripU=added;LS.set("sf_trip",tripU);renderDrone()}
+  if(t.tp){travelPlace=t.tp;LS.set("sf_tplace",travelPlace);$("#vPlace").value=t.tp.label}
+  addOpt(t.cc);renderTravel();showPane("viaje");status(`📨 Ficha compartida: ${cName(t.cc)}${added.length?` con ${added.length} dron${added.length>1?"es":""}`:""}`,4000)}
+
 /* ===================== asistente de permisos ===================== */
 // days: antelación mínima; reply: si la autoridad contesta (si no, es solo una comunicación)
 const PROCS={
@@ -2086,7 +2235,7 @@ function renderOb(){
 $("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(pendingShare)openShared();else if(!ref)setTimeout(()=>$("#q").focus(),350)}};
 
 /* ===================== arranque ===================== */
-function renderAll(){renderPermits();renderNews();renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
+function renderAll(){renderPermits();renderNews();renderLogs();renderBk();renderWeekend();renderFly();renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
 fillCountrySelect("#vDest","co");if(travelPlace)addOpt(travelPlace.cc);
 renderAll();syncOfficialByZoom();loadNews();
 window.addEventListener("resize",positionAreaBtn);
@@ -2097,10 +2246,11 @@ try{const sp=new URLSearchParams(location.search),p=(sp.get("p")||"").split(",")
 function openShared(){if(!pendingShare)return;const x=pendingShare;pendingShare=null;history.replaceState(null,"",location.pathname);
   ref={lat:x.lat,lon:x.lon,label:x.name};LS.set("sf_ref",ref);$("#q").value=x.name;map.setView([x.lat,x.lon],15);loadAll();
   setTimeout(()=>{if(x.cat==="point"||!CATS[x.cat]||CATS[x.cat].hidden||x.cat==="mine"||x.cat==="fav")openPoint(x.lat,x.lon,x.name);else openSpot({id:`share/${x.lat},${x.lon}`,lat:x.lat,lon:x.lon,cat:x.cat,name:x.name,src:"Compartido contigo",dist:0,url:`https://www.openstreetmap.org/?mlat=${x.lat}&mlon=${x.lon}#map=17/${x.lat}/${x.lon}`})},400)}
-if(!LS.get("sf_ob",0)){startOb()}
+if(!LS.get("sf_ob",0)&&!sharedTrip){startOb()}
 else if(pendingShare){openShared()}
 else if(ref){$("#q").value=ref.label.split(",")[0];map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}
 else{map.setView([40.2,-3.7],5)}
+setTimeout(openSharedTrip,300);
 
 </script>
 </body>

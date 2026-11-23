@@ -1,5 +1,5 @@
 // SpotFPV service worker: arranque rápido y mapas en caché
-const V="spotfpv-v13",LIBS="spotfpv-libs-v1",TILES="spotfpv-tiles-v1",MAX_TILES=600;
+const V="spotfpv-v14",LIBS="spotfpv-libs-v1",TILES="spotfpv-tiles-v1",MAX_TILES=600;
 const LIB_HOSTS=["unpkg.com","fonts.googleapis.com","fonts.gstatic.com"];
 const TILE_HOSTS=["tile.openstreetmap.org","server.arcgisonline.com","tile.opentopomap.org"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(V).then(c=>c.addAll(["./","./index.html"]).catch(()=>{})))});
