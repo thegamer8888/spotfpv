@@ -172,6 +172,17 @@ label.f{display:block;font-size:12.5px;font-weight:700;color:var(--mute);margin:
 /* detail */
 #detail{position:fixed;inset:0;z-index:2000;background:rgba(10,12,20,.45);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
 #detail.on{display:flex}
+#permit{position:fixed;inset:0;z-index:2100;background:rgba(10,12,20,.45);display:none;align-items:flex-end;justify-content:center}
+#permit.on{display:flex}
+#pmBox{background:var(--bg);width:100%;max-width:640px;max-height:94vh;border-radius:20px 20px 0 0;overflow-y:auto;padding:16px 16px calc(28px + var(--safe-b));animation:up .3s cubic-bezier(.2,.8,.2,1)}
+#pmBox label.f{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+#pmBox input[type=date],#pmBox input[type=time]{background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:11px;font-size:15px;width:100%}
+.pmData{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,monospace;background:var(--card);border-radius:12px;padding:12px;margin-top:8px;user-select:all}
+.proc{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--card);margin:8px 0;border:2px solid transparent;cursor:pointer}
+.proc.on{border-color:var(--brand)}
+.proc b{display:block;font-size:14.5px}
+.proc small{color:var(--mute);font-size:12.5px}
+.pmItem{display:flex;justify-content:space-between;gap:10px;align-items:center}
 #dBox{background:var(--bg);width:100%;max-width:640px;max-height:94vh;border-radius:26px 26px 0 0;overflow-y:auto;padding:0 0 calc(28px + var(--safe-b));animation:up .3s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .hero{height:230px;position:relative;display:flex;align-items:flex-end;padding:16px;color:#fff;background:var(--hg);background-size:cover;background-position:center;border-radius:26px 26px 0 0;overflow:hidden;cursor:zoom-in}
@@ -515,6 +526,8 @@ details.sec summary .i{color:var(--mute)}
         <div class="row" style="gap:8px;flex-wrap:nowrap"><input type="text" id="vPlace" placeholder="Ej.: Marrakech, Marruecos" autocomplete="off" style="flex:1"><button class="btn" id="vPlaceBtn" style="flex:none">Buscar</button></div>
       </div>
       <div id="travelOut"></div>
+      <h3>Mis permisos</h3>
+      <div id="myPermits"></div>
     </div>
 
     <div class="pane" id="p-capas">
@@ -558,6 +571,7 @@ details.sec summary .i{color:var(--mute)}
 </nav>
 
 <div id="detail"><div id="dBox"></div></div>
+<div id="permit"><div id="pmBox"></div></div>
 <div id="viewer"><button class="vx" id="vX">✕</button><button class="vnav vprev" id="vPrev">‹</button><div id="vBody"></div><div class="vcap" id="vCap"></div><button class="vnav vnext" id="vNext">›</button></div>
 
 <div id="ob"><div id="obBody"></div><div class="dots" id="obDots"></div><button class="btn block" id="obNext">Empezar</button></div>
@@ -571,6 +585,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 function km(a,b,c,d){const R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,h=Math.sin(x/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 const fmtD=k=>k<1?Math.round(k*1000)+" m":(k<10?k.toFixed(1):Math.round(k))+" km";
 let regionName; try{regionName=new Intl.DisplayNames(["es"],{type:"region"})}catch(e){regionName=null}
+const flagOf=cc=>(CDB[cc]&&CDB[cc].flag)||(cc&&cc.length===2?String.fromCodePoint(...[...cc.toUpperCase()].map(x=>127397+x.charCodeAt(0))):"🌍");
 const cName=cc=>(CDB[cc]&&CDB[cc].name)||(regionName&&cc&&cc.length===2?regionName.of(cc.toUpperCase()):cc)||"país desconocido";
 async function jget(url,opt={},ms=25000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{...opt,signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}}
 function jsonp(url,ms=15000){return new Promise((res,rej)=>{const cb="jp"+Math.random().toString(36).slice(2);const s=document.createElement("script");const t=setTimeout(()=>{cleanup();rej(new Error("timeout"))},ms);function cleanup(){clearTimeout(t);delete window[cb];s.remove()}window[cb]=d=>{cleanup();res(d)};s.onerror=()=>{cleanup();rej(new Error("jsonp"))};s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;document.head.appendChild(s)})}
@@ -654,7 +669,7 @@ const CERTS=[
  ["co_reg","Colombia: dron registrado en la Aerocivil","Obligatorio desde 200 g."],
  ["co_idon","Colombia: certificado de idoneidad piloto UAS","Necesario para categoría específica (trabajos)."]
 ];
-const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
+const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","jp","cn","in","my","id","vn","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
 
 /* ===================== presets de drones ===================== */
 const PRESETS=[
@@ -793,6 +808,12 @@ const HOMO={
  pe:{rec:"no",t:"No te los reconocen",d:"Perú no pertenece a EASA. En 2026 entró en vigor un reglamento nuevo de drones (DS 012-2026-MTC) con registro de drones ante la DGAC. Para cualquier uso que no sea recreativo hace falta una licencia emitida por la DGAC. Tus títulos no se convalidan."},
  cl:{rec:"no",t:"No te los reconocen y no se pueden convalidar",d:"Chile no tiene vía para convalidar certificados extranjeros. Para volar sobre zonas pobladas hace falta la credencial de la DGAC (examen en Chile con mínimo del 75 %), registrar el dron (solo pueden residentes) y pedir autorización. Como turista, lo realista es volar en zonas no pobladas, y solo hay una excepción para drones recreativos de hasta 750 g en un lugar privado."},
  br:{rec:"free",t:"Por ocio no necesitas título; sí registro y permiso por vuelo",d:"Brasil no te pide licencia para volar por ocio, así que no hay nada que convalidar. Lo que sí necesitas: registro en el SISANT (con pasaporte), homologación de la ANATEL y autorización del DECEA (SARPAS) para cada vuelo."},
+ jp:{rec:"free",t:"No te piden título, pero sí registro y permisos",d:"Japón no exige licencia a los turistas para vuelos recreativos normales, así que no hay nada que convalidar. Lo duro es el registro desde 100 g y el permiso del MLIT para casi cualquier zona urbana. El registro y los permisos están abiertos a extranjeros, sin pedir residencia.",time:"Registro 1–2 semanas; permiso urbano unos 10 días hábiles"},
+ cn:{rec:"no",t:"No te los reconocen; para ocio basta el registro",d:"China no convalida títulos extranjeros. Para volar por ocio no piden licencia, pero todos los drones deben registrarse con nombre real en la CAAC (plataforma UOM). Los trabajos con dron no los puede hacer un turista por su cuenta."},
+ in:{rec:"no",t:"No sirven: India no deja volar a turistas",d:"India prohíbe importar drones montados desde 2022 y el registro en Digital Sky pide documentos de identidad indios. En la práctica, un turista no puede volar su dron allí, tenga los títulos que tenga."},
+ my:{rec:"no",t:"No te los reconocen: permiso de la CAAM para cada vuelo",d:"Malasia no convalida títulos y no tiene excepción para drones de menos de 250 g. Hay que pedir a la CAAM una autorización de vuelo (ATF) incluso para volar por ocio. Tus títulos te ayudan a rellenar bien la solicitud, pero no te ahorran el permiso."},
+ id:{rec:"no",t:"No te los reconocen y las normas están poco claras",d:"Indonesia no convalida títulos europeos. Las fuentes no coinciden: algunas dicen que por ocio no hace falta nada por debajo de 2 kg y otras que en Bali todo dron debe registrarse desde 2025. Confírmalo con la DGCA de Indonesia antes de ir."},
+ vn:{rec:"no",t:"No te los reconocen y casi no se puede volar como turista",d:"Vietnam cambió las normas en 2025–2026: el registro es para residentes y los permisos los da el Ministerio de Defensa, con un avalista vietnamita. Desde 250 g piden licencia de piloto vietnamita. Tus títulos no valen allí."},
  ec:{rec:"free",t:"Por ocio no necesitas título",d:"Con la RDAC 101, la categoría abierta (ocio, menos de 4 kg) no pide licencia de piloto. Para trabajos hace falta autorización de piloto de la DGAC, permiso de operación y seguro. Tus títulos europeos no se convalidan."}
 };
 // Pasos concretos para países sin ficha completa
@@ -823,6 +844,30 @@ const STEPS={
   IT("need","Homologación de la ANATEL","La emisora y el dron no se pueden usar en Brasil sin certificación de la ANATEL. Los drones comprados fuera suelen no tenerla: pregúntale a la ANATEL antes de viajar.",{when:"antes",time:"Puede tardar semanas"}),
   IT("need","Autorización SARPAS para cada vuelo","Desde el 1 de julio de 2026 cada vuelo necesita autorización del DECEA en SARPAS NG, también con drones de menos de 250 g."),
   IT("warn","Parques y lugares famosos","Parques nacionales (ICMBio), el Cristo Redentor o Fernando de Noronha tienen normas propias.")],
+ jp:(d,g,pro)=>[
+  g>=100?IT("need","Registro en DIPS 2.0 (MLIT)","Obligatorio desde 100 g, batería incluida. Se pide con pasaporte y otro documento con nombre y dirección. Cuesta entre 900 y 2.400 yenes y vale 3 años. El número va visible en el dron.",{when:"antes",time:"Cuenta con 1–2 semanas",link:LK("Buscar DIPS 2.0 (registro de drones en Japón)",GQ("DIPS 2.0 drone registration MLIT English"))}):IT("ok","Sin registro","Tu dron pesa menos de 100 g: está exento del registro. Aun así, respeta aeropuertos, altura y zonas prohibidas."),
+  g>=100?IT("need","Remote ID","Los drones registrados deben emitir Remote ID. Si el tuyo no lo lleva de serie (muchos FPV), necesitas un módulo.",{when:"antes"}):null,
+  g>=100?IT("need","Permiso del MLIT para zonas urbanas (DID)","La mayoría de los sitios turísticos están en zonas DID, donde hace falta permiso. Pídelo en DIPS al menos 10 días antes.",{when:"antes",time:"Mínimo 10 días antes"}):IT("warn","Menos de 100 g: menos trámites","Los drones de menos de 100 g cuentan como modelos y no necesitan registro, pero siguen aplicando normas como la cercanía de aeropuertos o la altura máxima de 150 m."),
+  IT("warn","Zonas prohibidas","Aeropuertos, Palacio Imperial e instalaciones importantes del Estado, y 300 m alrededor de las embajadas.")],
+ cn:(d,g,pro)=>[
+  IT("need","Registro con nombre real (CAAC / UOM)","Obligatorio para todos los drones, pese lo que pese. Se hace con el pasaporte y es gratis. Suele hacer falta un número de móvil chino para el SMS; si no llega, compra una SIM en el aeropuerto. Pega el código QR en el dron.",{when:"antes",link:LK("Plataforma UOM de la CAAC","https://uom.caac.gov.cn/")}),
+  IT("need","Activación en la app UOM","Desde mayo de 2026 el dron también hay que activarlo en la app UOM o no despega."),
+  IT("bad","Zonas militares enteras","Todo el Tíbet y las zonas fronterizas de Xinjiang son espacio aéreo militar."),
+  IT("warn","Parques y ciudades","Algunas ciudades y parques escénicos tienen normas o permisos propios: revísalo para tu destino.")],
+ in:(d,g,pro)=>[
+  IT("bad","No lleves el dron a la India","Importar drones montados está prohibido desde febrero de 2022 y los confiscan a menudo en el aeropuerto. El registro en Digital Sky pide Aadhaar y pasaporte indio, así que un turista no puede registrarse.",{when:"antes"}),
+  IT("info","Alternativa","Si necesitas tomas aéreas, contrata a un piloto local con dron registrado.")],
+ my:(d,g,pro)=>[
+  IT("need","Autorización de vuelo (ATF) de la CAAM","Hace falta para prácticamente cualquier vuelo, también por ocio y con drones de menos de 250 g. Cuesta unos 250 RM (drones de hasta 20 kg) y vale 3 meses.",{when:"antes",time:"Pídela al menos 14 días hábiles antes"}),
+  IT("warn","Parques nacionales","Volar en un parque nacional necesita además permiso del propio parque."),
+  IT("info","Multas","Volar sin permiso puede costar hasta 50.000 RM.")],
+ id:(d,g,pro)=>[
+  IT("q","Registro: las fuentes no coinciden","Para Bali, varias guías dicen que desde 2025 hay que registrar todo dron en la DGCA, y otras que los turistas no pueden registrarse. Pregunta a la DGCA o a tu hotel antes de volar.",{when:"antes",link:LK("Buscar normas oficiales de drones en Indonesia",GQ("DGCA Indonesia drone registration tourist"))}),
+  IT("warn","Templos y ceremonias","No vueles sobre templos ni ceremonias sin permiso, ni de noche."),
+  IT("warn","Aeropuertos","Mantente muy lejos del aeropuerto de Bali (entre 9 y 15 km según la fuente).")],
+ vn:(d,g,pro)=>[
+  IT("bad","Permiso del Ministerio de Defensa","Casi todos los vuelos necesitan permiso. Un extranjero necesita la garantía por escrito de una entidad o persona vietnamita, y las solicitudes se cierran al menos 7 días antes. Muchos turistas lo hacen con una agencia local, que suele cobrar bastante.",{when:"antes",time:"Mínimo 7 días antes"}),
+  g<250?IT("warn","Menos de 250 g","Un dron recreativo de menos de 250 g no necesita permiso fuera de zonas prohibidas o restringidas, pero hay que avisar a los militares y la policía de la zona. Y el registro solo está previsto para residentes."):IT("bad","250 g o más","Necesitas licencia de piloto vietnamita.")],
  ec:(d,g,pro)=>[
   IT(g>=250?"need":"warn","Registro en la DGAC",g>=250?"Obligatorio y gratis desde 250 g, también para ocio, en la web de la DGAC (Aeronaves no tripuladas → Registro UAS). El número o QR va visible en el dron.":"Por debajo de 250 g las fuentes no coinciden: algunas dicen que también hay que registrarlo. Es gratis y online, mejor hazlo.",{when:"antes",link:LK("Web de la DGAC de Ecuador","https://www.aviacioncivil.gob.ec/")}),
   IT("bad","Galápagos: prohibido","Los drones recreativos están prohibidos en las Galápagos."),
@@ -1064,7 +1109,7 @@ async function openSpot(s){
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
    <div class="dtabs"><div class="seg" id="dTabs"><button data-t="res" class="on">Resumen</button><button data-t="nor">Normas</button><button data-t="wx">Tiempo</button><button data-t="plan">Qué hacer</button></div></div>
    <div class="dpane on" id="t-res"><div id="sumBox"><div class="skel" style="height:90px"></div><div class="skel" style="height:220px"></div></div><div id="wikiBox"></div></div>
-   <div class="dpane" id="t-nor"><p class="sub" style="margin:0 0 6px">Lo que hay en este punto para tu ${esc(drone.name.split("(")[0].trim())} (${drone.g} g). Toca un texto para leerlo entero.</p><div id="chk"><div class="skel" style="height:200px"></div></div></div>
+   <div class="dpane" id="t-nor"><p class="sub" style="margin:0 0 6px">Lo que hay en este punto para tu ${esc(drone.name.split("(")[0].trim())} (${drone.g} g). Toca un texto para leerlo entero.</p><div id="chk"><div class="skel" style="height:200px"></div></div><button class="btn block" id="pmSpot" style="margin-top:12px">${I("file",17)} Preparar permisos para este sitio</button></div>
    <div class="dpane" id="t-wx"><div id="wxBox"></div></div>
    <div class="dpane" id="t-plan"><p class="sub" style="margin:0 0 6px">Para el día que elijas en Tiempo (ahora: <b id="planDay">hoy</b>).</p><div id="recBox"><div class="skel" style="height:120px"></div></div></div>
    ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">${I("trash",17)} Borrar este spot</button>`:""}
@@ -1074,6 +1119,7 @@ async function openSpot(s){
   $("#dTabs").onclick=e=>{const b=e.target.closest("button");if(b)showDTab(b.dataset.t)};
   $("#dBox").onclick=e=>{const r=e.target.closest(".req");if(r&&!e.target.closest("a"))r.classList.toggle("open")};
   $("#svBtn").onclick=()=>openSV(s.lat,s.lon,false);
+  $("#pmSpot").onclick=async()=>{const cc=(lastCheck&&lastCheck.s&&lastCheck.s.id===s.id&&lastCheck.cc)||(await revCountry(s.lat,s.lon)).cc||refCountry;openPermit({cc,lat:s.lat,lon:s.lon,place:(curSpotObj&&curSpotObj.name)||s.name,fromSpot:true})};
   if($("#adjBtn"))$("#adjBtn").onclick=()=>startAim(s.lat,s.lon);
   $("#favBtn").onclick=()=>{if(favs[s.id])delete favs[s.id];else favs[s.id]=1;LS.set("sf_favs",favs);$("#favBtn").innerHTML=`${I("heart",20,favs[s.id]?"fav":"")}${favs[s.id]?"Guardado":"Guardar"}`;renderSpots()};
   $("#shareBtn").onclick=async()=>{const nm=(curSpotObj&&curSpotObj.name)||s.name;const url=`${location.origin}${location.pathname}?p=${s.lat.toFixed(6)},${s.lon.toFixed(6)}&n=${encodeURIComponent(nm)}&c=${s.cat==="mine"?"point":s.cat}`;const txt=`${nm} — mira este sitio para volar el dron en SpotFPV (normas, tiempo y permisos según tu dron)`;try{if(navigator.share)await navigator.share({title:nm,text:txt,url});else{await navigator.clipboard.writeText(txt+"\n"+url);status("Enlace copiado",2000)}}catch(e){}};
@@ -1661,8 +1707,8 @@ $("#pPurpose").addEventListener("click",e=>{const b=e.target.closest("button");i
 function saveProfile(){LS.set("sf_profile",profile);renderProfile();renderDrone();renderCtx();renderTravel()}
 
 /* ===================== viajar ===================== */
-const FLAGS=["es","co","de","fr","it","pt","ch","gb","us"];
-function renderFlags(){const v=$("#vDest").value;$("#flagGrid").innerHTML=FLAGS.map(cc=>`<button class="flag ${v===cc?"on":""}" data-cc="${cc}"><i>${CDB[cc].flag}</i>${esc(CDB[cc].name)}</button>`).join("")}
+const FLAGS=["es","co","de","fr","it","pt","ch","gb","us","th","jp","cn","my","id","vn","in","mx","br"];
+function renderFlags(){const v=$("#vDest").value;$("#flagGrid").innerHTML=FLAGS.map(cc=>`<button class="flag ${v===cc?"on":""}" data-cc="${cc}"><i>${flagOf(cc)}</i>${esc(cName(cc))}</button>`).join("")}
 $("#flagGrid").addEventListener("click",e=>{const b=e.target.closest(".flag");if(!b)return;$("#vDest").value=b.dataset.cc;renderFlags();renderTravel()});
 function renderTravel(){
   const cc=$("#vDest").value||"co";if(cc==="other"){$("#travelOut").innerHTML='<div class="empty"><b>🌍</b>Elige un país, o busca un sitio de ese país en el mapa y toca su bandera en Explorar.</div>';return}
@@ -1678,6 +1724,7 @@ function renderTravel(){
   ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
   <details class="sec"><summary>Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
   <div class="notice"><span>⏱️</span><span>Plazos orientativos. Las normas cambian: confírmalas antes de viajar.</span></div>`;
+  if(PROCS[cc]){$("#travelOut").insertAdjacentHTML("beforeend",`<button class="btn block" id="pmTravel" style="margin-top:4px">${I("file",17)} Preparar permiso para ${esc(cName(cc))}</button>`);$("#pmTravel").onclick=()=>openPermit({cc,lat:tp?tp.lat:null,lon:tp?tp.lon:null,place:tp?tp.label:""})}
   if(tp){$("#cityMap").onclick=()=>{pickPlace(tp.lat,tp.lon,tp.label);showPane("spots")};cityZones(tp)}
 }
 /* ---- destino libre: ciudad + país ---- */
@@ -1715,6 +1762,95 @@ async function cityZones(tp){
 $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
 if(travelPlace){$("#vPlace").value=travelPlace.label}
 
+/* ===================== asistente de permisos ===================== */
+// days: antelación mínima; reply: si la autoridad contesta (si no, es solo una comunicación)
+const PROCS={
+ es:[
+  {id:"interior",n:"Comunicación al Ministerio del Interior",w:"Vuelos en ciudad, pueblo o sobre gente",days:5,reply:false,
+   how:"Se hace en la sede electrónica del Ministerio del Interior con tu Cl@ve o certificado digital: rellenas el formulario de comunicación de la operación y lo envías. Mínimo 5 días naturales antes. Una comunicación cubre los vuelos de los 5 días siguientes al inicio, indicando fecha y franja horaria de cada uno. No es una autorización: no esperes respuesta, basta con enviarla.",
+   link:LK("Abrir la página del Ministerio del Interior","https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/comunicacion-operaciones-de-aeronaves-pilotadas-por-control-remoto-uas/"),kw:/interior|urban|poblad|concentraci/i},
+  {id:"enaire",n:"Coordinación con ENAIRE (espacio aéreo controlado)",w:"Cerca de aeropuertos o dentro de un CTR",days:7,est:1,reply:true,
+   how:"Mira en ENAIRE Drones qué zona te toca y pide la coordinación en ENAIRE Planea con tu número de operador. Si la zona es de un aeropuerto o helipuerto concreto, puede que haya que coordinar también con su gestor. Pídelo con días o semanas de margen.",
+   link:LK("Abrir ENAIRE Planea","https://planea.enaire.es/"),link2:LK("Ver la zona en ENAIRE Drones","https://drones.enaire.es/"),kw:/enaire|ctr|aeropuerto|aeródromo|helipuerto|controlado/i},
+  {id:"natural",n:"Permiso del espacio natural protegido",w:"Parques naturales, reservas, ZEPA",days:15,est:1,reply:true,
+   how:"Escribe al órgano gestor del espacio (en la Comunidad de Madrid, la Comunidad de Madrid) pidiendo autorización. Indica fecha, zona exacta, dron y que vuelas en categoría abierta. Suelen tardar de días a semanas.",
+   link:LK("Buscar el órgano gestor del espacio",GQ("autorización vuelo dron espacio natural protegido órgano gestor")),kw:/protegid|natural|reserva|zepa|parque nacional/i}],
+ jp:[{id:"dips",n:"Permiso del MLIT en DIPS 2.0",w:"Zonas urbanas (DID) y casi todos los sitios turísticos",days:10,reply:true,how:"Entra en DIPS 2.0 con tu cuenta, elige solicitud de permiso o aprobación de vuelo y rellena lugar, fechas, dron registrado y tu experiencia. Mínimo 10 días hábiles antes.",link:LK("Buscar DIPS 2.0",GQ("DIPS 2.0 MLIT flight permission application English"))}],
+ my:[{id:"atf",n:"Autorización de vuelo (ATF) de la CAAM",w:"Cualquier vuelo",days:20,dl:"14 días hábiles antes",reply:true,mail:"drone.atf@caam.gov.my",how:"Se pide por correo a la CAAM al menos 14 días hábiles antes. Cuesta unos 250 RM y vale 3 meses. Te preparo el correo con tus datos: revisa que esté todo, adjunta lo que pidan (pasaporte, foto del dron, mapa de la zona) y envíalo."}],
+ th:[{id:"caat",n:"Permiso de vuelo en el portal UAS de la CAAT",w:"Cada vuelo",days:3,est:1,reply:true,how:"Necesitas estar registrado en la NBTC y la CAAT. Luego pides cada vuelo en el portal UAS de la CAAT. Enviar la solicitud no es tener el permiso: espera a que la aprueben."}],
+ br:[{id:"sarpas",n:"Autorización SARPAS NG (DECEA)",w:"Cada vuelo, también con menos de 250 g",days:1,est:1,reply:true,how:"Con el dron ya registrado en el SISANT, entra en SARPAS NG, elige el dron y marca la zona, la altura y el horario.",link:LK("Buscar SARPAS NG",GQ("SARPAS NG DECEA solicitação voo drone"))}],
+ cl:[{id:"dgac",n:"Autorización de la DGAC",w:"Vuelos sobre zonas pobladas",days:10,dl:"unos 7 días hábiles antes",reply:true,how:"Se pide a la DGAC con el dron registrado y la credencial (unos 7 días hábiles). Como turista es casi imposible: lee primero la ficha de Chile.",link:LK("Cómo operar un dron en Chile (DGAC)","https://www.dgac.gob.cl/como-operar-un-dron-en-chile/")}],
+ vn:[{id:"mod",n:"Permiso del Ministerio de Defensa",w:"Casi cualquier vuelo",days:7,reply:true,how:"Hace falta un avalista vietnamita por escrito. Lo habitual es pedirlo a través de una agencia local, al menos 7 días antes."}]
+};
+let permits=LS.get("sf_permits",[]);
+const PST={borrador:["p1","Sin enviar"],enviado:["p2","Esperando respuesta"],comunicado:["p0","Comunicado (no hay respuesta)"],aprobado:["p0","Aprobado"],denegado:["p3","Denegado"]};
+const dayStr=d=>d.toISOString().slice(0,10);
+const daysTo=ds=>Math.round((new Date(ds+"T00:00:00")-new Date(dayStr(new Date())+"T00:00:00"))/864e5);
+let pm=null;
+function openPermit(o){
+  const list=PROCS[o.cc]||[];
+  if(!list.length){status(`De momento no tengo el trámite de permisos de ${cName(o.cc)}. Mira la ficha en Viajar.`,4500);return}
+  const txt=(lastCheck&&o.fromSpot?lastCheck.items.filter(x=>x.st!=="ok").map(x=>x.t+" "+(x.d||"")).join(" "):"");
+  const rec=list.filter(x=>x.kw&&x.kw.test(txt)).map(x=>x.id);
+  const min=Math.max(...list.map(x=>x.days));const def=new Date(Date.now()+(rec.length?Math.max(...list.filter(x=>rec.includes(x.id)).map(x=>x.days)):list[0].days)*864e5+864e5);
+  pm={...o,list,rec,sel:rec.length?rec[0]:list[0].id,date:dayStr(def),t1:"10:00",t2:"12:00",alt:"120"};
+  $("#permit").classList.add("on");renderPermit();
+}
+function permitText(p,P){
+  const lines=[
+   `Trámite: ${P.n}`,
+   `Piloto / operador: ${profile.fullName||"(tu nombre)"}`,
+   profile.opNum?`Nº de operador: ${profile.opNum}`:null,
+   `Dron: ${drone.name} · ${drone.g} g${drone.cls&&drone.cls!=="propio"?" · clase "+drone.cls:" · construcción propia"}`,
+   `Lugar: ${p.place||"(nombre del sitio)"}`,
+   p.lat!=null?`Coordenadas: ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`:null,
+   `Fecha: ${new Date(p.date+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}`,
+   `Horario: ${p.t1}–${p.t2}`,
+   `Altura máxima: ${p.alt} m sobre el suelo`,
+   `Tipo de vuelo: ${profile.purpose==="profesional"?"profesional":"recreativo"}, a la vista${drone.fpv?" (con gafas FPV y observador)":""}`];
+  return lines.filter(Boolean).join("\n");
+}
+function renderPermit(){
+  const p=pm,P=p.list.find(x=>x.id===p.sel),left=daysTo(p.date),late=left<P.days;
+  const data=permitText(p,P);
+  const mail=P.mail?`mailto:${P.mail}?subject=${encodeURIComponent("Application for Authorisation to Fly (ATF) - "+(profile.fullName||"")+" - "+p.date)}&body=${encodeURIComponent("Dear CAAM,\n\nI would like to apply for an Authorisation to Fly (ATF) for a recreational drone flight. Details:\n\n"+data.replace("Trámite: "+P.n+"\n","")+"\n\nPlease let me know any additional documents or fees required.\n\nKind regards,\n"+(profile.fullName||""))}`:null;
+  $("#pmBox").innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h1 style="margin:0;font-size:21px">${flagOf(p.cc)} Permisos en ${esc(cName(p.cc))}</h1><button class="xbtn" id="pmClose" style="position:static">✕</button></div>
+  <p class="sub" style="margin:4px 0 4px">${p.rec.length?"Según lo que he visto en este sitio, te marco lo que seguramente necesitas.":"Elige el trámite que te toca."}</p>
+  ${p.list.map(x=>`<div class="proc ${x.id===p.sel?"on":""}" data-id="${x.id}"><div style="flex:1"><b>${esc(x.n)} ${p.rec.includes(x.id)?'<span class="pill p2">Te toca</span>':""}</b><small>${esc(x.w)} · ${x.dl?esc(x.dl):x.est?`mejor con ${x.days} día${x.days>1?"s":""} de margen`:`mínimo ${x.days} día${x.days>1?"s":""} antes`}</small></div></div>`).join("")}
+  <div class="card small" style="line-height:1.5">${esc(P.how)}</div>
+  <label class="f">Lugar</label><input type="text" id="pmPlace" value="${esc(p.place||"")}" placeholder="Nombre del sitio o dirección">
+  <div class="row" style="gap:8px;flex-wrap:nowrap"><div style="flex:1.4"><label class="f">Día del vuelo</label><input type="date" id="pmDate" value="${p.date}" min="${dayStr(new Date())}"></div><div style="flex:1"><label class="f">Altura máx. (m)</label><input type="number" id="pmAlt" value="${esc(p.alt)}" min="1" max="120"></div></div>
+  <div class="row" style="gap:8px;flex-wrap:nowrap"><div style="flex:1"><label class="f">Desde</label><input type="time" id="pmT1" value="${p.t1}"></div><div style="flex:1"><label class="f">Hasta</label><input type="time" id="pmT2" value="${p.t2}"></div></div>
+  <div class="row" style="gap:8px;flex-wrap:nowrap"><div style="flex:1.3"><label class="f">Tu nombre completo</label><input type="text" id="pmName" value="${esc(profile.fullName||"")}"></div><div style="flex:1"><label class="f">Nº de operador</label><input type="text" id="pmOp" value="${esc(profile.opNum||"")}" placeholder="ESP…"></div></div>
+  <div class="verdict ${late?"v3":"v0"}" style="margin-top:12px"><span class="vi">${late?"⏰":"✅"}</span><div><b>${late?`${P.est?"Vas justo":"Vas tarde"}: faltan ${left} día${left===1?"":"s"} y ${P.est?"conviene dejar":"piden"} ${P.dl?P.dl.replace(" antes",""):P.days+" días"}`:`A tiempo: faltan ${left} días`}</b><span>${late?(P.est?"Puede que no te contesten a tiempo: si puedes, mueve el vuelo unos días.":"Cambia el día del vuelo o elige otro sitio que no lo necesite."):`Envíalo como tarde el ${new Date(Date.now()+(left-P.days)*864e5).toLocaleDateString("es-ES",{day:"numeric",month:"long"})}.`}</span></div></div>
+  <h3>Datos para el formulario</h3>
+  <div class="pmData" id="pmData">${esc(data)}</div>
+  <div class="row" style="gap:8px;margin-top:10px">
+   <button class="btn ghost" id="pmCopy" style="flex:1">${I("file",17)} Copiar datos</button>
+   ${mail?`<a class="btn" id="pmMail" href="${esc(mail)}" style="flex:1">✉️ Abrir el correo ya escrito</a>`:P.link?`<a class="btn" href="${esc(P.link.u)}" target="_blank" rel="noopener" style="flex:1">${esc(P.link.t)} ↗</a>`:""}
+  </div>
+  ${P.link2?`<a class="btn ghost block" href="${esc(P.link2.u)}" target="_blank" rel="noopener" style="margin-top:8px">${esc(P.link2.t)} ↗</a>`:""}
+  <p class="small mute" style="margin-top:10px">${mail?"Se abre tu app de correo con todo escrito: revísalo y dale a enviar.":"Copia los datos, abre el formulario oficial y pégalos campo por campo. Las webs oficiales piden tu Cl@ve o certificado digital, así que el envío lo haces tú."}</p>
+  <button class="btn block" id="pmSent" style="margin-top:12px">${I("check",17)} ${P.reply?"Ya lo he enviado: avísame de la respuesta":"Ya lo he comunicado"}</button>`;
+  const sync=()=>{p.place=$("#pmPlace").value;p.date=$("#pmDate").value||p.date;p.alt=$("#pmAlt").value;p.t1=$("#pmT1").value;p.t2=$("#pmT2").value;profile.fullName=$("#pmName").value.trim();profile.opNum=$("#pmOp").value.trim();LS.set("sf_profile",profile)};
+  $("#pmClose").onclick=()=>$("#permit").classList.remove("on");
+  $("#pmBox").querySelectorAll(".proc").forEach(el=>el.onclick=()=>{sync();p.sel=el.dataset.id;renderPermit()});
+  ["#pmPlace","#pmDate","#pmAlt","#pmT1","#pmT2","#pmName","#pmOp"].forEach(id=>$(id).addEventListener("change",()=>{sync();renderPermit()}));
+  $("#pmCopy").onclick=async()=>{sync();try{await navigator.clipboard.writeText(permitText(p,P));status("📋 Datos copiados",2000)}catch(e){status("Mantén pulsado el recuadro para copiarlo",3000)}};
+  $("#pmSent").onclick=()=>{sync();permits.unshift({id:Date.now().toString(36),cc:p.cc,proc:P.n,reply:P.reply,place:p.place,date:p.date,t1:p.t1,t2:p.t2,lat:p.lat,lon:p.lon,sent:dayStr(new Date()),status:P.reply?"enviado":"comunicado"});LS.set("sf_permits",permits);$("#permit").classList.remove("on");renderPermits();status(P.reply?"📬 Guardado. Cuando te contesten, márcalo en Viajar → Mis permisos":"✅ Guardado en Mis permisos",4000)};
+}
+$("#permit").addEventListener("click",e=>{if(e.target.id==="permit")$("#permit").classList.remove("on")});
+function renderPermits(){
+  const box=$("#myPermits");if(!box)return;
+  if(!permits.length){box.innerHTML='<div class="card small mute">Aquí verás los permisos que prepares desde un spot (pestaña Normas) o desde la ficha de un país. Te digo cuántos días faltan y puedes marcar si te los aprueban.</div>';return}
+  box.innerHTML=permits.map(x=>{const d=daysTo(x.date),[cls,lbl]=PST[x.status]||PST.enviado;return `<div class="card" data-id="${x.id}"><div class="pmItem"><b style="font-size:14.5px">${flagOf(x.cc)} ${esc(x.place||cName(x.cc))}</b><span class="pill ${cls}">${lbl}</span></div>
+   <div class="small mute" style="margin-top:3px">${esc(x.proc)}<br>${new Date(x.date+"T12:00:00").toLocaleDateString("es-ES",{weekday:"short",day:"numeric",month:"short"})} · ${esc(x.t1)}–${esc(x.t2)} · ${d>0?`faltan ${d} días`:d===0?"es hoy":"ya pasó"} · enviado el ${new Date(x.sent+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})}</div>
+   <div class="row" style="gap:6px;margin-top:8px">${x.reply&&x.status==="enviado"?`<button class="btn ghost" data-a="aprobado" style="padding:7px 10px;font-size:13px">✅ Aprobado</button><button class="btn ghost" data-a="denegado" style="padding:7px 10px;font-size:13px">❌ Denegado</button>`:""}${x.lat!=null?`<button class="btn ghost" data-a="map" style="padding:7px 10px;font-size:13px">📍 Mapa</button>`:""}<button class="btn ghost" data-a="del" style="padding:7px 10px;font-size:13px">🗑️</button></div></div>`}).join("");
+}
+$("#myPermits").addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(!b)return;const id=b.closest(".card").dataset.id,x=permits.find(y=>y.id===id);if(!x)return;const a=b.dataset.a;
+  if(a==="del"){permits=permits.filter(y=>y.id!==id)}else if(a==="map"){pickPlace(x.lat,x.lon,x.place||"");showPane("spots");return}else x.status=a;
+  LS.set("sf_permits",permits);renderPermits()});
+
 /* ===================== ajustes ===================== */
 function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
 $("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base2",baseKey);base=BASES[baseKey].addTo(map);if(base.bringToBack)base.bringToBack();syncSeg()});
@@ -1747,7 +1883,7 @@ function renderOb(){
 $("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(pendingShare)openShared();else if(!ref)setTimeout(()=>$("#q").focus(),350)}};
 
 /* ===================== arranque ===================== */
-function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
+function renderAll(){renderPermits();renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
 fillCountrySelect("#vDest","co");if(travelPlace)addOpt(travelPlace.cc);
 renderAll();syncOfficialByZoom();
 window.addEventListener("resize",positionAreaBtn);
