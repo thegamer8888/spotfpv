@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0a0d13" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="themeMeta" content="#f4f6f9">
+<script>(function(){var t="auto";try{t=JSON.parse(localStorage.getItem("sf_theme"))||"auto"}catch(e){}var m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)");function a(){var d=t==="dark"||(t==="auto"&&m&&m.matches);document.documentElement.classList.toggle("dk",d);var x=document.getElementById("themeMeta");if(x)x.content=d?"#0a0d13":"#f4f6f9"}window.__setTheme=function(v){t=v;try{localStorage.setItem("sf_theme",JSON.stringify(v))}catch(e){}a()};if(m&&m.addEventListener)m.addEventListener("change",a);a();document.addEventListener("DOMContentLoaded",a)})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SpotFPV">
@@ -21,12 +21,12 @@
   --shadow:0 10px 30px rgba(15,23,42,.12);--shadow2:0 2px 10px rgba(15,23,42,.08);
   --r:20px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
 }
-@media (prefers-color-scheme:dark){:root{
+:root.dk{
   --bg:#0b0e17;--card:#141927;--card2:#1c2233;--ink:#eef2ff;--ink2:#cbd5e1;--mute:#8b95ab;--line:#262d40;
   --okbg:rgba(22,163,74,.16);--infobg:rgba(37,99,235,.18);--warnbg:rgba(217,119,6,.18);--badbg:rgba(220,38,38,.18);
   --ok:#4ade80;--info:#7aa7ff;--warn:#fbbf24;--bad:#f87171;
   --shadow:0 10px 30px rgba(0,0,0,.45);--shadow2:0 2px 10px rgba(0,0,0,.35);
-}}
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 "Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
 a{color:var(--brand);text-decoration:none;font-weight:600}
@@ -174,6 +174,13 @@ label.f{display:block;font-size:12.5px;font-weight:700;color:var(--mute);margin:
 #detail.on{display:flex}
 #permit{position:fixed;inset:0;z-index:2100;background:rgba(10,12,20,.45);display:none;align-items:flex-end;justify-content:center}
 #permit.on{display:flex}
+#nav button{position:relative}
+.nb{position:absolute;top:2px;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font:700 10.5px/17px system-ui;text-align:center;padding:0 4px;font-style:normal;display:none}
+.news{padding:12px 14px;border-radius:14px;background:var(--card);margin:8px 0;box-shadow:var(--shadow2)}
+.news.new{border-left:4px solid var(--brand)}
+.news b{display:block;font-size:14.5px}
+.news .d{font-size:13px;color:var(--mute);margin-top:3px}
+.news .m{font-size:12px;color:var(--mute);margin-top:6px;display:flex;justify-content:space-between;gap:8px}
 #pmBox{background:var(--bg);width:100%;max-width:640px;max-height:94vh;border-radius:20px 20px 0 0;overflow-y:auto;padding:16px 16px calc(28px + var(--safe-b));animation:up .3s cubic-bezier(.2,.8,.2,1)}
 #pmBox label.f{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
 #pmBox input[type=date],#pmBox input[type=time]{background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:11px;font-size:15px;width:100%}
@@ -326,12 +333,12 @@ input[type=range]{width:100%;accent-color:var(--brand)}
   --shadow:0 8px 24px rgba(11,18,32,.10),0 1px 2px rgba(11,18,32,.06);--shadow2:0 1px 2px rgba(11,18,32,.06),0 0 0 1px rgba(11,18,32,.05);
   --r:16px;
 }
-@media (prefers-color-scheme:dark){:root{
+:root.dk{
   --bg:#0a0d13;--card:#121722;--card2:#1a2030;--ink:#e8edf5;--ink2:#c3cbd8;--mute:#8a94a6;--line:#232a3a;
   --brand:#4f8bff;--brandSoft:rgba(79,139,255,.14);--grad:linear-gradient(135deg,#3b74f6,#4f8bff);
   --ok:#4ade80;--okbg:rgba(34,197,94,.13);--info:#8fb3ff;--infobg:rgba(79,139,255,.14);--warn:#fbbf24;--warnbg:rgba(251,191,36,.13);--bad:#f87171;--badbg:rgba(248,113,113,.13);
   --shadow:0 8px 24px rgba(0,0,0,.45);--shadow2:0 0 0 1px rgba(255,255,255,.05);
-}}
+}
 html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;letter-spacing:-.005em}
 .i{display:inline-block;vertical-align:-.2em;flex:none}
 h1{font-size:24px;font-weight:700;letter-spacing:-.02em}
@@ -392,7 +399,7 @@ label.f{font-weight:600;letter-spacing:.05em;font-size:11.5px}
 details.sec summary{font-weight:650}
 details.sec summary .i{color:var(--mute)}
 .hero2{background:#0f172a;border-radius:16px}
-@media (prefers-color-scheme:dark){.hero2{background:var(--card2)}}
+.dk .hero2{background:var(--card2)}
 .wxHero .wi{display:flex}
 .hr{border-top-width:3px;border-radius:12px}
 .hr .e{display:flex;justify-content:center;color:var(--ink2);margin:4px 0}
@@ -524,6 +531,7 @@ details.sec summary .i{color:var(--mute)}
     </div>
 
     <div class="pane" id="p-viaje">
+      <div id="newsBox"></div>
       <h1>¿Te vas de viaje?</h1>
       <p class="sub">Elige el país y te digo qué te vale, qué te falta y cuánto tarda.</p>
       <div class="small mute" id="fromLine" style="margin:-4px 0 8px"></div>
@@ -540,7 +548,10 @@ details.sec summary .i{color:var(--mute)}
     </div>
 
     <div class="pane" id="p-capas">
-      <h1>Ajustes del mapa</h1>
+      <h1>Ajustes</h1>
+      <label class="f">Apariencia de la app</label>
+      <div class="seg" id="themeSeg"><button data-t="auto">Automático</button><button data-t="light">☀️ Claro</button><button data-t="dark">🌙 Oscuro</button></div>
+      <p class="small mute" style="margin:6px 0 0">Va aparte del mapa: puedes usar la app en oscuro con el mapa en satélite.</p>
       <label class="f">Estilo de mapa</label>
       <div class="seg" id="baseSeg"><button data-b="voy" class="on">Calles</button><button data-b="dark">Oscuro</button><button data-b="sat">Satélite</button><button data-b="topo">Relieve</button></div>
       <label class="f">Radio de búsqueda</label>
@@ -575,7 +586,7 @@ details.sec summary .i{color:var(--mute)}
   <button data-p="spots" class="on"><svg class="i " width="23" height="23"><use href="#i-compass"/></svg>Explorar</button>
   <button data-p="dron"><svg class="i " width="23" height="23"><use href="#i-drone"/></svg>Mi dron</button>
   <button data-p="piloto"><svg class="i " width="23" height="23"><use href="#i-id"/></svg>Perfil</button>
-  <button data-p="viaje"><svg class="i " width="23" height="23"><use href="#i-plane"/></svg>Viajar</button>
+  <button data-p="viaje"><svg class="i " width="23" height="23"><use href="#i-plane"/></svg>Viajar<i class="nb" id="newsDot"></i></button>
   <button data-p="capas"><svg class="i " width="23" height="23"><use href="#i-sliders"/></svg>Ajustes</button>
 </nav>
 
@@ -933,7 +944,7 @@ const I=(n,s=18,c="")=>`<svg class="i ${c}" width="${s}" height="${s}"><use href
 const EMO=/^(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}][\u{FE0F}\u{200D}]*)+\s*/u;
 const noE=s=>String(s||"").replace(EMO,"");
 function status(msg,ms){const s=$("#toast");if(!msg){s.style.display="none";return}s.innerHTML=msg;s.style.display="block";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>s.style.display="none",ms)}
-const dark=()=>window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
+const dark=()=>document.documentElement.classList.contains("dk");
 
 /* ===================== mapa ===================== */
 const map=L.map("map",{zoomControl:false,attributionControl:true,worldCopyJump:true,preferCanvas:true}).setView([40.42,-4.21],6);
@@ -1151,7 +1162,7 @@ async function openSpot(s){
    <div class="gal" id="gal"><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div><div class="ph skel" style="margin:0"></div></div>
    <div class="dtabs"><div class="seg" id="dTabs"><button data-t="res" class="on">Resumen</button><button data-t="nor">Normas</button><button data-t="wx">Tiempo</button><button data-t="plan">Qué hacer</button></div></div>
    <div class="dpane on" id="t-res"><div id="sumBox"><div class="skel" style="height:90px"></div><div class="skel" style="height:220px"></div></div><div id="wikiBox"></div></div>
-   <div class="dpane" id="t-nor"><p class="sub" style="margin:0 0 6px">Lo que hay en este punto para tu ${esc(drone.name.split("(")[0].trim())} (${drone.g} g). Toca un texto para leerlo entero.</p><div id="chk"><div class="skel" style="height:200px"></div></div><button class="btn block" id="pmSpot" style="margin-top:12px">${I("file",17)} Preparar permisos para este sitio</button></div>
+   <div class="dpane" id="t-nor"><div id="spotNews"></div><p class="sub" style="margin:0 0 6px">Lo que hay en este punto para tu ${esc(drone.name.split("(")[0].trim())} (${drone.g} g). Toca un texto para leerlo entero.</p><div id="chk"><div class="skel" style="height:200px"></div></div><button class="btn block" id="pmSpot" style="margin-top:12px">${I("file",17)} Preparar permisos para este sitio</button></div>
    <div class="dpane" id="t-wx"><div id="wxBox"></div></div>
    <div class="dpane" id="t-plan"><p class="sub" style="margin:0 0 6px">Para el día que elijas en Tiempo (ahora: <b id="planDay">hoy</b>).</p><div id="recBox"><div class="skel" style="height:120px"></div></div></div>
    ${s.cat==="mine"?`<button class="btn ghost block" id="delMine" style="margin-top:12px">${I("trash",17)} Borrar este spot</button>`:""}
@@ -1167,7 +1178,7 @@ async function openSpot(s){
   $("#shareBtn").onclick=async()=>{const nm=(curSpotObj&&curSpotObj.name)||s.name;const url=`${location.origin}${location.pathname}?p=${s.lat.toFixed(6)},${s.lon.toFixed(6)}&n=${encodeURIComponent(nm)}&c=${s.cat==="mine"?"point":s.cat}`;const txt=`${nm} — mira este sitio para volar el dron en SpotFPV (normas, tiempo y permisos según tu dron)`;try{if(navigator.share)await navigator.share({title:nm,text:txt,url});else{await navigator.clipboard.writeText(txt+"\n"+url);status("Enlace copiado",2000)}}catch(e){}};
   if(s.cat==="point")$("#savePt").onclick=()=>{closeDetail();openAddForm(s.lat,s.lon)};
   if(s.cat==="mine")$("#delMine").onclick=()=>{mySpots=mySpots.filter(m=>m.id!==s.id);LS.set("sf_mine",mySpots);closeDetail();if(ref)loadAll()};
-  loadPhotos(s);if(s.wiki)loadWiki(s);
+  loadPhotos(s);if(s.wiki)loadWiki(s);spotNews(s);
   $("#hero").onclick=e=>{if(e.target.closest(".xbtn"))return;openViewer(curPhoto)};
   curSpotId=s.id;curSpotObj=s;lastCheck=null;curWx=null;curWxErr=false;mountWx($("#wxBox"),s.lat,s.lon);
   try{await checkSpot(s,html=>{const box=$("#chk");if(box){const open=[...box.querySelectorAll("details")].map(d=>d.open);box.innerHTML=html;if(open.length)box.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i]})}})}catch(e){const box=$("#chk");if(box)box.innerHTML='<div class="verdict v1"><span class="vi">📡</span><div><b>No pude comprobarlo</b><span>Cierra y vuelve a abrir el spot en un momento.</span></div></div>'}
@@ -1771,6 +1782,7 @@ function renderTravel(){
   <details class="sec" open><summary>Tus títulos allí</summary><div class="in">${reqHTML([homolog(cc)])}${v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).length?reqHTML(v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).map(x=>({st:x.st,t:x.n,d:x.d}))):""}${Object.keys(profile.certs).some(k=>profile.certs[k])?"":'<p class="small mute" style="margin-top:6px">Marca tus títulos y dónde vives en la pestaña Perfil para que te lo diga a tu medida.</p>'}</div></details>
   ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
   ${tp?`<details class="sec" open><summary>Zonas a evitar en ${esc(tp.city)}</summary><div class="in"><div id="cityZones"><div class="small mute"><span class="spin"></span> Buscando aeropuertos, helipuertos, bases militares, cárceles y espacios protegidos…</div></div><button class="btn ghost block" id="cityMap" style="margin-top:10px">${I("compass",17)} Ver ${esc(tp.city)} en el mapa</button></div></details>`:""}
+  ${newsFor(cc).length?`<details class="sec"><summary>Cambios recientes en ${esc(cName(cc))} <span class="pill p1">${newsFor(cc).length}</span></summary><div class="in">${newsFor(cc).map(x=>newsHTML(x,x.date>newsSeen)).join("")}</div></details>`:""}
   ${tripHTML(cc)}
   ${carryHTML(cc)}
   <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
@@ -1915,6 +1927,41 @@ function tripHTML(cc){
 }
 $("#travelOut").addEventListener("click",e=>{const b=e.target.closest("#tripPick button");if(!b)return;const u=b.dataset.u;tripU=tripU.includes(u)?tripU.filter(x=>x!==u):[...tripU,u];if(!tripU.length)tripU=[u];LS.set("sf_trip",tripU);renderTravel()});
 
+/* ===================== novedades de normativa ===================== */
+let NEWS={updated:null,items:[]},newsSeen=LS.get("sf_news_seen",null),newsAll=false;
+const fmtNewsDate=d=>new Date(d+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"});
+async function loadNews(){
+  try{const r=await fetch("novedades.json?"+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;NEWS=await r.json();LS.set("sf_news",NEWS)}catch(e){NEWS=LS.get("sf_news",NEWS)}
+  NEWS.items.sort((a,b)=>b.date.localeCompare(a.date));
+  if(newsSeen===null){newsSeen=dayStr(new Date(Date.now()-60*864e5));LS.set("sf_news_seen",newsSeen)}
+  renderNews();renderTravel();
+}
+const myCountries=()=>new Set([profile.res,profile.nat,$("#vDest")&&$("#vDest").value,travelPlace&&travelPlace.cc,refCountry,...permits.map(p=>p.cc)].filter(Boolean));
+function newsHTML(x,isNew){return `<div class="news ${isNew?"new":""}"><b>${flagOf(x.cc)} ${esc(x.title)}</b><div class="d">${esc(x.text)}</div><div class="m"><span>${fmtNewsDate(x.date)}${isNew?' · <span class="pill p1">Nuevo</span>':""}</span>${x.src?`<a href="${esc(x.src.u)}" target="_blank" rel="noopener">${esc(x.src.t)} ↗</a>`:""}</div></div>`}
+function renderNews(){
+  const unread=NEWS.items.filter(x=>x.date>newsSeen),mine=myCountries();
+  const dot=$("#newsDot");dot.textContent=unread.length;dot.style.display=unread.length?"block":"none";
+  const list=newsAll?NEWS.items:NEWS.items.filter(x=>mine.has(x.cc)||x.date>newsSeen).slice(0,4);
+  $("#newsBox").innerHTML=`<details class="sec" ${unread.length?"open":""}><summary>📰 Novedades de normativa ${unread.length?`<span class="pill p3">${unread.length} nueva${unread.length>1?"s":""}</span>`:""}</summary><div class="in">
+   <p class="small mute" style="margin:0 0 4px">Cambios recientes en los países que te interesan. Revisado el ${NEWS.updated?fmtNewsDate(NEWS.updated):"—"}.</p>
+   ${list.length?list.map(x=>newsHTML(x,x.date>newsSeen)).join(""):'<div class="small mute">No hay cambios recientes en tus países.</div>'}
+   <div class="row" style="gap:8px;margin-top:6px">${unread.length?'<button class="btn ghost" id="newsRead" style="flex:1;padding:9px">✓ Marcar como leídas</button>':""}<button class="btn ghost" id="newsMore" style="flex:1;padding:9px">${newsAll?"Ver solo mis países":"Ver todas ("+NEWS.items.length+")"}</button></div>
+  </div></details>`;
+  if($("#newsRead"))$("#newsRead").onclick=()=>{newsSeen=dayStr(new Date());LS.set("sf_news_seen",newsSeen);renderNews()};
+  $("#newsMore").onclick=()=>{newsAll=!newsAll;renderNews();$("#newsBox details").open=true};
+}
+const newsFor=(cc,after)=>NEWS.items.filter(x=>x.cc===cc&&(!after||x.date>after));
+// Spots: avisa si la normativa del país cambió desde tu última visita
+let visits=LS.get("sf_visits",{});
+async function spotNews(s){
+  const box=$("#spotNews");if(!box)return;const id=s.id,prev=visits[id];
+  const cc=(await revCountry(s.lat,s.lon)).cc||refCountry;if(!cc||curSpotId!==id)return;
+  const ch=prev?newsFor(cc,prev):[];
+  if(ch.length)box.innerHTML=`<div class="verdict v2" style="margin:0 0 8px"><span class="vi">🔔</span><div><b>Cambió la normativa desde tu última visita (${fmtNewsDate(prev)})</b><span>${ch.map(x=>esc(x.title)).join(" · ")}. Lo de abajo ya está calculado con las normas actuales y tu dron de hoy.</span></div></div>`;
+  else if(prev)box.innerHTML=`<p class="small mute" style="margin:0 0 6px">Última visita: ${fmtNewsDate(prev)}. No me consta ningún cambio de normativa desde entonces.</p>`;
+  visits[id]=dayStr(new Date());LS.set("sf_visits",visits);
+}
+
 /* ===================== asistente de permisos ===================== */
 // days: antelación mínima; reply: si la autoridad contesta (si no, es solo una comunicación)
 const PROCS={
@@ -2005,6 +2052,9 @@ $("#myPermits").addEventListener("click",e=>{const b=e.target.closest("button[da
   LS.set("sf_permits",permits);renderPermits()});
 
 /* ===================== ajustes ===================== */
+function syncTheme(){const t=LS.get("sf_theme","auto");$$("#themeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.t===t))}
+$("#themeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;window.__setTheme(b.dataset.t);syncTheme()});
+syncTheme();
 function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
 $("#baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;map.removeLayer(base);baseKey=b.dataset.b;LS.set("sf_base2",baseKey);base=BASES[baseKey].addTo(map);if(base.bringToBack)base.bringToBack();syncSeg()});
 $("#radiusSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;radiusKm=+b.dataset.r;LS.set("sf_r",radiusKm);syncSeg();renderCtx();if(ref){map.setView([ref.lat,ref.lon],zoomFor(radiusKm));loadAll()}});
@@ -2036,9 +2086,9 @@ function renderOb(){
 $("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classList.remove("on");LS.set("sf_ob",1);renderAll();setTimeout(positionAreaBtn,300);if(pendingShare)openShared();else if(!ref)setTimeout(()=>$("#q").focus(),350)}};
 
 /* ===================== arranque ===================== */
-function renderAll(){renderPermits();renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
+function renderAll(){renderPermits();renderNews();renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
 fillCountrySelect("#vDest","co");if(travelPlace)addOpt(travelPlace.cc);
-renderAll();syncOfficialByZoom();
+renderAll();syncOfficialByZoom();loadNews();
 window.addEventListener("resize",positionAreaBtn);
 if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 syncEnaire();
