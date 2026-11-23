@@ -669,7 +669,7 @@ const CERTS=[
  ["co_reg","Colombia: dron registrado en la Aerocivil","Obligatorio desde 200 g."],
  ["co_idon","Colombia: certificado de idoneidad piloto UAS","Necesario para categoría específica (trabajos)."]
 ];
-const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","jp","cn","in","my","id","vn","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
+const COUNTRY_OPTS=["es","co","de","fr","it","pt","ch","gb","us","mx","ar","ve","pe","ec","cl","br","th","jp","cn","in","my","id","vn","ma","eg","cu","tr","nl","be","at","ie","pl","se","no","dk","gr","hr","other"];
 
 /* ===================== presets de drones ===================== */
 const PRESETS=[
@@ -1707,7 +1707,7 @@ $("#pPurpose").addEventListener("click",e=>{const b=e.target.closest("button");i
 function saveProfile(){LS.set("sf_profile",profile);renderProfile();renderDrone();renderCtx();renderTravel()}
 
 /* ===================== viajar ===================== */
-const FLAGS=["es","co","de","fr","it","pt","ch","gb","us","th","jp","cn","my","id","vn","in","mx","br"];
+const FLAGS=["es","co","de","fr","it","pt","ch","gb","us","th","jp","cn","my","id","vn","ma","eg","cu","tr","in","mx","br"];
 function renderFlags(){const v=$("#vDest").value;$("#flagGrid").innerHTML=FLAGS.map(cc=>`<button class="flag ${v===cc?"on":""}" data-cc="${cc}"><i>${flagOf(cc)}</i>${esc(cName(cc))}</button>`).join("")}
 $("#flagGrid").addEventListener("click",e=>{const b=e.target.closest(".flag");if(!b)return;$("#vDest").value=b.dataset.cc;renderFlags();renderTravel()});
 function renderTravel(){
@@ -1720,6 +1720,7 @@ function renderTravel(){
   <details class="sec" open><summary>Tus títulos de España allí</summary><div class="in">${reqHTML([homolog(cc)])}${v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).length?reqHTML(v.filter(x=>!/^(Certificado (A1\/A3|A2|STS))/.test(x.n)).map(x=>({st:x.st,t:x.n,d:x.d}))):""}${Object.keys(profile.certs).some(k=>profile.certs[k])?"":'<p class="small mute" style="margin-top:6px">Marca tus títulos en la pestaña Perfil para que te lo diga a tu medida.</p>'}</div></details>
   ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
   ${tp?`<details class="sec" open><summary>Zonas a evitar en ${esc(tp.city)}</summary><div class="in"><div id="cityZones"><div class="small mute"><span class="spin"></span> Buscando aeropuertos, helipuertos, bases militares, cárceles y espacios protegidos…</div></div><button class="btn ghost block" id="cityMap" style="margin-top:10px">${I("compass",17)} Ver ${esc(tp.city)} en el mapa</button></div></details>`:""}
+  ${carryHTML(cc)}
   <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
   ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
   <details class="sec"><summary>Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
@@ -1761,6 +1762,68 @@ async function cityZones(tp){
 }
 $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
 if(travelPlace){$("#vPlace").value=travelPlace.label}
+
+/* ===================== llevar tus drones: aduana y transporte ===================== */
+const BAN=(why)=>({st:"bad",t:"No lleves el dron: lo confiscan en la aduana",d:why});
+const CUSTOMS={
+ ma:BAN("Marruecos prohíbe importar drones desde 2015 sin autorización previa, que casi nunca se da a turistas. Los detectan en el escáner y se quedan en la aduana. Vale igual si llegas en avión, en el ferry o en coche."),
+ eg:BAN("Egipto prohíbe importar, tener y usar drones sin permiso del Ministerio de Defensa. Lo confiscan aunque lo declares."),
+ cu:BAN("Cuba prohíbe a los viajeros entrar con drones: lo confiscan en el aeropuerto y puede que no te lo devuelvan al salir."),
+ ni:BAN("Nicaragua prohíbe importar y usar drones, y tener uno puede acarrear sanciones penales."),
+ in:BAN("India prohíbe importar drones de consumo extranjeros. Hay que declararlos en el canal rojo y los DJI se confiscan a menudo."),
+ dz:BAN("Argelia exige permiso previo del Ministerio de Defensa, que no se da a extranjeros, y suelen confiscarlos en la entrada."),
+ ir:BAN("Irán prohíbe el uso privado o recreativo y se han reportado confiscaciones en la entrada."),
+ uz:BAN("Uzbekistán prohíbe importar drones a particulares: lo confiscan aunque solo te multen."),
+ sn:BAN("Senegal prohibió los vuelos recreativos en enero de 2026 y hay riesgo de que lo retengan en la frontera."),
+ kp:BAN("Corea del Norte no deja entrar drones de turistas."),
+ mg:BAN("Madagascar exige registro y permiso previo. Sin autorización, lo confiscan casi seguro al llegar."),
+ co:{st:"bad",t:"Colombia: solo por El Dorado (Bogotá) o el puerto de Cartagena",d:"Desde enero de 2026 los drones solo pueden entrar por esos dos puntos y no cuentan como equipaje de viajero: la DIAN puede exigir una importación ordinaria. Si entras por otro aeropuerto o por tierra, puedes quedarte sin él. Llévalo declarado y con la factura."},
+ mx:{st:"warn",t:"Declara el dron en la aduana",d:"Pasa por el canal rojo (declarar) y lleva la factura de compra."},
+ ec:{st:"info",t:"Sin impuestos si vale menos de 1.000 $",d:"Un dron de uso personal entra libre si vale menos de 1.000 $. Por encima pueden cobrarte hasta un 35 % de su valor. Lleva la factura."},
+ th:{st:"warn",t:"Puedes entrar con él, pero regístralo en la NBTC",d:"No está prohibido entrar, pero el registro en la NBTC se hace con tu sello de entrada y hay que hacerlo en los primeros 30 días, aunque no vueles."},
+ id:{st:"warn",t:"Declara los drones de más de 250 g",d:"Por encima de 250 g hay que declararlo y llevar el comprobante de registro en la DGCA. Por debajo, normalmente no hace falta declararlo."},
+ vn:{st:"warn",t:"Entrar con él no significa poder volarlo",d:"Puedes llevarlo en la maleta, pero eso no te da derecho a volarlo: mira los permisos de Vietnam."},
+ br:{st:"warn",t:"Ojo con la homologación de la ANATEL",d:"Un dron sin homologación de la ANATEL no se puede usar en Brasil. Pregúntales antes de viajar y lleva impresa su respuesta junto con la factura."},
+ jp:{st:"warn",t:"Las emisoras deben tener certificación de radio japonesa",d:"En Japón los equipos de radio necesitan certificación japonesa (giteki). Muchos equipos FPV, sobre todo los transmisores de vídeo de 5,8 GHz, no la tienen y pueden necesitar licencia de radioaficionado. Revísalo antes de llevarlos."},
+ cn:{st:"info",t:"Puedes entrar con él",d:"Llevar un dron a China está permitido, pero antes de volar tienes que registrarlo con tu nombre real (UOM)."},
+ us:{st:"info",t:"Puedes entrar con él",d:"No hace falta declararlo como efecto personal. Recuerda registrarlo en la FAA si pesa 250 g o más."}
+};
+function customsFor(cc){
+  if(cc==="es")return{st:"ok",t:"Viajas dentro de España",d:"No hay aduana para tus cosas, salvo con Canarias, Ceuta y Melilla, que tienen su propio régimen. Con efectos personales usados no suele haber problema. Lleva la factura por si acaso."};
+  if(EASA.has(cc))return{st:"ok",t:"Sin aduana dentro de la UE",d:`Entre España y ${cName(cc)} no hay aduana para tus cosas personales. Lleva la factura del dron por si te preguntan.`+(cc==="ch"||cc==="no"||cc==="is"?" Ojo: no está en la unión aduanera de la UE, así que puede haber control en la frontera; un dron usado y para ti suele pasar sin problema.":"")};
+  return CUSTOMS[cc]||{st:"q",t:"Revisa la aduana de "+cName(cc),d:"No tengo comprobado si pone pegas a los drones. Busca “entrar con dron "+cName(cc)+" aduana” o pregunta en su embajada.",link:LK("Buscar normas de aduana",GQ(`entrar con dron ${cName(cc)} aduana`))};
+}
+let carry=LS.get("sf_carry",{mode:"avion",s:1,mah:450});
+function carryHTML(cc){
+  const c=customsFor(cc),ban=c.st==="bad"&&CUSTOMS[cc]&&cc!=="co";
+  const wh=Math.round(carry.s*3.7*carry.mah/100)/10;
+  const whMsg=wh<=100?["ok",`Tus baterías tienen ${String(wh).replace(".",",")} Wh: puedes llevarlas en cabina sin pedir permiso (hasta 20 por persona).`]:wh<=160?["warn",`Tus baterías tienen ${String(wh).replace(".",",")} Wh: necesitas permiso de la aerolínea y como máximo 2 de repuesto.`]:["bad",`Tus baterías tienen ${String(wh).replace(".",",")} Wh: más de 160 Wh no pueden ir en un avión de pasajeros.`];
+  const MODES={
+   avion:[
+    IT("need","Baterías de repuesto, siempre en cabina","Nunca en la maleta facturada. Cada una con los conectores tapados o en su bolsa. Lo más cómodo es una bolsa ignífuga (LiPo bag) en la mochila."),
+    IT(whMsg[0],"¿Cuántos Wh tienen tus baterías?",whMsg[1]),
+    IT("info","El dron, mejor en la mochila de cabina","Si lo facturas, saca las baterías. Mira también el tamaño de equipaje de mano de tu tarifa: en las low cost a veces solo cabe una mochila pequeña."),
+    IT("warn","Cada aerolínea tiene su letra pequeña","Por ejemplo, easyJet solo deja 2 baterías de repuesto. Revisa la página de mercancías peligrosas de tu aerolínea antes de volar."),
+    IT("info","Carga las baterías a almacenamiento","Llévalas a unos 3,8 V por celda: más seguras y duran más.")],
+   barco:[
+    IT("warn","La aduana es la misma que en avión","Al llegar a otro país en ferry pasas su aduana igual. Si ese país prohíbe los drones, te lo quitan en el puerto."),
+    IT("need","Pregunta a la naviera por las baterías","Cada naviera pone sus normas sobre baterías de litio. Lleva las LiPo en bolsa ignífuga, descargadas a almacenamiento, y no las cargues en el camarote."),
+    IT("info","Si vas con coche en el ferry","Lo normal es que todo se quede en el coche durante la travesía. Revisa si la naviera pide algo especial con las baterías.")],
+   coche:[
+    IT(EASA.has(cc)||cc==="es"?"ok":"warn","Fronteras",EASA.has(cc)||cc==="es"?"Dentro del espacio Schengen normalmente no hay control. Lleva la factura por si acaso.":"Al cruzar a un país fuera de la UE (Andorra, Gibraltar, Marruecos…) pasas su aduana: declara el dron si hace falta."),
+    IT("need","No dejes las baterías al sol","Dentro de un coche al sol se pasan de 60 °C y una LiPo puede hincharse o incendiarse. Llévalas en bolsa ignífuga a la sombra y en almacenamiento."),
+    IT("info","Carga en el coche","Si cargas con el mechero del coche, hazlo vigilando y nunca con la batería caliente.")]
+  };
+  return `<details class="sec" ${ban?"open":""}><summary>Llevar tus drones ${c.st==="bad"?'<span class="pill p3">Cuidado</span>':""}</summary><div class="in">
+   ${reqHTML([c])}
+   <div class="seg" id="carrySeg" style="margin:10px 0 6px"><button data-m="avion" class="${carry.mode==="avion"?"on":""}">✈️ Avión</button><button data-m="barco" class="${carry.mode==="barco"?"on":""}">⛴️ Barco</button><button data-m="coche" class="${carry.mode==="coche"?"on":""}">🚗 Coche</button></div>
+   ${carry.mode==="avion"?`<div class="row" style="gap:8px;flex-wrap:nowrap;margin:6px 0"><div style="flex:1"><label class="small mute">Celdas (S)</label><input type="number" id="cS" min="1" max="12" value="${carry.s}"></div><div style="flex:1.3"><label class="small mute">Capacidad (mAh)</label><input type="number" id="cMah" min="50" step="50" value="${carry.mah}"></div></div>`:""}
+   ${reqHTML(MODES[carry.mode])}
+   ${cc!=="es"&&!EASA.has(cc)?reqHTML([IT("info","Al volver a España","Lleva la factura del dron para demostrar que lo compraste en la UE y que no te cobren el IVA. Si compras uno fuera y supera la franquicia de viajero (430 € en avión o barco, 300 € por tierra), tienes que declararlo.")]):""}
+  </div></details>`;
+}
+$("#travelOut").addEventListener("click",e=>{const b=e.target.closest("#carrySeg button");if(!b)return;carry.mode=b.dataset.m;LS.set("sf_carry",carry);renderTravel();const d=$("#carrySeg");if(d)d.closest("details").open=true});
+$("#travelOut").addEventListener("change",e=>{if(e.target.id==="cS"||e.target.id==="cMah"){carry.s=Math.max(1,+$("#cS").value||1);carry.mah=Math.max(50,+$("#cMah").value||450);LS.set("sf_carry",carry);renderTravel();const d=$("#carrySeg");if(d){d.closest("details").open=true}}});
 
 /* ===================== asistente de permisos ===================== */
 // days: antelación mínima; reply: si la autoridad contesta (si no, es solo una comunicación)
