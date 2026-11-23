@@ -509,6 +509,11 @@ details.sec summary .i{color:var(--mute)}
       <p class="sub">Elige el país y te digo qué te vale, qué te falta y cuánto tarda.</p>
       <div class="flags" id="flagGrid"></div>
       <select id="vDest" style="margin-top:10px"></select>
+      <div class="card" style="margin-top:12px">
+        <b style="font-size:14.5px">¿No está en la lista o quieres una ciudad concreta?</b>
+        <p class="small mute" style="margin:3px 0 8px">Escribe la ciudad y el país. Te digo las normas del país y qué zonas prohibidas hay en esa ciudad.</p>
+        <div class="row" style="gap:8px;flex-wrap:nowrap"><input type="text" id="vPlace" placeholder="Ej.: Marrakech, Marruecos" autocomplete="off" style="flex:1"><button class="btn" id="vPlaceBtn" style="flex:none">Buscar</button></div>
+      </div>
       <div id="travelOut"></div>
     </div>
 
@@ -748,10 +753,15 @@ function requirements(cc,d,p){
     out.items.push(IT("warn","Zonas restringidas","Consulta el visor geográfico UAS de la Aerocivil: aeropuertos, bases militares, cárceles y zonas de seguridad. La Aerocivil puede decretar prohibiciones temporales (p. ej. en jornadas electorales).",{link:c.map}));
     out.items.push(IT("info","Sanciones","Volar sin cumplir el RAC 100 puede acarrear multas de cientos de UVT (millones de pesos)."));
   }else{
-    out.head="Sin ficha detallada para "+cName(cc);
-    out.items.push(IT("q","Consulta a la autoridad de aviación civil",`Aún no tengo las normas de ${cName(cc)} en la app. Busca “drone regulations ${cName(cc)}” en la web oficial de su aviación civil antes de viajar.`));
+    const n=cName(cc),gq=q=>"https://www.google.com/search?q="+encodeURIComponent(q);
+    out.head="Sin ficha detallada para "+n+": normas generales";
+    out.items.push(IT("q","Confirma las normas con su aviación civil",`Aún no tengo la ficha completa de ${n} en la app. Busca la web oficial de su autoridad de aviación civil: es la única fuente fiable.`,{when:"antes",link:LK(`Buscar normativa oficial de drones en ${n}`,gq(`normativa drones ${n} aviación civil oficial`))}));
+    out.items.push(IT("need","Registro del dron o del piloto",`Muchos países piden registrar el dron (a menudo desde 250 g, a veces desde menos) o pedir un permiso para extranjeros. Compruébalo para ${n} con días de margen.`,{time:"De minutos a semanas según el país",when:"antes"}));
     out.items.push(IT("warn","Tus títulos europeos probablemente no valen","Fuera de la UE/EASA casi ningún país reconoce el A1/A3."));
-    out.items.push(IT("warn","Aduanas","Varios países prohíben o limitan entrar con drones. Revísalo antes de viajar."));
+    out.items.push(IT("bad","Aduana: ¿puedes entrar con el dron?",`Algunos países prohíben importar drones o los retienen en el aeropuerto (p. ej. Marruecos, Egipto, Cuba o Nicaragua). Confírmalo con la aduana o la embajada de ${n} antes de meterlo en la maleta.`,{when:"antes",link:LK(`Buscar si se puede entrar con dron a ${n}`,gq(`entrar con dron ${n} aduana`))}));
+    out.items.push(IT("warn","Lo habitual en casi todo el mundo","Máximo 120 m de altura, siempre a la vista (con gafas FPV, lleva un observador), nunca sobre multitudes, lejos de aeropuertos (a menudo 5–8 km), bases militares, cárceles y edificios oficiales. Orientativo: lo que mande el país va primero."));
+    if(+d.g<250)out.items.push(IT("info","Tu dron pesa menos de 250 g","En muchos países los drones pequeños tienen menos trámites, pero no en todos: algunos exigen registro o permiso a cualquier peso."));
+    if(pro)out.items.push(IT("need","Vuelos profesionales","Casi todos los países exigen licencia o permiso local para trabajar con drones, y a veces visado de trabajo.",{when:"antes"}));
   }
   out.items.forEach(x=>{if(x.link===undefined)delete x.link});
   return out;
@@ -1595,15 +1605,51 @@ function renderTravel(){
   const r=requirements(cc,drone,profile),c=CDB[cc]||{},v=certValidity(cc);
   const need=r.items.filter(x=>x.st==="need"||x.st==="bad"),total=r.items.filter(x=>x.st!=="info").length||1,okN=r.items.filter(x=>x.st==="ok").length;
   const antes=r.items.filter(x=>x.when==="antes"&&(x.st==="need"||x.st==="bad")),sitio=r.items.filter(x=>!antes.includes(x)&&x.st!=="ok"),ok=r.items.filter(x=>x.st==="ok");
-  $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||"🌍"} ${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
+  const tp=travelPlace&&travelPlace.cc===cc?travelPlace:null;
+  $("#travelOut").innerHTML=`<div class="hero2" style="margin-top:14px"><b>${c.flag||(cc.length===2?String.fromCodePoint(...[...cc.toUpperCase()].map(x=>127397+x.charCodeAt(0))):"🌍")} ${tp?esc(tp.city)+", ":""}${esc(cName(cc))} con tu ${esc(drone.name.split("(")[0].trim())}</b><span>${need.length?`Te falta${need.length>1?"n":""} ${need.length} cosa${need.length>1?"s":""} antes de volar`:"¡Tienes todo lo necesario!"} · ${esc(r.head)}</span><div class="progress" style="background:rgba(255,255,255,.25)"><div style="width:${Math.round(okN/(okN+need.length||1)*100)}%;background:#fff"></div></div></div>
   ${v.length?`<details class="sec"><summary>Tus títulos allí</summary><div class="in">${reqHTML(v.map(x=>({st:x.st,t:x.n,d:x.d})))}</div></details>`:""}
   ${antes.length?`<details class="sec" open><summary>Antes de viajar <span class="pill p2">${antes.length}</span></summary><div class="in">${reqHTML(antes)}</div></details>`:""}
+  ${tp?`<details class="sec" open><summary>Zonas a evitar en ${esc(tp.city)}</summary><div class="in"><div id="cityZones"><div class="small mute"><span class="spin"></span> Buscando aeropuertos, helipuertos, bases militares, cárceles y espacios protegidos…</div></div><button class="btn ghost block" id="cityMap" style="margin-top:10px">${I("compass",17)} Ver ${esc(tp.city)} en el mapa</button></div></details>`:""}
   <details class="sec" open><summary>Allí y en cada vuelo</summary><div class="in">${reqHTML(sitio)}</div></details>
   ${ok.length?`<details class="sec"><summary>Ya lo cumples <span class="pill p0">${ok.length}</span></summary><div class="in">${reqHTML(ok)}</div></details>`:""}
   <details class="sec"><summary>Webs oficiales</summary><div class="in">${[c.reg,c.train,c.map].filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.u===x.u)===i).map(x=>`<div class="req"><div class="st info">🔗</div><div class="tx"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)} ↗</a></div></div>`).join("")}</div></details>
   <div class="notice"><span>⏱️</span><span>Plazos orientativos. Las normas cambian: confírmalas antes de viajar.</span></div>`;
+  if(tp){$("#cityMap").onclick=()=>{pickPlace(tp.lat,tp.lon,tp.label);showPane("spots")};cityZones(tp)}
+}
+/* ---- destino libre: ciudad + país ---- */
+let travelPlace=LS.get("sf_tplace",null);
+async function searchTravelPlace(){
+  const v=$("#vPlace").value.trim();if(!v)return;$("#vPlace").blur();status('<span class="spin"></span> Buscando…');
+  try{
+    const r=await jget("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&accept-language=es&q="+encodeURIComponent(v));
+    const x=r[0];if(!x||!x.address||!x.address.country_code){status("😕 No encontré ese sitio. Prueba con “ciudad, país”",3500);return}
+    const a=x.address,cc=a.country_code.toLowerCase();
+    const city=a.city||a.town||a.village||a.municipality||a.county||a.state||x.name||v.split(",")[0];
+    travelPlace={cc,city,label:city+", "+cName(cc),lat:+x.lat,lon:+x.lon};LS.set("sf_tplace",travelPlace);
+    $("#vPlace").value=travelPlace.label;addOpt(cc);renderTravel();status("",0);
+  }catch(e){status("📡 Sin conexión con el buscador",4000)}
+}
+$("#vPlaceBtn").onclick=searchTravelPlace;
+$("#vPlace").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchTravelPlace()}});
+async function cityZones(tp){
+  const box=$("#cityZones");if(!box)return;const key="sf_cz_"+tp.lat.toFixed(3)+","+tp.lon.toFixed(3);
+  const show=list=>{const el=$("#cityZones");if(!el||!travelPlace||travelPlace.lat!==tp.lat)return;
+    if(!list.length){el.innerHTML=reqHTML([IT("ok","No veo zonas sensibles a menos de 15 km","No aparecen aeropuertos, bases militares ni cárceles en el mapa abierto. Aun así, mira el mapa oficial del país si lo tiene.")]);return}
+    el.innerHTML=reqHTML(list.slice(0,12).map(z=>{const near=z.d<(z.k==="aero"?8:z.k==="heli"?2:1);return IT(near?"bad":"warn",`${z.ic} ${z.n} · ${fmtD(z.d)}`,z.k==="aero"?(near?"Muy cerca: casi seguro es zona restringida o prohibida. No vueles sin autorización.":"Suele haber zona de control alrededor de los aeropuertos: comprueba sus límites."):z.k==="heli"?"Evita volar en su entorno: tráfico de helicópteros a baja altura.":z.k==="park"?"Espacio natural protegido: muchos prohíben drones o piden permiso al parque.":"Prohibido sobrevolar y hacer fotos o vídeo. Mantente lejos.")}))+(list.length>12?`<p class="small mute">…y ${list.length-12} más.</p>`:"")};
+  const cached=LS.get(key,null);if(cached){show(cached);return}
+  const a=`(around:15000,${tp.lat},${tp.lon})`;
+  const q=`[out:json][timeout:40];(nwr["aeroway"~"^(aerodrome|heliport)$"]${a};nwr["landuse"="military"]${a};nwr["amenity"="prison"]${a};nwr["boundary"="national_park"]${a};);out center tags 200;`;
+  try{const r=await overpass(q,45000);const seen=new Set();
+    const list=r.elements.map(e=>{const t=e.tags||{},la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null)return null;
+      let k,ic,n=t["name:es"]||t.name;
+      if(t.aeroway==="aerodrome"){k="aero";ic="✈️";n=n||"Aeródromo"}else if(t.aeroway==="heliport"){k="heli";ic="🚁";n=n||"Helipuerto"}else if(t.landuse==="military"){k="mil";ic="🪖";n=n||"Zona militar"}else if(t.amenity==="prison"){k="prison";ic="🚫";n=n||"Prisión"}else{k="park";ic="🌲";n=n||"Parque nacional"}
+      const d=km(tp.lat,tp.lon,la,lo);const id=k+n+Math.round(d*10);if(seen.has(id))return null;seen.add(id);return{k,ic,n,d}}).filter(Boolean)
+      .sort((x,y)=>(x.k==="aero"?-1:0)-(y.k==="aero"?-1:0)||x.d-y.d);
+    LS.set(key,list);show(list);
+  }catch(e){const el=$("#cityZones");if(el)el.innerHTML='<div class="small mute">🐢 El servidor de mapas va lento. Vuelve a abrir esta pestaña en un momento, o mira la zona en el mapa.</div>'}
 }
 $("#vDest").addEventListener("change",()=>{renderFlags();renderTravel()});
+if(travelPlace){$("#vPlace").value=travelPlace.label}
 
 /* ===================== ajustes ===================== */
 function syncSeg(){$$("#radiusSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===radiusKm));$$("#baseSeg button").forEach(b=>b.classList.toggle("on",b.dataset.b===baseKey))}
@@ -1638,7 +1684,7 @@ $("#obNext").onclick=()=>{if(obStep<3){obStep++;renderOb()}else{$("#ob").classLi
 
 /* ===================== arranque ===================== */
 function renderAll(){renderCatBar();renderDrone();renderProfile();renderFlags();renderTravel();renderCtx();syncSeg();renderSpots();positionAreaBtn()}
-fillCountrySelect("#vDest","co");
+fillCountrySelect("#vDest","co");if(travelPlace)addOpt(travelPlace.cc);
 renderAll();syncOfficialByZoom();
 window.addEventListener("resize",positionAreaBtn);
 if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
